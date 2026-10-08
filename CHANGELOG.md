@@ -197,6 +197,17 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Alterado
 
+- README reescrito no formato de referência que o dono do projeto apontou: cabeçalho centralizado
+  com a marca, fileira de selos de versão/stack, separadores horizontais, telas em tabela Markdown
+  centralizada de duas por linha, e as seções Sobre o projeto, Funcionalidades no ar, Módulos,
+  Tecnologias, Estrutura de pastas, Arquitetura, Banco de dados, Instalação, Configuração, Segurança,
+  Testes, Demonstração, Roadmap, Histórico de versões e Desenvolvedor. Nada foi inventado para
+  preencher seção: a tabela de módulos marca como 🚧 tudo que ainda é só schema, a demonstração diz
+  que não há demo online nem senha publicada, e a linha de uploads saiu da tabela de segurança
+  porque ainda não há código de upload no repositório. A marca do README é a mesma
+  `x-ui-brand-mark` do aplicativo, exportada em `docs/branding/nexusfield-marca.svg` com os hexes
+  atuais do `tokens.css` no lugar das variáveis de tema.
+
 - Paleta global reescrita nas duas pontas. O escuro larga o grafite azulado
   (`#101319`/`#151922`/`#1b2130`) e passa a ter **fundo preto puro** (`--nf-bg: #000000`), com a
   hierarquia vindo da superfície acima dele (`#0c0c0d`, `#151516`) e do fio de borda, não de cor no
