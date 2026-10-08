@@ -10,8 +10,13 @@
 
 <title>{{ $title }}</title>
 
+{{-- Ícones do navegador: o PNG manda nos modernos, o .ico cobre os que só
+     pedem a raiz, e o apple-touch-icon é chato sobre fundo porque a Maçã não
+     aceita transparência. A cor da barra vem do x-script.theme, por tema. --}}
+<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('img/marca-nexus-32.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ asset('img/marca-nexus-192.png') }}">
 <link rel="icon" href="{{ asset('favicon.ico') }}">
-<link rel="icon" type="image/png" sizes="64x64" href="{{ asset('img/marca-nexus-64.png') }}">
+<link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
 
 @fonts
 <x-script.theme />

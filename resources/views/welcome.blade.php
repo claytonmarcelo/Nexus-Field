@@ -15,7 +15,10 @@
         <main id="conteudo">
             <section class="nf-hero">
                 <div class="container">
-                    <div class="row align-items-center g-5">
+                    {{-- `gx-4` e não `g-5`: a margem negativa de um row g-5 (-24px)
+                         é maior que o respiro do container (12px) e abre barra de
+                         rolagem horizontal no celular. --}}
+                    <div class="row align-items-center gx-4 gy-5">
                         <div class="col-12 col-lg-7">
                             <p class="nf-label">Gestão de operações em campo</p>
                             <h1 class="nf-display nf-hero-title">
@@ -36,6 +39,20 @@
                             </div>
                         </div>
                         <div class="col-12 col-lg-5">
+                            {{-- O medalhão pendurado no próprio eixo: balança com
+                                 amplitude cada vez menor e assenta nivelado, que é
+                                 o que a plataforma faz com a operação do cliente. --}}
+                            <div class="nf-brand-stage">
+                                <img
+                                    class="nf-brand-stage-logo"
+                                    src="{{ asset('img/logo-nexus-480.png') }}"
+                                    width="480"
+                                    height="422"
+                                    alt="NEXUS-FIELD"
+                                />
+                                <span class="nf-brand-stage-nivel" aria-hidden="true"></span>
+                            </div>
+
                             <div class="nf-flow-panel">
                                 <p class="nf-label">O ciclo de um serviço</p>
                                 <ol class="nf-flow">

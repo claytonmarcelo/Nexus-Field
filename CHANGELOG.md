@@ -362,6 +362,22 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   repassando responsabilidade; exclusão só do rascunho; filtros, ordenação, paginação e o CSV sendo a
   mesma contagem da tela; o painel do técnico não contando a fila alheia; e a matriz de permissões. A
   suíte fecha em 133 testes / 1201 asserções.
+- Marca da plataforma nos navegadores: o medalhão da logo virou `public/favicon.ico` (16 e 32
+  embutidos, cada um como PNG dentro do contêiner) e as resoluções que a interface realmente pede —
+  `marca-nexus-32`, `-64`, `-128` e `-192`, mais `apple-touch-icon.png` achatado sobre preto porque o
+  iOS descarta a transparência. `x-site-head` entrega os três links e `x-ui.brand-mark` ganhou
+  `arquivo`/`lado`, para cada ponto da interface chamar a resolução nativa em vez de esticar o mesmo
+  PNG de 64px. A cor da barra do celular continua saindo do `x-script.theme`, por tema — não de um
+  `theme-color` fixo que mentiria para metade dos acessos.
+- Auto nível nas telas abertas: `x-ui.brand-mark` aceita `animacao`, a boas-vindas ganhou o palco
+  `.nf-brand-stage` com a logo inteira (`img/logo-nexus-480.png`) pendurada no próprio topo, e as três
+  telas de acesso repetem o gesto em amplitude de relógio acima do título. O movimento é CSS
+  (`@keyframes nf-auto-nivel` e `nf-nivelando`), não GIF, e o motivo é do projeto: o medalhão é
+  gradiente com borda suave, e um GIF o quantizaria em 256 cores com transparência de 1 bit — além de
+  não acompanhar o tema, já que esta mesma tela hoje é preta ou branca. Em troca, o halo acende no
+  instante em que a marca assenta (`nf-acender`), um fio claro em volta do desenho devolve o "FIELD"
+  que sobre o preto era ilegível, e quem pede movimento reduzido recebe a logo parada e nivelada pela
+  regra global de `base.css`.
 
 ### Alterado
 
@@ -582,6 +598,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   ordens um `@return Closure` que só repetia a assinatura e um `!` colado na variável, e de fases
   anteriores três nits: `(new DemoSeeder())` com parênteses, concatenações com espaço ao redor do `.` e
   um nome de método de teste em camelCase no meio da frase em português.
+- O `g-5` da linha do hero abria barra de rolagem horizontal no celular: a margem negativa do row
+  (-24px) passava do respiro do container (12px) e o documento media 432px dentro de uma janela de 420.
+  A linha passou a `gx-4 gy-5`, que devolve os 3rem de respiro vertical entre os blocos sem sair da
+  grade — medido no navegador, `scrollWidth` voltou a bater com a largura da janela em 420px.
 
 ### Removido
 

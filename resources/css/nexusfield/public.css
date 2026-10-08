@@ -58,6 +58,12 @@
     transform: translateY(-1px);
 }
 
+/* Marca das telas de acesso: o mesmo auto nível, em amplitude de relógio de pulso. */
+.nf-brand-mark--nivelando {
+    transform-origin: 50% 8%;
+    animation: nf-nivelando 9s var(--nf-ease) infinite;
+}
+
 .nf-public > main {
     flex: 1 1 auto;
 }
@@ -78,6 +84,57 @@
     color: var(--nf-text-muted);
     font-size: 1.025rem;
     line-height: 1.65;
+}
+
+/*
+ * Palco da marca na abertura. O medalhão pende do próprio topo e balança com
+ * amplitude cada vez menor até assentar nivelado; o brilho acende no instante
+ * em que ele para. Quem pede movimento reduzido fica na logo parada e acesa no
+ * meio-termo — a regra global de base.css desliga a animação, e os valores
+ * base abaixo são o que sobra quando ela desliga.
+ */
+.nf-brand-stage {
+    position: relative;
+    display: grid;
+    margin-bottom: clamp(1.25rem, 3vw, 2rem);
+    padding-block: clamp(1rem, 3vw, 1.75rem);
+    place-items: center;
+}
+
+.nf-brand-stage::before {
+    position: absolute;
+    inset: 4% 6%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--nf-primary) 30%, transparent), transparent 76%);
+    filter: blur(16px);
+    opacity: .55;
+    animation: nf-acender 7s var(--nf-ease) infinite;
+    content: "";
+}
+
+.nf-brand-stage-logo {
+    position: relative;
+    width: clamp(210px, 26vw, 320px);
+    height: auto;
+    transform-origin: 50% 4%;
+    filter: drop-shadow(0 12px 26px color-mix(in srgb, var(--nf-primary) 22%, transparent));
+    animation: nf-auto-nivel 7s var(--nf-ease) infinite;
+}
+
+.nf-brand-stage-nivel {
+    position: absolute;
+    right: 16%;
+    bottom: clamp(.35rem, 1.2vw, .9rem);
+    left: 16%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--nf-line-strong), transparent);
+    opacity: .6;
+}
+
+/* No escuro o "FIELD" da logo é quase preto sobre preto: o fio claro em volta
+     das letras é o que devolve a palavra inteira para a leitura. */
+[data-bs-theme="dark"] .nf-brand-stage-logo {
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, .62)) drop-shadow(0 12px 26px color-mix(in srgb, var(--nf-primary) 22%, transparent));
 }
 
 .nf-flow-panel {
@@ -300,6 +357,26 @@
     padding: clamp(1.5rem, 4vw, 2.25rem);
 }
 
+.nf-auth-brand {
+    display: grid;
+    margin-bottom: 1.1rem;
+    place-items: center;
+}
+
+.nf-auth-brand .nf-brand-mark {
+    width: 58px;
+    height: 58px;
+    filter: drop-shadow(0 6px 14px color-mix(in srgb, var(--nf-primary) 20%, transparent));
+}
+
+.nf-auth-brand-nivel {
+    width: 76px;
+    height: 1px;
+    margin-top: .6rem;
+    background: linear-gradient(90deg, transparent, var(--nf-line-strong), transparent);
+    opacity: .6;
+}
+
 .nf-auth-title {
     margin-bottom: .35rem;
     font-size: clamp(1.4rem, 1.15rem + .9vw, 1.85rem);
@@ -358,4 +435,30 @@
     .nf-cta > .btn {
         width: 100%;
     }
+}
+
+/* Oscilação amortecida: larga com amplitude, encolhe a cada volta e trava em 0. */
+@keyframes nf-auto-nivel {
+    0% { transform: rotate(-5.5deg); }
+    9% { transform: rotate(4.2deg); }
+    20% { transform: rotate(-2.4deg); }
+    31% { transform: rotate(1.3deg); }
+    42% { transform: rotate(-.7deg); }
+    53% { transform: rotate(.3deg); }
+    64%, 100% { transform: rotate(0deg); }
+}
+
+@keyframes nf-nivelando {
+    0% { transform: rotate(-2.4deg); }
+    12% { transform: rotate(1.7deg); }
+    26% { transform: rotate(-.9deg); }
+    40% { transform: rotate(.4deg); }
+    52%, 100% { transform: rotate(0deg); }
+}
+
+/* O halo acompanha o assentamento: fraco enquanto balança, aceso quando nivela. */
+@keyframes nf-acender {
+    0%, 58% { opacity: .28; }
+    72% { opacity: 1; }
+    100% { opacity: .28; }
 }

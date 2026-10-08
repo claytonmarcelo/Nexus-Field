@@ -45,7 +45,7 @@ os mesmos blocos aparecem nos estados vazios.
 
 | Apresentação pública · tema claro | Entrada · tema escuro |
 | :--: | :--: |
-| <a href="docs/screenshots/01-boas-vindas.png"><img src="docs/screenshots/01-boas-vindas.png" alt="Página de apresentação pública do NEXUS-FIELD em tema claro, com o ciclo de um serviço ao lado do título" width="360"></a> | <a href="docs/screenshots/02-entrada.png"><img src="docs/screenshots/02-entrada.png" alt="Tela de entrada com e-mail, senha com botão de revelar, manter conectado e recuperação de acesso em tema escuro" width="360"></a> |
+| <a href="docs/screenshots/01-boas-vindas.png"><img src="docs/screenshots/01-boas-vindas.png" alt="Página de apresentação pública do NEXUS-FIELD em tema claro, com a logo animada no palco do hero e o ciclo de um serviço ao lado do título" width="360"></a> | <a href="docs/screenshots/02-entrada.png"><img src="docs/screenshots/02-entrada.png" alt="Tela de entrada com e-mail, senha com botão de revelar, manter conectado e recuperação de acesso em tema escuro" width="360"></a> |
 
 | Recuperação de acesso · tema claro | Painel no celular · tema escuro |
 | :--: | :--: |
@@ -187,6 +187,11 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - Paleta "Premium Gourmet + Technology": o verde cromado medido do próprio medalhão como marca,
   latão como contra-ponto, fundo preto no escuro e branco neutro no claro, sem casta de cor
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura
+- Marca nos navegadores: `favicon.ico` com 16 e 32 embutidos, PNGs de 32 e 192 e `apple-touch-icon`
+  achatado sobre preto, todos gerados do medalhão oficial
+- Auto nível nas telas abertas: a logo do hero balança em amplitude decrescente e para nivelada, com o
+  halo acendendo no assentamento; o mesmo gesto, menor, acima do título de entrada. É CSS, não GIF, para
+  continuar legível nos dois temas e respeitar `prefers-reduced-motion`
 - Diálogos e avisos só por SweetAlert2 e Toastr — `alert()`, `confirm()` e `prompt()` nativos são
   vetados no projeto e cobertos por teste
 - Layout responsivo, com o painel em uma coluna no celular

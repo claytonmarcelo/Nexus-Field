@@ -18,6 +18,13 @@
 
         <main class="nf-auth" id="conteudo">
             <div class="nf-auth-card">
+                {{-- A mesma marca da página de boas-vindas, aqui no respiro curto:
+                     balança pouco e para nivelada antes do formulário. --}}
+                <div class="nf-auth-brand">
+                    <x-ui.brand-mark arquivo="marca-nexus-128" lado="128" animacao="nivelando" />
+                    <span class="nf-auth-brand-nivel" aria-hidden="true"></span>
+                </div>
+
                 <h1 class="nf-display nf-auth-title">{{ $title }}</h1>
 
                 @if ($subtitle)
