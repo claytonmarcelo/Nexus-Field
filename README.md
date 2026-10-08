@@ -87,19 +87,15 @@ php artisan serve
 cinco papéis de sistema e o administrador da sua empresa. Sem ele não há quem possa autorizar
 nada, e o login cai em uma conta sem papel.
 
-Defina a senha antes de semear:
+Antes de semear, preencha no `.env` as chaves de credencial dessa conta; os nomes e os comentários
+de cada uma já estão no `.env.example`, e nenhuma delas tem valor de verdade versionado.
 
-```env
-SEED_ADMIN_EMAIL=marcelolimadez@gmail.com
-SEED_ADMIN_PASSWORD=a-senha-da-conta-raiz
-```
-
-Essa é a **conta raiz** do sistema: ela recebe o catálogo inteiro de permissões e não pode ser
-excluída, desativada, remanejada de empresa nem ter o e-mail trocado — a regra está no model
-(`User::booted()`), então vale mesmo para request de administrador. A senha, essa sim, é
-rotacionável: troque o valor no `.env` e rode `php artisan db:seed` de novo, ou altere a senha por
-dentro da aplicação. Em produção o seeder recusa senha gerada automaticamente; credencial nunca
-entra no código nem no Git.
+A conta que o `db:seed` cria é a **conta raiz** do sistema: ela recebe o catálogo inteiro de
+permissões e não pode ser excluída, desativada, remanejada de empresa nem ter o e-mail trocado —
+a regra está no model (`User::booted()`), então vale mesmo para request de administrador. A senha,
+essa sim, é rotacionável: troque o valor no `.env` e rode `php artisan db:seed` de novo, ou altere
+a senha por dentro da aplicação. Em produção o seeder recusa senha gerada automaticamente;
+credencial nunca entra no código nem no Git.
 
 A aplicação sobe em `http://localhost:8000`.
 

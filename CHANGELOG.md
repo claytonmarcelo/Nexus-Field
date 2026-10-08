@@ -221,6 +221,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   contraste AA de texto/fundo e de tinta/marca calculados do hex ao WCAG, e uma lista de hexes da
   paleta antiga que não pode voltar em nenhum arquivo de CSS, JavaScript ou Blade. A suíte fecha em
   73 testes / 541 asserções.
+- Instalação do README sem credencial à mostra: o trecho que copiava `SEED_ADMIN_EMAIL` com o
+  endereço real e `SEED_ADMIN_PASSWORD` com um valor de exemplo saiu. Quem instala continua
+  encontrando os nomes das chaves e o que cada uma faz nos comentários do `.env.example`, e a
+  explicação de por que a conta raiz é permanente ficou no lugar.
 
 ### Corrigido
 
