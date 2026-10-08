@@ -73,8 +73,26 @@ php artisan serve
 
 ## Testes
 
+Os testes de feature usam MySQL (schema `nexusfield_test`, engine InnoDB), então crie o schema
+uma vez:
+
+```sql
+CREATE DATABASE IF NOT EXISTS nexusfield_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Depois:
+
 ```bash
 php artisan test
+```
+
+No Windows, se `php artisan test` falhar ao compilar views com o aviso
+`tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
+interpretador — o wrapper `vendor/bin/phpunit` é um `.bat` e herda as restrições de escrita do
+`cmd.exe`:
+
+```bash
+php vendor/phpunit/phpunit/phpunit
 ```
 
 ## Estrutura

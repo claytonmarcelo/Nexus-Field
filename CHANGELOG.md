@@ -6,6 +6,56 @@ Todos os registros relevantes de mudanças deste projeto. O formato segue
 
 Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.1.0`.
 
+## [Unreleased]
+
+### Adicionado
+
+- Autenticação com sessão endurecida: `Auth::attempt`, troca do ID da sessão após entrar
+  (contra session fixation), logout com `invalidate` + `regenerateToken`, bloqueio de usuário
+  inativo e de empresa com assinatura inativa, e limite de 5 tentativas por e-mail e IP.
+- Recuperação de senha pelo password broker do framework: token de uso único, expiração própria,
+  senha nova com no mínimo 10 caracteres, letras e números, e confirmação obrigatória.
+- Autorização real no servidor: catálogo de permissões por módulo (`PermissionCatalog`), os cinco
+  papéis de sistema (Administrador, Supervisor/Gestor, Funcionário, Técnico, Cliente) sincronizados
+  pelo seeder, `User::hasPermission`/`hasAnyPermission` com cache por request e o middleware
+  `permission`, que recusa com 403 antes de qualquer botão existir na tela.
+- Multi-tenancy efetivo, não apenas uma coluna a mais: `TenantContext` por request, middleware
+  `ResolveCompany`, escopo global `CompanyScope` e o trait `BelongsToCompany`, com `anyCompany()`
+  reservado para agregações internas e para o console.
+- Models da camada nuclear: `Company`, `Plan`, `Role`, `Permission`, `User`, `Client`,
+  `ClientContact`, `Address` e `CompanySetting`.
+- 24 testes (64 asserções) cobrando login válido e inválido, usuário inativo, assinatura vencida,
+  throttle, mudança de ID de sessão, logout, gate de permissão por papel, reset de senha com token
+  válido/forgiado/fraco e isolamento entre tenants.
+- `tests/CreatesFixtures.php`, que monta empresa, plano, permissões, papel e usuário para os
+  testes de feature rodarem contra o MySQL real (`nexusfield_test`), sem mock de banco.
+
+### Corrigido
+
+- `BelongsToCompany` passa a impor o `company_id` do contexto no `create`; antes, um
+  `company_id` enviado pelo request escrevia o registro em outra empresa — vazamento entre
+  tenants. O valor explícito continua valendo quando não há contexto (console e seeders).
+- `tests/TestCase.php` limpa o `TenantContext` no `tearDown`: como o contexto é estático, um
+  teste podia contaminar o seguinte e esconder falha de isolamento.
+- `phpunit.xml` roda sobre MySQL/InnoDB com `LOG_CHANNEL=null`; com o log em arquivo, o monolog
+  derrubava a stack do teste ao gravar (`errno=9`) e a falha real ficava escondida.
+- `routes/web.php` usa um `WelcomeController` em vez de fechar a rota de entrada numa closure,
+  mantendo a página pública testável.
+
+### Removido
+
+- `tests/Unit/ExampleTest.php` do skeleton, que apenas afirmava `true === true`: teste de
+  fachada, sem regra de negócio para proteger.
+
+### Conhecido
+
+- As telas de boas-vindas, login, recuperação de senha e o layout AdminLTE chegam nas fases 4 a 7;
+  por enquanto `/` renderiza a view padrão do skeleton do Laravel.
+- No Windows deste posto, `php artisan test` executa o `vendor/bin/phpunit` (`.bat`) através do
+  `cmd.exe`, que não tem permissão de escrita em `C:\wamp64`; isso derruba a compilação de views
+  durante os testes. Rodar `php vendor/phpunit/phpunit/phpunit` diretamente contorna o problema,
+  que é da máquina e não do projeto.
+
 ## [0.1.0] — 2026-10-07
 
 ### Adicionado

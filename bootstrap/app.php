@@ -12,7 +12,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->web(append: [
+            \App\Http\Middleware\ResolveCompany::class,
+        ]);
+
+        $middleware->alias([
+            'permission' => \App\Http\Middleware\EnsurePermission::class,
+            'company' => \App\Http\Middleware\ResolveCompany::class,
+        ]);
+
+        $middleware->redirectGuestsTo(fn () => route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
