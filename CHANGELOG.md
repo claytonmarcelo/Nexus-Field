@@ -396,6 +396,67 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   mais dois em `RootAccountTest` — a raiz que não deixa de ser raiz e o seeder que recusa o endereço
   aposentado, com `tearDown` devolvendo o ambiente para a classe seguinte não herdar o endereço
   recusado.
+- Fase 13 — a voz do cliente no ar. `TicketController` (`/chamados`) lista com busca (protocolo, assunto,
+  descrição e nome do cliente), estado, prioridade, categoria, técnico, cliente, prazo e janela de
+  abertura, ordenação presa em `ORDENAVEIS` (`protocol`, `subject`, `status`, `priority`, `opened_at`,
+  `resolved_at`, `created_at`), paginação própria e exportação CSV por `tickets.export` saindo da mesma
+  `consulta()` da tela — inclusive o alcance de quem pede, para o CSV não entregar mais do que a pessoa
+  vê.
+- O protocolo nasce no banco, não na mão: `Ticket::proximoProtocolo()` acha `CH-2026-0007` pelo `max()`
+  da sequência do ano **dentro da empresa**, em `DB::transaction` com `lockForUpdate` — a empresa ao lado
+  continua em `CH-2026-0001` e dois chamados simultâneos não colidem.
+- Prioridade é prazo, não cor: `Ticket::PRAZO_HORAS` (urgente 4h, alta 8h, média 24h, baixa 48h, sem
+  pressa 72h) grava `prazo_em` na abertura e de novo em toda mudança de prioridade, e "atrasado" é o
+  prazo vencido sobre um estado que ainda não encerrou. Reaberto volta a correr: `mudarStatus()` limpa
+  a data de resolução e refaz o prazo a partir de agora. O painel lê o mesmo `prazo_em`, por isso a
+  gravação dá `Cache::forget('nf.prazo-chamado.{id}')` — sem isso o KPI de atrasados continuaria
+  contando um chamado que a tela já mostrou resolvido.
+- Passagem de estado com dono e data: migration
+  `2026_10_08_000003_create_ticket_status_history_table.php` (o schema passa a ter 19 migrations) cria
+  `ticket_status_history` com `from_status`, `to_status`, `note` e `created_at` carimbado pelo model — o
+  `timestamps = false` existe porque as duas colunas de tempo da tabela são a data do carimbo e nada
+  mais. Abrir o chamado já escreve a primeira linha, então a ficha nunca mostra "ninguém moveu isso".
+- `tickets.execute` é a nova permissão de conduzir a máquina de estados, e ela separou duas coisas que
+  estavam misturadas na rota: antes `/chamados/{id}/estado` pedia `tickets.update` **ou** `tickets.close`,
+  então o técnico — que tem a primeira — podia resolver um chamado, e a conta de cliente, que não tem
+  nenhuma das duas, ficava sem o passo do dia a dia. Agora escritório, funcionário e técnico conduzem
+  (`in_progress`, `waiting`), e resolver e fechar continuam pedindo `tickets.close` dentro do
+  controlador. O catálogo (`PermissionCatalog::MODULES`), o middleware da rota, `proximosEstados()` e a
+  ficha (`podeMover`) concordam entre si — 65 permissões no banco, e a matriz testada papel por papel.
+- Conversa do chamado: `TicketCommentController` (`POST /chamados/{chamado}/notas`). Responder é
+  continuar uma conversa que se tem o direito de ler, então a rota está em `tickets.view` e não em
+  `tickets.create` — a conta de cliente não cria documento nenhum, ela fala na própria carteira, e o
+  `client_id` da nota vem da sessão, não do formulário. A marca de nota interna (`is_internal`) só é
+  aceita de quem tem `tickets.update`, e a consulta da ficha deixa essas notas fora do resultado para
+  quem não pode lê-las: não é filtro de CSS, é a query que não as busca.
+- `App\Support\TextoSeguro` é o que separa o HTML do editor de virar XSS estocado. A regra é lista
+  fechada: tag que não está em `PERMITIDOS` é desembrulhada (a palavra fica, o rótulo sai), atributo que
+  não está na lista da tag desaparece, `<script>`, `<style>`, `<iframe>`, `<img>`, `<form>` e companhia
+  caem junto com o que têm dentro, e `href` só sobrevive em `http`, `https`, `mailto`, `tel` —
+  `javascript:`, `#` e relativo são recusados, e o link que passa ganha `rel="noopener nofollow"`. O
+  prefixo `<?xml encoding="utf-8" ?>` existe de propósito: sem ele o parser do libxml lê o corpo como
+  CP1252 e come os acentos do texto.
+- Summernote 0.9.1 entrou em uso real no bundle que já estava declarado: `x-ui.editor` é uma textarea
+  com o mesmo contrato de rótulo, ajuda e erro do `x-ui.textarea`, e `resources/js/nexusfield/editor.js`
+  a monta por cima dela (`Nf.editor`) com barra reduzida, altura configurável, botão de tela cheia e
+  `codeview`. Sem JavaScript — ou com `prefers-reduced-motion` — atextarea aparece como área de texto
+  comum e o formulário envia do mesmo jeito; é por isso que a peça é `textarea` e não `div`.
+- `components.css` ganhou as 126 linhas que o módulo pedia: `.nf-conversa` e `.nf-conversa-bloco` (a
+  conversa com autor, data e marca de interna), `.nf-assunto`, `.nf-chamado-topo`, `.nf-legenda-arquivo`
+  e `.nf-form-aviso`, mais o acerto de altura que o Summernote precisa para não cortar a própria barra.
+- Alcance do chamado é o mesmo das ordens, com `EnxergaOChamado` no meio do caminho: o técnico responde
+  aos atribuídos a ele, a conta de cliente à carteira dela (`users.client_id`), e o escritório à empresa
+  inteira. A ficha de um chamado que não é seu responde 404 — não 403 com aviso de "existe, mas você não
+  pode" — e a listagem, a exportação e o `withCount` das notas seguem a mesma `consulta()`.
+- `DemoSeeder` passou a desenhar o módulo inteiro: 11 chamados com conversa real, notas internas e a
+  trilha de estados percorrida (22 notas e 27 passagens no banco local), incluindo um urgente estourado
+  no prazo para a lista de atrasados ter o que mostrar.
+- `tests/Feature/TicketsTest.php` (10 testes / 141 asserções) cobre o protocolo que não repete o da
+  empresa ao lado, o prazo calculado da prioridade, o atraso medido pelo banco, o estado que só anda
+  pelo fluxo, a nota obrigatória para resolver e para fechar sem resolução, o 403 de quem conduz sem
+  `tickets.execute`, a nota interna que não chega a quem não pode ler, o payload malicioso que chega
+  inteiro na requisição e volta limpo do banco, o alcance do técnico e da conta de cliente, e a matriz de
+  permissões do módulo. A suíte fecha em 150 testes / 1386 asserções.
 
 ### Alterado
 
@@ -658,6 +719,38 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   nenhuma das duas batia com o que `git ls-files database/migrations` devolve. Agora os dois lados
   dizem 18, e a linha da Fase 2 perdeu o número — ela descreve o que a fase entregou, não o total de
   hoje, que é exatamente o tipo de cifra que apodrece em documentação.
+- `nota` obrigatória que não obrigava nada: a regra era uma `Closure` sobre o valor, e o Laravel não
+  chama regra de valor quando o campo **não veio** na requisição — num formulário com `nullable`,
+  omitir a linha `nota` resolvia um chamado sem dizer o que foi feito. A obrigatoriedade agora é
+  calculada antes da validação (`notaObrigatoria()` responde pelo estado de origem e pelo destino) e
+  entra como `required` com a mensagem do passo. Descoberto no smoke HTTP, não no teste: a primeira
+  versão do teste mandava `nota=''`, que passava pela closure.
+- Onze formulários cadastrados com `:action="$..."` — sintaxe de outro framework colada em Blade. O
+  atributo chegava ao HTML como `:action` literal, sem `action` nenhum, e o navegador enviava o POST
+  para a URI da própria página: em `categories/index`, `clients/form`, `clients/show`, `orders/form`,
+  `orders/show`, `products/form`, `services/form`, `specialties/index`, `teams/form`, `teams/show`,
+  `technicians/form` e `technicians/show` toda gravação batia num GET de listagem. Trocados por
+  `action="{{ ... }}"`; as telas novas de chamado já nasceram certas, e foi a comparação com elas que
+  entregou o resto.
+- Quem conduzia o estado era decidido em três lugares que não conversavam: a rota pedia
+  `tickets.update|tickets.close`, o controlador oferecia os passos do fluxo e a ficha desenhava o botão
+  para quem tem `tickets.view`. Resultado: o técnico via "Iniciar atendimento" e levava 403 no clique,
+  e o teste correspondente passava verde por engano — sem técnico na ficha, a rota devolvia 404 antes
+  da autorização. Agora a rota pede `tickets.execute`, o controlador usa o mesmo critério em
+  `proximosEstados()` e a tela só monta o formulário com `podeMover`; o 404 do teste virou asserção
+  explícita de que a conta de cliente não move estado.
+- Ficha de chamado desenhada em inglês: o subtítulo do card de estado ("The status flow decides the way;
+  every pass stays with author and date"), os rótulos "Notes", "Actions", "Submit Change", "Loading…" e
+  "Internal note" e a frase de chamada de "Voltar" saíram em português, com as mesmas frases que o
+  restante do painel usa. A proibição dos diálogos nativos já estava coberta; a do idioma não estava, e
+  esta tela passou.
+- Linhas de ordem e de chamado no painel eram texto morto: `dashboard.blade.php` imprimia número e
+  protocolo dentro da tabela sem link nenhum, então o número que a fase 8 contou no banco não levava a
+  lugar nenhum. As duas colunas agora abrem a ficha correspondente (`orders.show`, `tickets.show`), e os
+  links só aparecem dentro dos blocos que a permissão de leitura já desenhou.
+- `pint --test` nos arquivos da fase: `DemoSeeder` carregava dois imports sem uso e docblocks com
+  `\Carbon\Carbon` onde a classe já estava importada; `TicketsTest` tinha um import fora de ordem.
+  Rodados e conferidos depois, com a suíte ainda verde.
 
 ### Removido
 
@@ -675,11 +768,11 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Conhecido
 
-- O painel lê o banco e nada mais: os blocos operacionais existem, e a tela que produz os de ordem já
-  está no ar. Faltam as telas que alimentam os blocos de chamado, agenda, estoque e financeiro, que
-  chegam das fases 13 em diante. Clientes, técnicos, equipes, especialidades, catálogo e ordens já estão
-  no `Navigation` e alimentam os indicadores que dependem de cadastro; o que ainda não tem rota não tem
-  link no menu, por decisão e não por descuido.
+- O painel lê o banco e nada mais: os blocos operacionais existem, e a tela que produz os de ordem e os
+  de chamado já estão no ar. Faltam as telas que alimentam os blocos de agenda, estoque e financeiro,
+  que chegam das fases 14 em diante. Clientes, técnicos, equipes, especialidades, catálogo, ordens e
+  chamados já estão no `Navigation` e alimentam os indicadores que dependem de cadastro; o que ainda não
+  tem rota não tem link no menu, por decisão e não por descuido.
 - A ficha da equipe e a do serviço já abrem a ordem pelo botão, porque `orders.show` existe desde a fase
   12. O que continua condicionado é o botão "Movimentações" da listagem de produtos e a nota de estoque
   da ficha de ordem: ambos só são desenhados quando a rota `movements.index` existir (fase 16). A tela

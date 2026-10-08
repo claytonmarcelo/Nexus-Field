@@ -234,7 +234,7 @@
                         <div class="nf-form-secao">
                             <h2>Editar base</h2>
                             <form method="POST"
-                                :action="route('technicians.addresses.update', [$tecnico, $enderecoEmEdicao])"
+                                action="{{ route('technicians.addresses.update', [$tecnico, $enderecoEmEdicao]) }}"
                                 data-nf-guard novalidate>
                                 @method('PUT')
                                 <x-ui.address-fields :endereco="$enderecoEmEdicao" :tipos="$tiposDeEndereco" />
@@ -250,7 +250,7 @@
                     @else
                         <div class="nf-form-secao">
                             <h2>Nova base</h2>
-                            <form method="POST" :action="route('technicians.addresses.store', $tecnico)"
+                            <form method="POST" action="{{ route('technicians.addresses.store', $tecnico) }}"
                                 data-nf-guard novalidate>
                                 <x-ui.address-fields :endereco="$novaBase" :tipos="$tiposDeEndereco" />
                                 <div class="nf-form-acoes">

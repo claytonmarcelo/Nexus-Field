@@ -32,4 +32,16 @@ class TicketComment extends Model
     {
         return $this->belongsTo(Client::class);
     }
+
+    /**
+     * Quem escreveu a nota: toda nota sai do escritório (usuário) ou da carteira
+     * (cliente), nunca dos dois. A carteira vem primeiro porque, no atendimento, o
+     * que o escritório lê é o nome do cliente, não o da conta que digitou. A ficha
+     * usa isto em vez de escolher a relação na tela, para autoria e marca de interno
+     * não divergirem.
+     */
+    public function autor(): string
+    {
+        return $this->client?->name ?? $this->user?->name ?? 'Sem autoria registrada';
+    }
 }

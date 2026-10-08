@@ -12,7 +12,7 @@
     :trilha="['Cadastros' => route('clients.index'), 'Clientes' => route('clients.index'), ($editando ? 'Editar' : 'Novo') => null]"
 >
     <x-ui.card>
-        <form method="POST" :action="$editando ? route('clients.update', $cliente) : route('clients.store')"
+        <form method="POST" action="{{ $editando ? route('clients.update', $cliente) : route('clients.store') }}"
             data-nf-guard novalidate>
             @if ($editando)
                 @method('PUT')

@@ -214,7 +214,7 @@
                             ? 'Esta ordem já foi concluída ou cancelada: o que passou no campo é histórico e não se reescreve.'
                             : 'Ir para aberta ou cancelada pede a permissão de aprovação, que esta conta não tem.' }}" />
                 @else
-                    <form method="POST" :action="route('orders.status', $ordem)" data-nf-guard novalidate>
+                    <form method="POST" action="{{ route('orders.status', $ordem) }}" data-nf-guard novalidate>
                         @method('PUT')
 
                         <x-ui.select label="Próximo estado" name="estado" :opcoes="$proximosEstados" required
@@ -367,9 +367,9 @@
                     @endif
 
                     <form method="POST"
-                        :action="$itemEmEdicao
+                        action="{{ $itemEmEdicao
                             ? route('orders.items.update', [$ordem, $itemEmEdicao])
-                            : route('orders.items.store', $ordem)" data-nf-guard novalidate>
+                            : route('orders.items.store', $ordem) }}" data-nf-guard novalidate>
                         @if ($itemEmEdicao)
                             @method('PUT')
                         @endif
@@ -480,7 +480,7 @@
                     @else
                         <div class="nf-form-secao">
                             <h2>Comissionar técnico</h2>
-                            <form method="POST" :action="route('orders.assignments.store', $ordem)" data-nf-guard novalidate>
+                            <form method="POST" action="{{ route('orders.assignments.store', $ordem) }}" data-nf-guard novalidate>
                                 <div class="nf-form-grade">
                                     <x-ui.select label="Técnico" name="tecnico_id" :opcoes="$tecnicos"
                                         :placeholder="$ordem->assignments->isEmpty() ? 'Escolha quem entra no quadro' : 'Escolha quem volta ao quadro'"

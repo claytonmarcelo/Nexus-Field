@@ -16,6 +16,8 @@ use App\Http\Controllers\Technicians\SpecialtyController;
 use App\Http\Controllers\Technicians\TeamController;
 use App\Http\Controllers\Technicians\TechnicianAddressController;
 use App\Http\Controllers\Technicians\TechnicianController;
+use App\Http\Controllers\Tickets\TicketCommentController;
+use App\Http\Controllers\Tickets\TicketController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -76,6 +78,44 @@ Route::middleware(['auth', 'company'])->group(function () {
 
         Route::get('{ordem}', [OrderController::class, 'show'])
             ->middleware('permission:orders.view')
+            ->name('show');
+    });
+
+    Route::prefix('chamados')->name('tickets.')->group(function () {
+        // Literal antes de parametrizado: `chamados/novo` é a tela de abertura, não
+        // a ficha do chamado de código "novo".
+        Route::middleware('permission:tickets.view')->group(function () {
+            Route::get('/', [TicketController::class, 'index'])->name('index');
+
+            Route::get('exportar', [TicketController::class, 'export'])
+                ->middleware('permission:tickets.export')
+                ->name('export');
+
+            // Responder é continuar a conversa que se tem o direito de ler: todos os
+            // papéis do módulo podem, inclusive a conta de cliente.
+            Route::post('{chamado}/notas', [TicketCommentController::class, 'store'])->name('comments.store');
+        });
+
+        Route::middleware('permission:tickets.create')->group(function () {
+            Route::get('novo', [TicketController::class, 'create'])->name('create');
+            Route::post('/', [TicketController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:tickets.update')->group(function () {
+            Route::get('{chamado}/editar', [TicketController::class, 'edit'])->name('edit');
+            Route::put('{chamado}', [TicketController::class, 'update'])->name('update');
+        });
+
+        // `tickets.execute` é quem conduz a máquina de estados do chamado: escritório e
+        // campo. A conta de cliente lê a carteira e responde, mas não move estado — por
+        // isso a rota não aceita `tickets.view`. Dentro do controlador, resolver e fechar
+        // ainda pedem `tickets.close`, que é decisão de encerramento.
+        Route::put('{chamado}/estado', [TicketController::class, 'mudarStatus'])
+            ->middleware('permission:tickets.execute')
+            ->name('status');
+
+        Route::get('{chamado}', [TicketController::class, 'show'])
+            ->middleware('permission:tickets.view')
             ->name('show');
     });
 

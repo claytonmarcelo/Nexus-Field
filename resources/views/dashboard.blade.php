@@ -63,7 +63,9 @@
                                 <tbody>
                                     @foreach ($painel['ordens']['proximas'] as $ordem)
                                         <tr>
-                                            <td class="nf-mono">{{ $ordem->number }}</td>
+                                            <td class="nf-mono">
+                                                <a class="fw-semibold" href="{{ route('orders.show', $ordem) }}">{{ $ordem->number }}</a>
+                                            </td>
                                             <td>{{ $ordem->client->name }}</td>
                                             <td class="nf-mono">
                                                 {{ Formatters::dateTime($ordem->scheduled_starts_at) }}
@@ -191,7 +193,9 @@
                                 <tbody>
                                     @foreach ($painel['chamados']['fila'] as $chamado)
                                         <tr>
-                                            <td class="nf-mono">{{ $chamado->protocol }}</td>
+                                            <td class="nf-mono">
+                                                <a class="fw-semibold" href="{{ route('tickets.show', $chamado) }}">{{ $chamado->protocol }}</a>
+                                            </td>
                                             <td>{{ $chamado->subject }}</td>
                                             <td>{{ $chamado->client->name }}</td>
                                             <td>

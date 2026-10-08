@@ -169,6 +169,15 @@ class DashboardMetrics
         return ServiceOrder::query()->visiveisPara($this->usuario);
     }
 
+    /**
+     * Mesma regra de alcance das ordens, aplicada aos chamados: o KPI "abertos" de
+     * um técnico é a fila dele, não a fila da empresa.
+     */
+    private function chamadosDoUsuario(): Builder
+    {
+        return Ticket::query()->visiveisPara($this->usuario);
+    }
+
     /** @return array{kpis: array<int, array<string, mixed>>, dados: array<string, mixed>}|[] */
     private function agenda(): array
     {
@@ -210,16 +219,16 @@ class DashboardMetrics
             return [];
         }
 
-        $abertos = Ticket::query()->open()->count();
-        $criticos = Ticket::query()->open()->urgent()->count();
+        $abertos = $this->chamadosDoUsuario()->open()->count();
+        $criticos = $this->chamadosDoUsuario()->open()->urgent()->count();
 
-        $resolvidos = Ticket::query()
+        $resolvidos = $this->chamadosDoUsuario()
             ->resolvedBetween(now()->subDays(7), now())
             ->count();
 
         // Média aritmética das resoluções da janela; sem resolução no período o
         // painel diz "sem resolução registrada" em vez de mostrar zero.
-        $tempoMedio = Ticket::query()
+        $tempoMedio = $this->chamadosDoUsuario()
             ->whereNotNull('resolved_at')
             ->whereBetween('resolved_at', [now()->subDays(30), now()])
             ->avg(DB::raw('TIMESTAMPDIFF(HOUR, opened_at, resolved_at)'));
@@ -237,7 +246,7 @@ class DashboardMetrics
             'dados' => [
                 'resolvidos' => $resolvidos,
                 'tempo_medio' => $tempoMedio === null ? null : (float) $tempoMedio,
-                'fila' => Ticket::query()
+                'fila' => $this->chamadosDoUsuario()
                     ->with(['client'])
                     ->open()
                     ->orderByRaw("field(priority, 'urgent', 'high', 'normal', 'low')")

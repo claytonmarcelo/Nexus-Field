@@ -22,10 +22,10 @@ use App\Models\StockMovement;
 use App\Models\Team;
 use App\Models\Technician;
 use App\Models\Ticket;
-use App\Models\TicketComment;
+use App\Models\TicketStatusHistory;
 use App\Models\User;
-use App\Support\PermissionCatalog;
 use App\Support\Roles;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -797,6 +797,59 @@ class DemoSeeder extends Seeder
                 'body' => 'O equipamento voltou a falhar no segundo turno, por isso abri o chamado.',
                 'is_internal' => false,
             ]);
+
+            $this->trilhaDoChamado($chamado, $this->passosDoChamado($status, $abertoEm, $resolvidoEm, $fechadoEm));
+        }
+    }
+
+    /**
+     * Os passos que o fluxo do chamado permite até o estado da linha, cada um com o
+     * carimbo de coluna correspondente. É a mesma trilha que a ficha desenha: sem
+     * ela, o dado de exemplo mostraria um estado que ninguém moveu.
+     *
+     * @return array<int, array{0: string, 1: Carbon, 2: string|null}>
+     */
+    private function passosDoChamado(string $status, $abertoEm, $resolvidoEm, $fechadoEm): array
+    {
+        $passos = [['open', $abertoEm, 'Chamado aberto na central de atendimento.']];
+
+        if ($status !== 'open') {
+            $passos[] = ['in_progress', $abertoEm->copy()->addHour(), 'Técnico designado e contato feito com o cliente.'];
+        }
+
+        if ($status === 'waiting') {
+            $passos[] = ['waiting', $abertoEm->copy()->addHours(6), 'Aguardando a peça do fornecedor.'];
+        }
+
+        if ($resolvidoEm !== null) {
+            $passos[] = ['resolved', $resolvidoEm, 'Ajuste e teste feitos no local; cliente confirmou o funcionamento.'];
+        }
+
+        if ($status === 'closed') {
+            $passos[] = ['closed', $fechadoEm ?? $resolvidoEm, 'Cliente confirmou o serviço e o protocolo foi encerrado.'];
+        }
+
+        return $passos;
+    }
+
+    /**
+     * @param  array<int, array{0: string, 1: Carbon, 2: string|null}>  $passos
+     */
+    private function trilhaDoChamado(Ticket $chamado, array $passos): void
+    {
+        $anterior = null;
+
+        foreach ($passos as [$destino, $quando, $nota]) {
+            TicketStatusHistory::query()->create([
+                'ticket_id' => $chamado->id,
+                'user_id' => $this->usuarios['supervisor']->id,
+                'from_status' => $anterior,
+                'to_status' => $destino,
+                'note' => $nota,
+                'created_at' => $quando,
+            ]);
+
+            $anterior = $destino;
         }
     }
 

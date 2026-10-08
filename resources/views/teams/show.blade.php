@@ -109,7 +109,7 @@
                     @if ($entradas !== [])
                         <div class="nf-form-secao">
                             <h2>Adicionar ao quadro</h2>
-                            <form method="POST" :action="route('teams.members.store', $equipe)" data-nf-guard novalidate>
+                            <form method="POST" action="{{ route('teams.members.store', $equipe) }}" data-nf-guard novalidate>
                                 <div class="nf-form-grade">
                                     <x-ui.select label="Técnico" name="tecnico_id" :opcoes="$entradas"
                                         placeholder="Escolha quem entra" required />

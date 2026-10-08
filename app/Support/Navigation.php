@@ -34,6 +34,12 @@ class Navigation
                         'permission' => 'orders.view',
                         'icon' => 'fa-solid fa-clipboard-list',
                     ],
+                    [
+                        'label' => 'Chamados',
+                        'route' => 'tickets.index',
+                        'permission' => 'tickets.view',
+                        'icon' => 'fa-solid fa-headset',
+                    ],
                 ],
             ],
             [

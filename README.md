@@ -18,13 +18,13 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-133%20testes%20%2F%201201%20asser%C3%A7%C3%B5es-brightgreen" alt="133 testes, 1201 asserções">
+  <img src="https://img.shields.io/badge/testes-150%20testes%20%2F%201386%20asser%C3%A7%C3%B5es-brightgreen" alt="150 testes, 1386 asserções">
 </p>
 
 <p align="center">
-  <sub>Estágio atual: fundação completa (fases 1 a 8) e os cadastros e o catálogo no ar
+  <sub>Estágio atual: fundação completa (fases 1 a 8), os cadastros e o catálogo no ar
   (fase 9 — clientes, fase 10 — técnicos, equipes e especialidades, fase 11 — serviços, produtos e
-  categorias). A tabela
+  categorias) e a operação aberta (fase 12 — ordens de serviço, fase 13 — chamados). A tabela
   <a href="#módulos">Módulos</a> diz, um por um, o que já está no ar e
   o que ainda é só schema.</sub>
 </p>
@@ -180,6 +180,25 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   carteira dela (por `users.client_id`), e só o escritório responde pela empresa inteira
 - Ordem encerrada é conta fechada: linha, quadro e estado não aceitam mudança, e a única exclusão permitida é
   a do rascunho que nunca virou trabalho
+- **Chamados**: protocolo `CH-2026-0007` gerado no banco pela sequência do ano da empresa — a mesma regra
+  da ordem, com o `max()` dentro de transação para dois chamados simultâneos não colidirem
+- A prioridade não é enfeite: ela define o prazo em horas (`PRAZO_HORAS`), o painel calcula
+  `prazo_em` na gravação, e "atrasados" é o prazo vencido sobre um estado que ainda não encerrou —
+  nada de coluna de SLA digitada
+- O relato e a resposta entram por Summernote e viram HTML no banco. `TextoSeguro` poda por lista fechada:
+  tag e atributo que não estão na lista somem, `javascript:`/`#`/relativo não são link aceito, `<script>`,
+  `<img>`, `<iframe>` e companhia caem com o que têm dentro, e link que sobrevive ganha `noopener nofollow`
+- Estado só anda pelo botão da ficha, que escreve origem, destino, autor, hora e nota em
+  `ticket_status_history`; o fluxo (`FLUXO`) é o que vale, resolver sem dizer o que foi feito é recusado,
+  e fechar um resolvido dispensa a frase porque a resolução já está na ficha
+- Conduzir o estado é `tickets.execute`; resolver e fechar pedem ainda `tickets.close`. A conta de cliente
+  lê a própria carteira e responde na conversa, mas não move estado nenhum — o servidor recusa antes da tela
+- Nota interna existe para o escritório pensar sem vazar: `is_internal` só é aceito de quem tem
+  `tickets.update`, e a consulta da ficha de quem não tem simplesmente deixa essas notas fora do resultado
+- Reabrir limpa o carimbo de resolução, o prazo volta a correr, e o que estava congelado (pendência do
+  chamado, contagem do painel) volta a contar
+- exportar chamado é `tickets.export` e entrega o mesmo CSV da listagem, com a descrição reduzida ao texto
+  que se lê — o rótulo do editor não viaja para a planilha
 
 ### Interface
 
@@ -214,7 +233,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vêm uma fase por vez.
 | Técnicos, equipes e especialidades | ✅ | ✅ | ✅ |
 | Catálogo de serviços e produtos | ✅ | ✅ | ✅ |
 | Ordens de serviço | ✅ | ✅ | ✅ |
-| Chamados | ✅ | ✅ | 🚧 fase 13 |
+| Chamados | ✅ | ✅ | ✅ |
 | Agenda e compromissos | ✅ | ✅ | 🚧 fase 14 |
 | Check-in / check-out com geolocalização | ✅ | ✅ | 🚧 fase 15 |
 | Estoque e movimentações | ✅ | ✅ | 🚧 fase 16 |
@@ -250,7 +269,7 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 | jQuery | 3.7 | Base UMD que Toastr e Summernote esperam |
 | SweetAlert2 | 11 | Confirmação, informação e entrada de texto no lugar dos diálogos nativos |
 | Toastr | 2.1 | Avisos efêmeros de canto, com HTML escapado |
-| Summernote | 0.9 | Editor de texto rico — já declarado no bundle, entra em uso com o módulo de chamados |
+| Summernote | 0.9 | Editor de texto rico do relato do chamado e da resposta da conversa |
 | Vite | 8 | Build e dev server |
 | Fontaine | 0.8 | Métricas de fonte para evitar troca de layout |
 
@@ -264,11 +283,12 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 | `StatusCatalog` / `Formatters` | Estados e formatações (dinheiro, decimal, data, hora e duração) num único lugar |
 | `ListFilters` | Busca, filtro por coluna, ordenação e por-página lidos do query string |
 | `Export` | CSV com BOM e separador `;`, escrito a partir da mesma consulta da tela |
+| `TextoSeguro` | Lista fechada de tags, atributos e esquemas de link: o HTML do editor sai seguro antes de virar byte no banco |
 | `Auditor` / `Auditable` | Trilha de auditoria gravada nas mudanças de estado, sem mudar tela nenhuma |
 | `TemEnderecos` | Endereços polimórficos e o endereço principal de um cadastro |
 | `EmEdicao` / `CuidaDeEnderecos` | Edição em linha na própria ficha e o ciclo de vida do endereço aninhado |
 | `Navigation` | Menu montado por permissão e rota existente |
-| `Nf` (`theme`, `toast`, `confirm`, `forms`, `flash`, `passwords`) | Únicos caminhos permitidos para tema, aviso e diálogo na tela |
+| `Nf` (`theme`, `toast`, `confirm`, `forms`, `flash`, `passwords`, `editor`) | Únicos caminhos permitidos para tema, aviso, diálogo e texto rico na tela |
 
 ---
 
@@ -278,17 +298,19 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 nexusfield/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians, Catalog, Orders
-│   │   │                      e os Concerns compartilhados
+│   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians, Catalog, Orders,
+│   │   │                      Tickets e os Concerns compartilhados
 │   │   └── Middleware/      → ResolveCompany (tenancy) e EnsurePermission (autorização)
 │   ├── Models/              → Company, Plan, User, Role, Permission, Client, Contact, Address,
 │   │                          Technician, Team, Specialty, Service, ServiceCategory, Product,
-│   │                          ServiceOrder, ServiceOrderItem, ServiceOrderAssignment…
-│   └── Support/             → PermissionCatalog, Navigation, StatusCatalog, Formatters, TenantContext
+│   │                          ServiceOrder, ServiceOrderItem, ServiceOrderAssignment, Ticket,
+│   │                          TicketComment, TicketStatusHistory…
+│   └── Support/             → PermissionCatalog, Navigation, StatusCatalog, Formatters,
+│                              TenantContext, TextoSeguro
 ├── bootstrap/               → inicialização e registro de rotas
 ├── config/                  → banco, sessão, filesystem, temas
 ├── database/
-│   ├── migrations/          → 18 migrations do schema nexusfield
+│   ├── migrations/          → 19 migrations do schema nexusfield
 │   └── seeders/             → DatabaseSeeder (plano, empresa, RBAC, conta raiz) e DemoSeeder
 ├── docs/
 │   ├── branding/            → o medalhão e a arte completa da marca oficial
@@ -297,16 +319,16 @@ nexusfield/
 ├── public/                  → index.php, favicon, img/ com a marca e assets compilados
 ├── resources/
 │   ├── css/nexusfield/      → tokens.css, base.css, components.css, public.css, listings.css
-│   ├── js/nexusfield/       → theme, notify, dialog, confirm, forms, flash, passwords, listas, jquery
+│   ├── js/nexusfield/       → theme, notify, dialog, confirm, forms, flash, passwords, listas, editor, jquery
 │   └── views/               → Blade: componentes ui/ e layouts, páginas públicas, de entrada,
 │                              de clientes, de técnicos, de equipes, de especialidades, de serviços,
-│                              de produtos, de categorias e de ordens de serviço
+│                              de produtos, de categorias, de ordens de serviço e de chamados
 ├── routes/                  → web.php
 ├── storage/                 → logs, cache e uploads (fora da raiz pública)
 ├── tests/
 │   ├── Feature/             → entrada e recuperação, autorização por papel, tenancy, layout
 │   │                          autenticado, painel, demonstração, conta raiz, clientes, técnicos,
-│   │                          catálogo e ordens de serviço
+│   │                          catálogo, ordens de serviço e chamados
 │   └── Unit/                → paleta dos dois temas, contrato das capturas, iniciais do usuário
 └── CHANGELOG.md             → histórico por fase
 ```
@@ -353,7 +375,7 @@ A regra de dependência é uma só: tela nenhuma decide autorização. O middlew
 **MySQL 8+**, schema `nexusfield`, engine InnoDB obrigatória (chave estrangeira e transação), charset
 `utf8mb4` / `utf8mb4_unicode_ci`.
 
-O schema é versionado em 18 migrations (`database/migrations/`) e cobre o domínio inteiro: planos e
+O schema é versionado em 19 migrations (`database/migrations/`) e cobre o domínio inteiro: planos e
 empresas, usuários e RBAC, clientes e endereços, técnicos e equipes, catálogo de serviços e produtos,
 ordens de serviço, estoque, check-in, chamados, agenda, financeiro, configurações, notificações,
 auditoria e anexos.
@@ -482,6 +504,7 @@ com as chaves nomeadas e nenhuma credencial preenchida.
 | CSRF | Habilitado em todo formulário POST |
 | Força bruta | 5 tentativas por e-mail e IP, mais throttle de 10 requests/min na rota de entrada |
 | Autorização | `EnsurePermission` no servidor, por permissão do catálogo; a tela não decide nada |
+| Texto rico | HTML de editor passa por `TextoSeguro` (lista fechada de tags, atributos e esquemas de URL) antes do banco; sem isso seria XSS estocado |
 | Tenancy | `CompanyScope` global; leitura fora da empresa exige `anyCompany()` explícito |
 | Conta raiz | `is_root` não é atribuível por request e a conta raiz resiste a exclusão, desativação, remanejamento e a perder a própria bandeira |
 | Diálogos | `alert()`, `confirm()` e `prompt()` nativos vetados e cobertos por teste; SweetAlert2 e Toastr escapam HTML |
@@ -503,7 +526,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **133 testes / 1201 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **150 testes / 1386 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com
 token válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato
 do seletor de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG
@@ -514,7 +537,10 @@ central somado das movimentações, a unidade fora do catálogo recusada e a exc
 existe histórico — e o de ordens de serviço: sequência anual por empresa, estado que só anda pelo fluxo
 com carimbo e aprovação, linha que congela o preço, total somado no SQL, quadro de comissão com
 passagem preservada, alcance do técnico e da conta de cliente no painel e na listagem, e o CSV sendo a
-mesma consulta da tela.
+mesma consulta da tela — e o de chamados: protocolo que não repete o da empresa ao lado, prioridade que
+calcula o prazo, atraso medido pelo banco, nota obrigatória para resolver, passo recusado quando o fluxo
+não existe, nota interna que não aparece para quem não pode ler, HTML malicioso que chega inteiro na tela
+e volta limpo do banco, e o alcance do técnico e da conta de cliente na ficha e na conversa.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -564,10 +590,7 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 - [x] **Fase 10** — Técnicos, equipes e especialidades: escala, quadro com histórico de passagem e base de trabalho
 - [x] **Fase 11** — Catálogo de serviços, produtos e categorias: preço, duração, SKU e saldo lido das movimentações
 - [x] **Fase 12** — Ordens de serviço: sequência anual por empresa, fluxo de estado com carimbo, linhas que congelam o preço, quadro de comissão e total somado no SQL
-
-### Em curso
-
-- [ ] Fase 13 — Chamados
+- [x] **Fase 13** — Chamados: protocolo por empresa e ano, prioridade que calcula o prazo, conversa com nota interna, estado conduzido por `tickets.execute` e HTML do editor limpo no servidor
 
 ### Planejado
 

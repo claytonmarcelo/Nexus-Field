@@ -1500,3 +1500,129 @@
         gap: .2rem;
     }
 }
+
+/* ------------------------------------------------------------------ *
+ * Texto rico — o que sai do editor e volta para a tela
+ *
+ * O HTML já passou pelo allowlist de App\Support\TextoSeguro, então aqui
+ * só se veste o que ele permite existir: parágrafo, lista, citação, código
+ * e link. Nada de `!important`: o que não estiver na lista não chega aqui.
+ * ------------------------------------------------------------------ */
+.nf-rico {
+    color: var(--nf-text);
+    line-height: 1.65;
+    overflow-wrap: break-word;
+}
+
+.nf-rico > :first-child {
+    margin-top: 0;
+}
+
+.nf-rico > :last-child {
+    margin-bottom: 0;
+}
+
+.nf-rico p,
+.nf-rico ul,
+.nf-rico ol,
+.nf-rico blockquote {
+    margin-bottom: .75rem;
+}
+
+.nf-rico ul,
+.nf-rico ol {
+    padding-left: 1.35rem;
+}
+
+.nf-rico li + li {
+    margin-top: .2rem;
+}
+
+.nf-rico blockquote {
+    margin: 0 0 .75rem;
+    padding: .35rem 0 .35rem .9rem;
+    border-left: 3px solid var(--nf-primary);
+    color: var(--nf-text-muted);
+}
+
+.nf-rico code,
+.nf-rico pre {
+    font-family: var(--font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: .84em;
+}
+
+.nf-rico pre {
+    padding: .7rem .85rem;
+    margin-bottom: .75rem;
+    overflow-x: auto;
+    border-radius: var(--bs-border-radius);
+    background: var(--nf-surface);
+}
+
+.nf-rico a {
+    color: var(--nf-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.nf-rico a:hover {
+    color: var(--nf-primary-hover);
+}
+
+/* ------------------------------------------------------------------ *
+ * Summernote — editor dos campos de texto longo
+ *
+ * A peça vem com cores próprias do Bootstrap claro; no tema escuro ela
+ * ficaria uma mancha branca no meio do formulário, então as superfícies
+ * trocam pelos tokens do tema. O `!important` é o único aqui, e tem motivo:
+ * a folha do Summernote usa `!important` no fundo da área de edição.
+ * ------------------------------------------------------------------ */
+.nf-editor-campo .note-editor {
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+}
+
+.nf-editor-campo .note-editor .note-toolbar {
+    background: var(--nf-surface);
+    border-bottom: 1px solid var(--nf-line);
+    padding: .4rem .5rem;
+}
+
+.nf-editor-campo .note-editor .note-btn {
+    border-color: var(--bs-border-color);
+    background: var(--nf-elevated);
+    color: var(--nf-text);
+}
+
+.nf-editor-campo .note-editor .note-btn:hover {
+    background: var(--nf-surface);
+    color: var(--nf-text);
+}
+
+.nf-editor-campo .note-editor .note-editing-area .note-editable {
+    background: var(--nf-elevated) !important;
+    color: var(--nf-text);
+}
+
+.nf-editor-campo .note-editor .note-statusbar,
+.nf-editor-campo .note-editor .note-resizebar {
+    background: var(--nf-surface);
+    border-top: 1px solid var(--nf-line);
+}
+
+.nf-editor-campo .note-editor.note-air-editor,
+.nf-editor-campo .note-editor .note-placeholder {
+    color: var(--nf-text-muted);
+}
+
+[data-bs-theme="dark"] .note-modal-content,
+[data-bs-theme="dark"] .note-popover .note-popover-content .note-heading,
+[data-bs-theme="dark"] .note-popover .note-popover-content .note-control-selection {
+    background: var(--nf-elevated);
+    color: var(--nf-text);
+}
+
+[data-bs-theme="dark"] .note-modal-content .modal-header,
+[data-bs-theme="dark"] .note-modal-content .modal-footer {
+    border-color: var(--nf-line);
+}

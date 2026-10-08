@@ -79,9 +79,9 @@
             <div class="col-12 col-xl-5">
                 <x-ui.card :title="$emEdicao ? 'Editar '.$emEdicao->name : 'Nova especialidade'"
                     subtitle="O nome é único por empresa e o slug nasce dele.">
-                    <form method="POST" :action="$emEdicao
+                    <form method="POST" action="{{ $emEdicao
                         ? route('specialties.update', $emEdicao)
-                        : route('specialties.store')" data-nf-guard novalidate>
+                        : route('specialties.store') }}" data-nf-guard novalidate>
                         @if ($emEdicao)
                             @method('PUT')
                         @endif

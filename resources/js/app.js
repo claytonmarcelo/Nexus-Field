@@ -19,6 +19,7 @@ import * as flash from './nexusfield/flash';
 import * as passwords from './nexusfield/passwords';
 import * as confirmacao from './nexusfield/confirm';
 import * as listas from './nexusfield/listas';
+import * as editor from './nexusfield/editor';
 
 window.Nf = {
     theme,
@@ -34,3 +35,4 @@ flash.init();
 passwords.init();
 confirmacao.init();
 listas.init();
+editor.init();
