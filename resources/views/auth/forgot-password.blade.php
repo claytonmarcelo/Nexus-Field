@@ -16,7 +16,7 @@
             placeholder="seu.email@empresa.com.br"
         />
 
-        <x-ui.button type="submit" variant="primary" size="lg" wide icon="fa-solid fa-paper-plane">
+        <x-ui.button type="submit" variant="primary" size="lg" wide icon="fa-solid fa-envelope">
             Enviar link de redefinição
         </x-ui.button>
     </form>

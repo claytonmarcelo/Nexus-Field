@@ -22,7 +22,13 @@
     margin-inline: auto;
 }
 
+/*
+ * Uma só altura para a barra de topo: 52px em vez dos ~64 do AdminLTE. O conteúdo
+ * é o que precisa de espaço, não a moldura.
+ */
 .app-header {
+    min-height: var(--nf-header-height);
+    padding-block: .25rem;
     background-color: color-mix(in srgb, var(--nf-surface) 88%, transparent);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--nf-line);
@@ -33,7 +39,9 @@
     display: inline-flex;
     align-items: center;
     gap: .5rem;
-    padding-inline: .75rem;
+    min-height: 2.15rem;
+    padding-block: .25rem;
+    padding-inline: .7rem;
     color: var(--nf-text-muted);
     background: none;
     border: 0;
@@ -48,6 +56,31 @@
 .nf-nav-item-toggle {
     display: flex;
     align-items: center;
+}
+
+/* O usuário vira uma pílula clicável: o hover explica que o menu é dali. */
+.nf-nav-user {
+    gap: .55rem;
+    border-radius: 999px;
+    padding-block: .18rem;
+    padding-inline: .55rem .5rem;
+    border: 1px solid transparent;
+    transition: background-color var(--nf-duration) var(--nf-ease),
+        border-color var(--nf-duration) var(--nf-ease),
+        color var(--nf-duration) var(--nf-ease);
+}
+
+.nf-nav-user:hover,
+.nf-nav-user:focus-visible,
+.nf-nav-user[aria-expanded="true"] {
+    background-color: var(--nf-primary-soft);
+    border-color: color-mix(in srgb, var(--nf-primary) 28%, transparent);
+    color: var(--nf-primary);
+}
+
+.nf-nav-user .fa-angle-down {
+    font-size: .7rem;
+    color: var(--nf-text-faint);
 }
 
 .nf-nav-user-name {
@@ -111,6 +144,16 @@
     letter-spacing: .01em;
 }
 
+/*
+ * A faixa da marca fecha na mesma linha do navbar. O AdminLTE entrega 3.5rem com
+ * `box-sizing: border-box`, então aqui só se troca a altura e se reduz o forro
+ * vertical — o `overflow: hidden` do template cortaria a marca de outra forma.
+ */
+.app-sidebar .sidebar-brand {
+    height: var(--nf-header-height);
+    padding-block: .25rem;
+}
+
 .app-sidebar {
     background:
         radial-gradient(120% 60% at 50% 0%, rgba(63, 158, 140, .16) 0%, transparent 62%),
@@ -133,6 +176,7 @@
 .app-content-header {
     background-color: transparent;
     border-bottom: 1px solid var(--nf-line);
+    padding-block: .55rem;
 }
 
 .nf-content-header-row {
@@ -155,12 +199,55 @@
 
 .app-footer {
     border-top: 1px solid var(--nf-line);
+    background-color: color-mix(in srgb, var(--nf-surface) 60%, transparent);
     color: var(--nf-text-muted);
+    padding-block: .55rem;
+}
+
+.nf-footer-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .3rem 1rem;
+}
+
+.nf-footer-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .55rem;
+    font-size: .8rem;
 }
 
 .nf-footer-note {
-    font-size: .82rem;
+    font-size: .78rem;
     color: var(--nf-text-muted);
+}
+
+/* Selo técnico: curto, borda arredondada, cor de marca quando é fato da sessão. */
+.nf-footer-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    border: 1px solid var(--nf-line);
+    border-radius: 999px;
+    background-color: var(--nf-elevated);
+    padding: .12rem .6rem;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .015em;
+    color: var(--nf-text-muted);
+    white-space: nowrap;
+}
+
+.nf-footer-chip-tenant {
+    border-color: color-mix(in srgb, var(--nf-primary) 32%, var(--nf-line));
+    background-color: var(--nf-primary-soft);
+    color: var(--nf-primary);
+    max-width: 22rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ------------------------------------------------------------------ *
@@ -170,20 +257,34 @@
     display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: .4em;
-    font-size: .85rem;
+    gap: .55em;
+    font-size: .8rem;
     color: var(--nf-text-muted);
 }
 
 .nf-signature-brand {
     font-family: var(--nf-font-display);
     font-weight: 600;
-    letter-spacing: .02em;
+    letter-spacing: .04em;
+    color: var(--nf-primary);
+}
+
+.nf-signature-credit {
+    letter-spacing: .01em;
     color: var(--nf-text);
 }
 
-.nf-signature-dot {
+.nf-signature-year {
+    font-size: .74rem;
     color: var(--nf-text-faint);
+}
+
+/* Fio vertical no lugar do "·": separa sem virar pontuação de texto corrido. */
+.nf-signature-sep {
+    display: inline-block;
+    width: 1px;
+    height: .9em;
+    background-color: var(--nf-line-strong);
 }
 
 /* ------------------------------------------------------------------ *
@@ -385,6 +486,10 @@
  * Botões
  * ------------------------------------------------------------------ */
 .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
     font-weight: 600;
     letter-spacing: .005em;
     padding-block: .5rem;
@@ -394,6 +499,14 @@
         color var(--nf-duration) var(--nf-ease),
         box-shadow var(--nf-duration) var(--nf-ease),
         transform var(--nf-duration) var(--nf-ease);
+}
+
+/* O ícone alinha com a caixa de texto do rótulo, não com a base do botão. */
+.btn > i {
+    display: inline-flex;
+    align-items: center;
+    font-size: .92em;
+    line-height: 1;
 }
 
 .btn:active {
@@ -553,6 +666,64 @@
     background-color: var(--nf-surface);
     border-color: var(--nf-line-strong);
     color: var(--nf-text-muted);
+}
+
+/* ------------------------------------------------------------------ *
+ * Campo de senha com mostrar/ocultar
+ *
+ * O botão mora dentro do invólucro e o invólucro recebe `is-invalid` junto com o
+ * input: é assim que a mensagem de erro do Bootstrap continua sendo irmã do
+ * campo sem reescrever a regra de display dela.
+ * ------------------------------------------------------------------ */
+.nf-password {
+    position: relative;
+}
+
+.nf-password .form-control {
+    padding-inline-end: 2.9rem;
+}
+
+.nf-password-toggle {
+    position: absolute;
+    inset-block-start: .3rem;
+    inset-inline-end: .35rem;
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid transparent;
+    border-radius: var(--bs-border-radius-sm);
+    background: none;
+    color: var(--nf-text-faint);
+    cursor: pointer;
+    transition: color var(--nf-duration) var(--nf-ease),
+        background-color var(--nf-duration) var(--nf-ease),
+        border-color var(--nf-duration) var(--nf-ease);
+}
+
+.nf-password-toggle:hover,
+.nf-password-toggle:focus-visible {
+    color: var(--nf-primary);
+    background-color: var(--nf-primary-soft);
+    border-color: color-mix(in srgb, var(--nf-primary) 26%, transparent);
+}
+
+.nf-password-toggle i {
+    grid-area: 1 / 1;
+    font-size: .85rem;
+    line-height: 1;
+}
+
+.nf-password-toggle .nf-password-icon-hide {
+    display: none;
+}
+
+.nf-password-toggle[aria-pressed="true"] .nf-password-icon-show {
+    display: none;
+}
+
+.nf-password-toggle[aria-pressed="true"] .nf-password-icon-hide {
+    display: inline-block;
 }
 
 .form-check-input {
@@ -1023,31 +1194,79 @@
 }
 
 /* ------------------------------------------------------------------ *
- * Chave de tema
+ * Chave de tema — pílula com knob deslizante
+ *
+ * O estado é lido do [data-bs-theme] do <html>, que o script de pré-pintura já
+ * decidiu: a pílula nasce na posição certa, sem depender do JavaScript carregar.
  * ------------------------------------------------------------------ */
 .nf-theme-toggle {
-    display: inline-grid;
-    place-items: center;
-    width: 2.2rem;
-    height: 2.2rem;
-    border-radius: 50%;
-    border: 1px solid var(--nf-line);
-    background: var(--nf-elevated);
-    color: var(--nf-text-muted);
-    transition: background-color var(--nf-duration) var(--nf-ease),
-        color var(--nf-duration) var(--nf-ease),
-        border-color var(--nf-duration) var(--nf-ease);
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
 }
 
-.nf-theme-toggle:hover {
-    color: var(--nf-accent);
-    border-color: var(--nf-line-strong);
-    background: var(--nf-surface);
+.nf-theme-toggle-track {
+    position: relative;
+    display: block;
+    width: 3.35rem;
+    height: 1.7rem;
+    border-radius: 999px;
+    border: 1px solid var(--nf-line-strong);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--nf-primary) 8%, transparent), transparent),
+        var(--nf-elevated);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .06);
+    transition: border-color var(--nf-duration) var(--nf-ease),
+        background-color var(--nf-duration) var(--nf-ease);
+}
+
+.nf-theme-toggle-knob {
+    position: absolute;
+    inset-block: 3px;
+    inset-inline-start: 3px;
+    inline-size: 1.45rem;
+    block-size: 1.45rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--nf-gradient-brand);
+    color: #fdfbf7;
+    box-shadow: var(--nf-shadow-sm);
+    transition: transform 260ms var(--nf-ease);
+}
+
+.nf-theme-toggle-knob i {
+    grid-area: 1 / 1;
+    font-size: .68rem;
+    line-height: 1;
+}
+
+.nf-theme-toggle:hover .nf-theme-toggle-track {
+    border-color: var(--nf-primary);
+}
+
+.nf-theme-toggle:focus-visible {
+    outline: 2px solid var(--nf-primary);
+    outline-offset: 2px;
+    border-radius: 999px;
+}
+
+[data-bs-theme="dark"] .nf-theme-toggle-knob {
+    transform: translateX(1.55rem);
 }
 
 [data-bs-theme="light"] .nf-theme-toggle .nf-icon-moon,
 [data-bs-theme="dark"] .nf-theme-toggle .nf-icon-sun {
     display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nf-theme-toggle-knob {
+        transition: none;
+    }
 }
 
 /* ------------------------------------------------------------------ *

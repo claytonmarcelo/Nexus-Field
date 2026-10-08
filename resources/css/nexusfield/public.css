@@ -18,27 +18,44 @@
     backdrop-filter: blur(10px);
 }
 
+/* Mesma altura do topo autenticado: `--nf-header-height` é a fonte única. */
 .nf-public-header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: .75rem;
-    min-height: 64px;
-    padding-block: .625rem;
+    min-height: var(--nf-header-height);
+    padding-block: .35rem;
+}
+
+.nf-public-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
 }
 
 .nf-brand {
     display: inline-flex;
     align-items: center;
-    gap: .625rem;
+    gap: .6rem;
     color: var(--nf-text);
     text-decoration: none;
 }
 
+.nf-brand .nf-wordmark {
+    font-size: 1.02rem;
+    letter-spacing: .03em;
+}
+
 .nf-brand-mark {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     flex: none;
+    transition: transform var(--nf-duration) var(--nf-ease);
+}
+
+.nf-brand:hover .nf-brand-mark {
+    transform: translateY(-1px);
 }
 
 .nf-public > main {
@@ -164,20 +181,105 @@
     color: var(--nf-text-muted);
 }
 
+/*
+ * Rodapé em três tempos: identidade, capacidades e navegação — e uma fita de
+ * crédito embaixo. Fundo um tom acima do corpo para não virar bloco branco.
+ */
 .nf-public-footer {
     border-top: 1px solid var(--nf-line);
-    background-color: var(--nf-surface);
-    padding-block: 1.25rem;
+    background:
+        radial-gradient(90% 140% at 50% 0%, color-mix(in srgb, var(--nf-primary) 6%, transparent) 0%, transparent 70%),
+        var(--nf-surface);
+    padding-block: 1.6rem 1.1rem;
     font-size: .85rem;
 }
 
-.nf-public-footer-inner {
+.nf-public-footer-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 1.25rem 2rem;
+    align-items: start;
+}
+
+.nf-public-footer-brand {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+}
+
+.nf-public-footer-id .nf-wordmark {
+    margin-bottom: .2rem;
+    font-size: 1rem;
+    letter-spacing: .03em;
+    color: var(--nf-text);
+}
+
+.nf-public-footer-tagline {
+    max-width: 46ch;
+    margin-bottom: 0;
+    color: var(--nf-text-muted);
+    line-height: 1.6;
+}
+
+.nf-public-footer-capacities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Coluna direita: capacidades em cima, navegação embaixo, no mesmo ritmo. */
+.nf-public-footer-side {
+    display: grid;
+    align-content: start;
+    gap: .9rem;
+}
+
+.nf-public-footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem 1rem;
+    font-size: .82rem;
+}
+
+.nf-public-footer-links a {
+    color: var(--nf-text-muted);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: color var(--nf-duration) var(--nf-ease),
+        border-color var(--nf-duration) var(--nf-ease);
+}
+
+.nf-public-footer-links a:hover,
+.nf-public-footer-links a:focus-visible {
+    color: var(--nf-primary);
+    border-bottom-color: color-mix(in srgb, var(--nf-primary) 45%, transparent);
+}
+
+.nf-public-footer-bottom {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: .5rem;
+    gap: .5rem 1rem;
+    margin-top: 1.35rem;
+    padding-top: .8rem;
+    border-top: 1px dashed var(--nf-line-strong);
     color: var(--nf-text-muted);
+}
+
+@media (max-width: 767.98px) {
+    .nf-public-footer-top {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
+    }
+
+    .nf-public-footer-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    }
 }
 
 .nf-auth {

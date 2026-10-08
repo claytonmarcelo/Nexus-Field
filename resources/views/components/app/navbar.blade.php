@@ -27,7 +27,7 @@
             <li class="nav-item dropdown">
                 <button
                     type="button"
-                    class="nav-link"
+                    class="nav-link nf-nav-user"
                     data-bs-toggle="dropdown"
                     data-bs-display="static"
                     aria-expanded="false"

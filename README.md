@@ -13,7 +13,7 @@ chegam nas fases seguintes.
 <table>
   <tr>
     <td width="50%"><a href="docs/screenshots/01-boas-vindas.png"><img src="docs/screenshots/01-boas-vindas.png" alt="Página de apresentação pública do NEXUS-FIELD em tema claro, com o ciclo de um serviço ao lado do título"></a><br><sub>Apresentação pública · tema claro · 1440×900</sub></td>
-    <td width="50%"><a href="docs/screenshots/02-entrada.png"><img src="docs/screenshots/02-entrada.png" alt="Tela de entrada com e-mail, senha, manter conectado e recuperação de acesso em tema escuro"></a><br><sub>Entrada · tema escuro · 1440×900</sub></td>
+    <td width="50%"><a href="docs/screenshots/02-entrada.png"><img src="docs/screenshots/02-entrada.png" alt="Tela de entrada com e-mail, senha com botão de revelar, manter conectado e recuperação de acesso em tema escuro"></a><br><sub>Entrada · tema escuro · 1440×900</sub></td>
   </tr>
   <tr>
     <td width="50%"><a href="docs/screenshots/03-recuperar-acesso.png"><img src="docs/screenshots/03-recuperar-acesso.png" alt="Tela de recuperação de acesso pedindo o e-mail da conta em tema claro"></a><br><sub>Recuperação de acesso · tema claro · 1440×900</sub></td>
@@ -102,6 +102,14 @@ dentro da aplicação. Em produção o seeder recusa senha gerada automaticament
 entra no código nem no Git.
 
 A aplicação sobe em `http://localhost:8000`.
+
+Não há cadastro por conta própria (`/register`). As contas deste estágio vêm do seeder: o seeder
+padrão cria a conta raiz descrita acima, e `DemoSeeder` cria as quatro contas de demonstração. O
+motivo de não abrir auto-cadastro é de escopo, não de pressa: cada usuário nasce vinculado a uma
+empresa e a um papel, então uma tela de cadastro teria que criar a empresa, escolher o plano e
+nomear o administrador na mesma operação — decisão comercial, não um campo de formulário. Enquanto
+a tela de usuários (fase própria) não existe, quem precisa de conta nova usa o seeder em
+desenvolvimento. A recuperação de acesso existe para quem já tem conta e esqueceu a senha.
 
 ## Executando em ambiente de desenvolvimento
 

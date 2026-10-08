@@ -39,6 +39,14 @@ function syncBrowserBar(mode) {
     }
 }
 
+// A pílula mostra o tema atual pelo CSS, mas o estado também precisa chegar ao
+// leitor de tela: aria-pressed="true" significa "estou no modo escuro".
+function syncToggleState(mode) {
+    document.querySelectorAll('[data-nf-theme-toggle]').forEach((toggle) => {
+        toggle.setAttribute('aria-pressed', mode === 'dark' ? 'true' : 'false');
+    });
+}
+
 export function apply(mode, { remember = true } = {}) {
     if (!MODES.has(mode)) {
         return;
@@ -46,6 +54,7 @@ export function apply(mode, { remember = true } = {}) {
 
     document.documentElement.dataset.bsTheme = mode;
     syncBrowserBar(mode);
+    syncToggleState(mode);
 
     if (remember) {
         window.localStorage?.setItem(STORAGE_KEY, mode);
@@ -61,6 +70,7 @@ export function toggle() {
 
 export function init() {
     syncBrowserBar(current());
+    syncToggleState(current());
 
     document.addEventListener('click', (event) => {
         const trigger = event.target.closest('[data-nf-theme-toggle]');

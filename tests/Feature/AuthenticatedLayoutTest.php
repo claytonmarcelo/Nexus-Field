@@ -152,6 +152,26 @@ class AuthenticatedLayoutTest extends TestCase
             ->assertSee('data-lte-toggle="treeview"', false);
     }
 
+    /**
+     * A pílula de tema é a única chave do projeto e `[data-nf-theme-toggle]` é o
+     * contrato que resources/js/nexusfield/theme.js escuta: se o Blade mudar de
+     * markup sem isso, o botão para de funcionar em silêncio.
+     */
+    public function test_chave_de_tema_mantem_o_contrato_do_js_e_o_pe_mostra_a_empresa_da_sessao(): void
+    {
+        $this->seedPermissions();
+        $company = $this->makeCompany('alfa');
+        $user = $this->makeUser('administrator', $company, 'a@test.local');
+
+        $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-nf-theme-toggle', $html);
+        $this->assertStringContainsString('nf-theme-toggle-knob', $html);
+        $this->assertStringContainsString('aria-pressed="false"', $html);
+        $this->assertStringContainsString('nf-footer-chip-tenant', $html);
+        $this->assertStringContainsString('Empresa alfa', $html);
+    }
+
     public function test_rodape_autenticado_assina_o_mesmo_texto_da_pagina_publica(): void
     {
         $this->seedPermissions();

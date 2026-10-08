@@ -163,9 +163,52 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   verdade, sem mockup nem tela desenhada à mão. A legenda diz o que é dado de demonstração
   (`DemoSeeder`) e o que é empresa real, para a galeria não virar promessa de módulo que ainda não
   existe.
+- `README.md` agora responde por que não existe tela de cadastro: cada usuário nasce preso a uma
+  empresa e a um papel, então auto-cadastro teria que criar empresa, escolher plano e nomear o
+  administrador na mesma operação. O texto diz quais contas existem hoje (raiz pelo seeder padrão,
+  quatro pelo `DemoSeeder`) e não promete a tela de usuários, que é fase própria.
+- Chave de tema em pílula: trilha com knob deslizante que carrega o sol ou a lua, posição e ícone
+  decididos por CSS em `[data-bs-theme]` — o mesmo atributo que o `x-script.theme` já escreveu antes
+  da primeira pintura, então o botão nasce certo sem esperar o JavaScript. `theme.js` passou a
+  sincronizar `aria-pressed` (leitor de tela sabe em qual tema está) e o movimento respeita
+  `prefers-reduced-motion`.
+- Mostrar/ocultar senha nos campos de senha. `x-ui.input` com `type="password"` ganha um invólucro
+  `.nf-password` e um `type="button"` sobreposto; `resources/js/nexusfield/passwords.js` só troca o
+  `type` do próprio campo, devolve o foco e restaura a seleção do usuário. Nada de espelhar valor,
+  nada de gravar em `localStorage`, e nada de esconder no `blur` — quem confere a senha costuma
+  voltar para corrigir um caractere. O `is-invalid` vai junto no invólucro para a mensagem de erro
+  continuar irmã do campo sem reescrever a regra do Bootstrap.
+- Rodapé público em três camadas: identidade com a marca e a promessa operacional, selos das
+  capacidades que o projeto já tem hoje (isolamento por empresa, permissões por papel, trilha de
+  auditoria e o fuso real de `config('app.timezone')`) e a navegação — que mostra **Painel** para
+  quem já entrou em vez de um link de entrada que só devolveria a pessoa ao painel. O pé
+  autenticado ganhou o chip com o nome da empresa da sessão, lido do banco.
+- `--nf-header-height` como token único de altura do topo: navbar autenticado, faixa da marca na
+  sidebar e cabeçalho público fecham nos mesmos 52px (eram ~64 no público e a faixa da marca não
+  alinhava com a barra). O cabeçalho de conteúdo também baixou.
+- `tests/Feature/PasswordFieldTest.php` (5 testes): o `<input>` nasce `password`, o botão é
+  `type="button"` (um clique nunca envia o formulário) e aponta para o campo certo por
+  `aria-controls`, senha digitada não ecoa em `old()`, redefinição tem um botão por campo de senha
+  e a recuperação de acesso não ganha botão onde não há senha. Lido pelo DOM, não por busca de
+  string solta.
+- `tests/Unit/UserInitialsTest.php` (6 testes) e uma asserção nova no `AuthenticatedLayoutTest`
+  prendendo o contrato `[data-nf-theme-toggle]` entre Blade e JavaScript, mais o chip da empresa no
+  rodapé. A suíte fecha em 68 testes / 356 asserções.
 
 ### Corrigido
 
+- Avatar com glifo solto: `User::initials()` montava "A(" a partir de "Administrador (demo)",
+  porque todo token separado por espaço entrava no cálculo. Agora só palavra que começa com letra
+  conta; nome de uma palavra só usa as duas primeiras letras ("Ad") em vez de repetir a inicial, e
+  nome sem letra nenhuma cai na marca.
+- Ícone quadrado nos botões de acesso: "Entrar" (cabeçalho público e envio do login) passou a usar
+  `fa-key`, o mesmo da chamada da página pública, e "Enviar link de redefinição" usa `fa-envelope`
+  — o ícone agora diz o que o botão faz. `.btn` virou `inline-flex` com `gap`, porque o espaço entre
+  ícone e rótulo dependia de um caractere de espaço no markup.
+- Assinatura de rodapé com o ano fixo no Blade: `now()->format('Y')` no lugar do "2026" digitado, e
+  os separadores viraram fio vertical em CSS em vez de "·" no texto.
+- Capturas do `README.md` refeitas contra o aplicativo rodando, já com o topo baixo, a pílula de
+  tema e o rodapé novo; a legenda da tela de entrada passou a mencionar o botão de revelar senha.
 - Fuso do aplicativo ajustado para `America/Sao_Paulo` (`APP_TIMEZONE`, com padrão no
   `config/app.php`): o MySQL local atende com `time_zone = SYSTEM`, então com o app em UTC a
   janela de "hoje" do painel, a agenda e todo `NOW()` escrito em SQL divergiam três horas do

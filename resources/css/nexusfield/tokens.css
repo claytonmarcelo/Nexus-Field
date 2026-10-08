@@ -254,6 +254,12 @@
     --nf-sidebar-width: 264px;
     --lte-sidebar-width: var(--nf-sidebar-width);
 
+    /*
+     * Altura única do topo: a barra de navegação e a faixa da marca na sidebar
+     * precisam fechar no mesmo corte, senão a moldura fica torta.
+     */
+    --nf-header-height: 3.25rem;
+
     --nf-duration: 180ms;
     --nf-ease: cubic-bezier(.22, .61, .36, 1);
 }

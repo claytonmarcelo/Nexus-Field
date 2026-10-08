@@ -143,8 +143,27 @@ class User extends Authenticatable
      */
     public function initials(): string
     {
-        $palavras = preg_split('/\s+/', trim($this->name) ?: 'Usuario', -1, PREG_SPLIT_NO_EMPTY);
+        $palavras = preg_split('/\s+/', trim($this->name ?: '') ?: 'Usuario', -1, PREG_SPLIT_NO_EMPTY) ?: [];
 
-        return mb_strtoupper(mb_substr($palavras[0], 0, 1).mb_substr($palavras[count($palavras) - 1], 0, 1));
+        // "Administrador (demo)" renderizava "A(" no avatar: só token que começa
+        // com letra é nome. Sem nenhum, fica a marca.
+        $palavras = array_values(array_filter(
+            $palavras,
+            static fn (string $palavra): bool => (bool) preg_match('/^[\p{L}]/u', $palavra),
+        ));
+
+        if ($palavras === []) {
+            return 'NF';
+        }
+
+        $primeira = $palavras[0];
+        $ultima = $palavras[count($palavras) - 1];
+
+        // Nome de uma palavra só repetiria a mesma letra duas vezes ("AA").
+        if ($primeira === $ultima) {
+            return mb_strtoupper(mb_substr($primeira, 0, 2));
+        }
+
+        return mb_strtoupper(mb_substr($primeira, 0, 1).mb_substr($ultima, 0, 1));
     }
 }

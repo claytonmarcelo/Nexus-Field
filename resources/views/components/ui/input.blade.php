@@ -38,10 +38,39 @@
             @if ($required) required @endif
             @if ($errorClass) aria-invalid="true" aria-describedby="{{ $id }}-erro" @elseif ($hint) aria-describedby="{{ $id }}-ajuda" @endif
         >
+    @elseif ($secret)
+        {{-- O botão entra sobreposto ao campo, então o `is-invalid` mora também no
+            invólucro: é o que faz a mensagem abaixo continuar aparecendo sem
+            reescrever a regra do Bootstrap. --}}
+        <div class="nf-password{{ $errorClass }}">
+            <input
+                {{ $attributes->merge(['type' => 'password', 'class' => $controlClass, 'id' => $id, 'name' => $name]) }}
+                @if ($placeholder) placeholder="{{ $placeholder }}" @endif
+                @if ($required) required aria-required="true" @endif
+                @if ($inputmode) inputmode="{{ $inputmode }}" @endif
+                @if ($autocomplete) autocomplete="{{ $autocomplete }}" @endif
+                @if ($errorClass) aria-invalid="true" aria-describedby="{{ $id }}-erro" @elseif ($hint) aria-describedby="{{ $id }}-ajuda" @endif
+            >
+
+            {{-- Ver a senha digitada é escolha do usuário, não comportamento padrão
+                 do campo: o estado vai para aria-pressed e o ícone troca por CSS. --}}
+            <button
+                type="button"
+                class="nf-password-toggle"
+                data-nf-password-toggle
+                aria-controls="{{ $id }}"
+                aria-pressed="false"
+                aria-label="Mostrar senha"
+                title="Mostrar senha"
+            >
+                <i class="nf-password-icon-show fa-solid fa-eye" aria-hidden="true"></i>
+                <i class="nf-password-icon-hide fa-solid fa-eye-slash" aria-hidden="true"></i>
+            </button>
+        </div>
     @else
         <input
             {{ $attributes->merge(['type' => $type, 'class' => $controlClass, 'id' => $id, 'name' => $name]) }}
-            @unless ($secret) value="{{ old($name, $value) }}" @endunless
+            value="{{ old($name, $value) }}"
             @if ($placeholder) placeholder="{{ $placeholder }}" @endif
             @if ($required) required aria-required="true" @endif
             @if ($inputmode) inputmode="{{ $inputmode }}" @endif

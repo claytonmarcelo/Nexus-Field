@@ -16,6 +16,7 @@ import { toast } from './nexusfield/notify';
 import { confirmDialog, infoDialog, promptDialog } from './nexusfield/dialog';
 import * as forms from './nexusfield/forms';
 import * as flash from './nexusfield/flash';
+import * as passwords from './nexusfield/passwords';
 
 window.Nf = {
     theme,
@@ -28,3 +29,4 @@ window.Nf = {
 theme.init();
 forms.init();
 flash.init();
+passwords.init();

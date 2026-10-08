@@ -11,10 +11,17 @@
                 </span>
             </a>
 
-            <div class="d-flex align-items-center gap-2">
+            <div class="nf-public-header-actions">
                 <x-ui.theme-toggle />
-                @if ($withLogin && Route::has('login'))
-                    <x-ui.button href="{{ route('login') }}" variant="primary" size="sm" icon="fa-solid fa-right-to-bracket">
+
+                @auth
+                    {{-- Sessão aberta não tem motivo para ver a tela de entrada; o
+                         caminho honesto é o painel. --}}
+                    <x-ui.button href="{{ route('dashboard') }}" variant="primary" size="sm" icon="fa-solid fa-gauge-high">
+                        Painel
+                    </x-ui.button>
+                @elseif ($withLogin && Route::has('login'))
+                    <x-ui.button href="{{ route('login') }}" variant="primary" size="sm" icon="fa-solid fa-key">
                         Entrar
                     </x-ui.button>
                 @endif
@@ -22,4 +29,3 @@
         </div>
     </div>
 </header>
-

@@ -34,7 +34,7 @@
             @endif
         </div>
 
-        <x-ui.button type="submit" variant="primary" size="lg" wide icon="fa-solid fa-right-to-bracket">
+        <x-ui.button type="submit" variant="primary" size="lg" wide icon="fa-solid fa-key">
             Entrar
         </x-ui.button>
     </form>
