@@ -211,6 +211,13 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   item de lista ativo, avatar, knob da pílula de tema e os botões do diálogo passaram a ler a mesma
   tinta, clara no claro e escura no escuro. O mesmo vale para `badge.text-bg-*` no escuro, onde o
   `!important` do utilitário só pôde ser alcançado com `!important` de resposta.
+- Âncora das capturas padronizada: as seis telas passam a caber no mesmo padrão de duas por linha,
+  com largura declarada no `<img>` (640px para desktop, 292px para o celular) em vez do tamanho
+  natural do arquivo, e as duas linhas de painel — que antes ocupavam a largura inteira cada uma —
+  agora comparam lado a lado na mesma escala. Nenhuma altura foi declarada de propósito: com altura
+  fixa, o `max-width: 100%` do GitHub amassa a imagem fora da proporção; sem ela o navegador
+  respeita a razão nativa, e foi isso que se mediu no navegador (proporção declarada = proporção
+  desenhada nas seis).
 - Âmbar e aviso escureceram um degrau no claro (`#b96c2c` → `#a45d1f`, `#a9761a` → `#96670f`) para
   segurar 4,5:1 com a letra por cima, e as bordas de interação subiram para 3:1 — o campo de
   formulário era o componente que precisava aparecer como limite, não o cartão.
