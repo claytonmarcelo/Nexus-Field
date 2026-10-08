@@ -7,6 +7,7 @@
     (() => {
         const storageKey = 'nexusfield:tema';
         const cookieName = 'nf_theme';
+        const barColors = { light: '#f3eee6', dark: '#101319' };
         const modes = new Set(['light', 'dark']);
         let mode = null;
 
@@ -26,5 +27,10 @@
         }
 
         document.documentElement.dataset.bsTheme = mode;
+
+        const bar = document.createElement('meta');
+        bar.name = 'theme-color';
+        bar.content = barColors[mode];
+        document.head.appendChild(bar);
     })();
 </script>

@@ -1,0 +1,259 @@
+/*
+ * Casca pública: cabeçalho, hero, seções e rodapé das telas abertas
+ * (entrada, login, recuperação). O interior autenticado usa AdminLTE.
+ */
+
+.nf-public {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+.nf-public-header {
+    position: sticky;
+    z-index: 1020;
+    top: 0;
+    border-bottom: 1px solid var(--nf-line);
+    background-color: color-mix(in srgb, var(--nf-surface) 88%, transparent);
+    backdrop-filter: blur(10px);
+}
+
+.nf-public-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    min-height: 64px;
+    padding-block: .625rem;
+}
+
+.nf-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .625rem;
+    color: var(--nf-text);
+    text-decoration: none;
+}
+
+.nf-brand-mark {
+    width: 32px;
+    height: 32px;
+    flex: none;
+}
+
+.nf-public > main {
+    flex: 1 1 auto;
+}
+
+.nf-hero {
+    padding-block: clamp(2.5rem, 7vw, 5.5rem) clamp(2rem, 5vw, 4rem);
+}
+
+.nf-hero-title {
+    max-width: 22ch;
+    margin-bottom: 1rem;
+    font-size: clamp(1.85rem, 1.2rem + 2.4vw, 3.25rem);
+}
+
+.nf-hero-text {
+    max-width: 58ch;
+    margin-bottom: 1.5rem;
+    color: var(--nf-text-muted);
+    font-size: 1.025rem;
+    line-height: 1.65;
+}
+
+.nf-flow-panel {
+    border: 1px solid var(--nf-line);
+    border-left: 3px solid var(--nf-primary);
+    border-radius: var(--bs-border-radius-lg);
+    background-color: var(--nf-elevated);
+    box-shadow: var(--nf-shadow-md);
+    padding: 1.5rem 1.5rem 1.25rem;
+}
+
+.nf-flow {
+    counter-reset: nf-flow;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.nf-flow li {
+    counter-increment: nf-flow;
+    position: relative;
+    padding: 0 0 1rem 2.1rem;
+    color: var(--nf-text-muted);
+}
+
+.nf-flow li:last-child {
+    padding-bottom: 0;
+}
+
+.nf-flow li::before {
+    content: counter(nf-flow);
+    position: absolute;
+    top: -.1rem;
+    left: 0;
+    display: grid;
+    width: 1.5rem;
+    height: 1.5rem;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--nf-gradient-brand);
+    color: var(--nf-surface);
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+.nf-flow li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 1.55rem;
+    bottom: .15rem;
+    left: .72rem;
+    width: 1px;
+    background: var(--nf-line-strong);
+}
+
+.nf-section {
+    padding-block: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.nf-section-alt {
+    border-block: 1px solid var(--nf-line);
+    background-color: color-mix(in srgb, var(--nf-surface) 70%, transparent);
+}
+
+.nf-section-head {
+    max-width: 62ch;
+    margin-bottom: 2rem;
+}
+
+.nf-section-title {
+    margin-bottom: .75rem;
+    font-size: clamp(1.4rem, 1.1rem + 1.1vw, 2.15rem);
+}
+
+.nf-section-text {
+    margin-bottom: 0;
+    color: var(--nf-text-muted);
+    line-height: 1.65;
+}
+
+.nf-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    border: 1px solid var(--nf-line-strong);
+    border-radius: var(--bs-border-radius-xl);
+    background-color: var(--nf-elevated);
+    box-shadow: var(--nf-shadow-md);
+    padding: clamp(1.5rem, 4vw, 2.75rem);
+}
+
+.nf-cta-title {
+    margin-bottom: .5rem;
+    font-size: clamp(1.3rem, 1.05rem + 1vw, 1.9rem);
+}
+
+.nf-cta-text {
+    max-width: 56ch;
+    color: var(--nf-text-muted);
+}
+
+.nf-public-footer {
+    border-top: 1px solid var(--nf-line);
+    background-color: var(--nf-surface);
+    padding-block: 1.25rem;
+    font-size: .85rem;
+}
+
+.nf-public-footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    color: var(--nf-text-muted);
+}
+
+.nf-auth {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    padding-block: clamp(2rem, 6vw, 4rem);
+}
+
+.nf-auth-card {
+    width: 100%;
+    max-width: 430px;
+    border: 1px solid var(--nf-line);
+    border-radius: var(--bs-border-radius-xl);
+    background-color: var(--nf-elevated);
+    box-shadow: var(--nf-shadow-lg);
+    padding: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.nf-auth-title {
+    margin-bottom: .35rem;
+    font-size: clamp(1.4rem, 1.15rem + .9vw, 1.85rem);
+}
+
+.nf-auth-subtitle {
+    margin-bottom: 1.5rem;
+    color: var(--nf-text-muted);
+}
+
+.nf-auth-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.nf-auth-link {
+    font-size: .875rem;
+    color: var(--nf-primary);
+    text-decoration: none;
+}
+
+.nf-auth-link:hover {
+    color: var(--nf-primary-hover);
+    text-decoration: underline;
+}
+
+.nf-auth-back {
+    margin: 1.25rem 0 0;
+    text-align: center;
+    font-size: .875rem;
+}
+
+.nf-auth-back a {
+    color: var(--nf-text-muted);
+    text-decoration: none;
+}
+
+.nf-auth-back a:hover {
+    color: var(--nf-primary);
+    text-decoration: underline;
+}
+
+.nf-auth-back i {
+    margin-right: .35rem;
+}
+
+@media (max-width: 575.98px) {
+    .nf-brand .nf-wordmark {
+        font-size: .95rem;
+    }
+
+    .nf-cta > .btn {
+        width: 100%;
+    }
+}
