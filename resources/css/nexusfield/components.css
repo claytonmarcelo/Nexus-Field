@@ -609,6 +609,13 @@
     white-space: nowrap;
 }
 
+/* Em cartão estreito o scroll horizontal esconde coluna sem aviso. Aqui a célula
+ * quebra e a tabela passa a caber no que existe; no celular o min-content ainda
+ * manda e rola, que é o comportamento honesto para cinco colunas em 320px. */
+.table-responsive > .table.nf-table-wrap > tbody > tr > td {
+    white-space: normal;
+}
+
 .nf-table-actions {
     display: inline-flex;
     gap: .35rem;
@@ -800,6 +807,10 @@
     opacity: .75;
 }
 
+.nf-kpi-body {
+    min-width: 0;
+}
+
 .nf-kpi-value {
     font-family: var(--nf-font-display);
     font-size: clamp(1.65rem, 1.1rem + 1.6vw, 2.4rem);
@@ -807,6 +818,13 @@
     line-height: 1.05;
     letter-spacing: -.02em;
     font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
+/* Um valor em reais tem ~11 caracteres: no corpo estreito do KPI ele quebraria
+ * em duas linhas, então o dinheiro usa uma escala própria. */
+.nf-kpi-value-money {
+    font-size: clamp(1.2rem, .95rem + .8vw, 1.55rem);
 }
 
 .nf-kpi-label {
@@ -1118,4 +1136,126 @@
 
 .nf-dialog .nf-dialog-danger {
     --swal2-confirm-button-background-color: var(--nf-danger);
+}
+
+/* ------------------------------------------------------------------ *
+ * Painel operacional
+ * ------------------------------------------------------------------ */
+
+/*
+ * Tons por estado de negócio. O tom vem de StatusCatalog e cai em uma classe
+ * `.tone-*`; o desenho fica aqui, e os dois lados (badge, tile, barra) usam a
+ * mesma paleta para que "em execução" tenha a mesma cor em três cartões.
+ */
+.nf-icon-tile {
+    color: var(--nf-primary);
+    background: var(--nf-primary-soft);
+}
+
+.nf-icon-tile.tone-open { color: var(--nf-info); background: color-mix(in srgb, var(--nf-info) 14%, transparent); }
+.nf-icon-tile.tone-progress { color: var(--nf-warning); background: color-mix(in srgb, var(--nf-warning) 14%, transparent); }
+.nf-icon-tile.tone-waiting { color: var(--nf-accent); background: color-mix(in srgb, var(--nf-accent) 16%, transparent); }
+.nf-icon-tile.tone-done { color: var(--nf-success); background: color-mix(in srgb, var(--nf-success) 14%, transparent); }
+.nf-icon-tile.tone-canceled { color: var(--nf-danger); background: color-mix(in srgb, var(--nf-danger) 14%, transparent); }
+.nf-icon-tile.tone-draft { color: var(--nf-text-muted); background: var(--nf-elevated); }
+
+.nf-kpi .card-body {
+    padding: 1rem 1.1rem;
+}
+
+.nf-kpi-hint {
+    font-size: .82rem;
+    color: var(--nf-text-muted);
+}
+
+.nf-table > thead > tr > th {
+    padding: .45rem .6rem;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+    border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-table > tbody > tr > td {
+    padding: .6rem;
+    font-size: .9rem;
+}
+
+.nf-bar-list {
+    display: grid;
+    gap: .9rem;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+
+.nf-bar-head {
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: .35rem;
+    font-size: .86rem;
+}
+
+.nf-bar-track {
+    height: .5rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--nf-elevated);
+}
+
+.nf-bar-fill {
+    width: var(--nf-bar-width, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background: var(--nf-primary);
+}
+
+.nf-bar-fill.tone-open { background: var(--nf-info); }
+.nf-bar-fill.tone-progress { background: var(--nf-warning); }
+.nf-bar-fill.tone-waiting { background: var(--nf-accent); }
+.nf-bar-fill.tone-done { background: var(--nf-success); }
+.nf-bar-fill.tone-canceled { background: var(--nf-danger); }
+.nf-bar-fill.tone-draft { background: var(--nf-text-muted); }
+
+.nf-timeline {
+    display: grid;
+    gap: .8rem;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+
+.nf-timeline > li {
+    display: grid;
+    grid-template-columns: 3.4rem 1fr;
+    gap: .75rem;
+    align-items: baseline;
+    padding-bottom: .8rem;
+    border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-timeline > li:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.nf-timeline-time {
+    font-size: .84rem;
+    color: var(--nf-text-muted);
+    white-space: nowrap;
+}
+
+.nf-timeline-text {
+    font-size: .82rem;
+    color: var(--nf-text-muted);
+}
+
+@media (max-width: 479.98px) {
+    .nf-timeline > li {
+        grid-template-columns: 1fr;
+        gap: .2rem;
+    }
 }

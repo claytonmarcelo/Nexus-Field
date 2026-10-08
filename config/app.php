@@ -60,12 +60,17 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
+    | will be used by the PHP date and date-time functions.
+    |
+    | O fuso do app é o relógio de parede da operação: a janela de "hoje" do
+    | painel, a agenda e as comparações de período escritas em SQL precisam bater
+    | com o MySQL, que atende com time_zone = SYSTEM (America/Sao_Paulo, sem DST
+    | desde 2019). Com o app em UTC, `now()` do PHP e `NOW()` do servidor
+    | divergiriam três horas em toda leitura de data.
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'America/Sao_Paulo'),
 
     /*
     |--------------------------------------------------------------------------

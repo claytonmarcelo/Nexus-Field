@@ -5,11 +5,10 @@ namespace Database\Seeders;
 use App\Models\Company;
 use App\Models\Permission;
 use App\Models\Plan;
-use App\Models\Role;
 use App\Models\User;
 use App\Support\PermissionCatalog;
+use App\Support\Roles;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
@@ -64,24 +63,7 @@ class DatabaseSeeder extends Seeder
 
     private function seedRoles(Company $company, array $permissions): array
     {
-        $created = [];
-
-        foreach (['administrator', 'supervisor', 'employee', 'technician', 'client'] as $slug) {
-            $role = Role::query()->firstOrNew(['company_id' => $company->id, 'slug' => $slug]);
-            $role->name = Str::headline($slug);
-            $role->is_system = true;
-            $role->save();
-
-            $granted = PermissionCatalog::byRole($slug);
-            $ids = $granted === ['*']
-                ? array_values($permissions)
-                : array_values(array_intersect_key($permissions, array_flip($granted)));
-
-            $role->permissions()->sync($ids);
-            $created[$slug] = $role;
-        }
-
-        return $created;
+        return Roles::provision($company, $permissions);
     }
 
     private function seedAdministrator(Company $company, array $roles): void

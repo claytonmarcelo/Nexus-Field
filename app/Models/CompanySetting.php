@@ -13,9 +13,12 @@ class CompanySetting extends Model
 
     protected $fillable = ['company_id', 'key', 'value'];
 
-    protected $casts = [
-        'value' => 'array',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'value' => 'array',
+        ];
+    }
 
     public function company(): BelongsTo
     {

@@ -17,11 +17,14 @@ class Address extends Model
         'is_primary',
     ];
 
-    protected $casts = [
-        'latitude' => 'decimal:7',
-        'longitude' => 'decimal:7',
-        'is_primary' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
+            'is_primary' => 'boolean',
+        ];
+    }
 
     public function company(): BelongsTo
     {

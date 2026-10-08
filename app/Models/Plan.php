@@ -12,11 +12,14 @@ class Plan extends Model
         'max_service_orders_per_month', 'price_monthly', 'features', 'is_active',
     ];
 
-    protected $casts = [
-        'features' => 'array',
-        'is_active' => 'boolean',
-        'price_monthly' => 'decimal:2',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'features' => 'array',
+            'is_active' => 'boolean',
+            'price_monthly' => 'decimal:2',
+        ];
+    }
 
     public function companies(): HasMany
     {

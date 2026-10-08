@@ -17,7 +17,7 @@ falharem com erros desconectados do problema real.
 ## Instalação
 
 O atalho abaixo executa, nesta ordem, `composer install`, cópia de `.env.example` para `.env`,
-`key:generate`, `migrate`, `npm install` e `npm run build`:
+`key:generate`, `migrate`, `db:seed`, `npm install` e `npm run build`:
 
 ```bash
 composer run setup
@@ -52,12 +52,25 @@ há servidores MySQL com MyISAM como engine padrão.
 
 ```bash
 php artisan migrate
+php artisan db:seed
 npm install
 npm run build
 php artisan serve
 ```
 
-A aplicação sobe em `http://localhost:8000`.
+`db:seed` faz parte da instalação, não é opcional: é ele que cria o catálogo de permissões, os
+cinco papéis de sistema e o administrador da sua empresa. Sem ele não há quem possa autorizar
+nada, e o login cai em uma conta sem papel.
+
+Defina a senha antes de semear:
+
+```env
+SEED_ADMIN_EMAIL=admin@nexusfield.local
+SEED_ADMIN_PASSWORD=troque-esta-senha-forte
+```
+
+Em produção o seeder recusa senha gerada automaticamente; o valor tem que vir do ambiente, nunca
+do código. A aplicação sobe em `http://localhost:8000`.
 
 ## Executando em ambiente de desenvolvimento
 
@@ -70,6 +83,20 @@ Sobe servidor, filas e Vite juntos. Para apenas o servidor HTTP:
 ```bash
 php artisan serve
 ```
+
+Para ver o painel com dados, sem mexer na sua empresa, use a demonstração. Ela grava tudo numa
+empresa à parte (`nexusfield-demo`) e recusa produção:
+
+```bash
+php artisan db:seed --class=DemoSeeder
+```
+
+Os usuários criados são `admin.demo@nexusfield.local` (administrador),
+`gestor.demo@nexusfield.local` (supervisor), `campo.demo@nexusfield.local` (técnico) e
+`cliente.demo@nexusfield.local` (cliente), todos na empresa de demonstração. A senha vem de
+`SEED_DEMO_PASSWORD`, que cai para `SEED_ADMIN_PASSWORD` quando não tem valor; sem nenhum dos dois,
+o seeder gera uma e mostra no console. Rodar de novo limpa a empresa de demonstração e regrava; é
+fixture de tela, não histórico de operação.
 
 ## Testes
 
@@ -115,12 +142,16 @@ tests/          testes unitários e de feature
 | --- | --- |
 | `APP_NAME`, `APP_URL`, `APP_ENV`, `APP_DEBUG` | Identidade e modo de execução |
 | `APP_LOCALE` | Idioma da aplicação (`pt_BR`) |
+| `APP_TIMEZONE` | Fuso da operação (`America/Sao_Paulo`); precisa bater com o `time_zone` do MySQL para as leituras de data do painel e da agenda |
 | `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Conexão MySQL |
 | `DB_ENGINE` | Engine das tabelas; deve ser `InnoDB` |
 | `SESSION_DRIVER`, `SESSION_LIFETIME` | Persistência e expiração de sessão |
 | `CACHE_STORE`, `QUEUE_CONNECTION` | Cache e filas |
 | `FILESYSTEM_DISK` | Disco padrão de upload |
 | `MAIL_*` | Envio de e-mail (recuperação de acesso, notificações) |
+| `BCRYPT_ROUNDS` | Custo do hash de senha; em teste usa valor baixo de propósito |
+| `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Credenciais do administrador semeado pela instalação |
+| `SEED_DEMO_PASSWORD` | Senha dos usuários da empresa de demonstração (`DemoSeeder`) |
 
 `.env` contém segredos e **não** é versionado. Só `.env.example` entra no Git.
 

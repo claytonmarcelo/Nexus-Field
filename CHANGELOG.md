@@ -95,8 +95,76 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   mandado para o login, dados de sessão e empresa na tela, contagem batendo com o banco, menu sem
   link morto, item sem permissão fora do menu e recusado no gate, logout por POST com CSRF, o
   contrato do layout (classes do body, treeview, atalhos de teclado em português) e o rodapé.
+- `App\Support\DashboardMetrics`, o painel inteiro servido por consulta ao MySQL desta empresa:
+  cada bloco (ordens, agenda, chamados, equipe, clientes, estoque, financeiro, notificações, base
+  consultada) primeiro pergunta ao RBAC se quem entrou tem a permissão de `*.view` daquele módulo,
+  e só então roda suas consultas. Sem permissão o bloco não aparece na tela **e a query não é
+  montada** — não existe "esconde o card e consulta igual". Os 12 KPIs, as tabelas e as barras de
+  distribuição saem do mesmo caminho, e o `with()` na consulta leva junto o que a tabela mostra —
+  card nenhum vira N+1.
+- `App\Support\StatusCatalog`, o vocabulário de estados do negócio (ordem, chamado, prioridade,
+  técnico, financeiro) com rótulo em português, tom semântico e badge: a mesma palavra não chega
+  traduzida em três lugares diferentes da tela.
+- `App\Support\Formatters` — `money()`, `decimal()`, `date()`, `dateTime()`, `time()` e
+  `TIME_NULL` — para KPI, tabela e agenda exibirem R$ e datas no mesmo formato, e um campo de
+  tempo vazio aparecer como `—` em vez de `00:00` ou `1970`.
+- Models operacionais que o painel consulta: `ServiceOrder`, `ServiceOrderItem`,
+  `ServiceOrderAssignment`, `ServiceOrderStatusHistory`, `ServiceOrderCheckin`, `Ticket`,
+  `TicketComment`, `Appointment`, `Technician`, `Team`, `Specialty`, `Product`, `Service`,
+  `ServiceCategory`, `StockMovement`, `FinancialRecord`, `Payment` e `Notification`, todos
+  passando pelo `CompanyScope`. O saldo de estoque continua derivado das movimentações
+  (`CENTRAL_SIGN`/`TECHNICIAN_SIGN`), sem coluna que possa discordar do histórico.
+- Painel em si: os doze KPIs em cartões, a fila de ordens dos próximos sete dias, a agenda de
+  hoje, os chamados por prioridade, a carteira financeira (a receber, recebido no mês, despesa do
+  mês, vencidos), o estoque abaixo do ponto de reposição, quem está em campo, as notificações sem
+  leitura e a base consultada. Cada bloco tem estado vazio próprio, escrito com o que a consulta
+  realmente procurou — nada de linha fantasma ou zero decorativo.
+- `database/seeders/DemoSeeder.php`, a demonstração que valida a fundação sem contaminar a
+  operação: roda só em ambiente não-produtivo (recusa produção), cria tudo dentro de uma empresa à
+  parte (`nexusfield-demo`) e limpa essa empresa antes de regravar, então rodar de novo não
+  duplica. As datas são relativas ao dia em que roda, para o painel ter hoje, ontem e semana em
+  andamento. Não é chamado pelo `DatabaseSeeder`; `php artisan db:seed --class=DemoSeeder`.
+- `SEED_DEMO_PASSWORD` no `.env.example`: a senha dos usuários de demonstração vem do ambiente; sem
+  valor, o seeder gera uma e mostra no console, e nada de credencial entra no repositório.
+- `tests/Feature/DashboardTest.php` (4 testes, 130 asserções) contra o MySQL real: os doze KPIs
+  batendo um a um com a contagem do banco, bloco sem permissão comprovadamente **sem query** (via
+  `DB::listen`, com a salvaguarda de que alguma consulta rodou), empresa sem dados mostrando estado
+  vazio em vez de número inventado, e os dados da outra empresa fora do painel.
+- `tests/Feature/DemoSeederTest.php` (5 testes, 46 asserções): recusa de produção, dependência do
+  catálogo de permissões, nada da demonstração na empresa real (tabelas-filhas contadas pela
+  empresa do pai, como o modelo resolve), reexecução sem duplicar e o painel abrindo com o número
+  que está no banco. A suíte fecha em 47 testes / 295 asserções.
+- Instalação documentada fecha o ciclo: `composer run setup` passou a rodar `db:seed` depois do
+  `migrate`, e o `README.md` explica por que esse passo não é opcional (sem permissões semeadas não
+  há papel que autorize nada), como o `DemoSeeder` entra no ambiente local e o que cada variável
+  nova faz. Antes, o README terminava no `migrate` e a aplicação subia sem catálogo de permissões.
 
 ### Corrigido
+
+- Fuso do aplicativo ajustado para `America/Sao_Paulo` (`APP_TIMEZONE`, com padrão no
+  `config/app.php`): o MySQL local atende com `time_zone = SYSTEM`, então com o app em UTC a
+  janela de "hoje" do painel, a agenda e todo `NOW()` escrito em SQL divergiam três horas do
+  relógio do PHP. Timestamps gravados antes desta mudança continuam corretos no banco; a leitura em
+  desenvolvimento é que adiantava.
+- `Client::addresses()` devolvia `HasMany` sobre uma relação polimórfica (`morphMany` em
+  `Address`). O painel de clientes, que é a próxima fase, ia quebrar no primeiro `with('addresses')`.
+- `protected $casts` virou o método `casts()` nos models já existentes, igual aos novos: no
+  Laravel 13 a propriedade ainda funciona, mas misturar os dois estilos faz um model herdado
+  sobrescrever o cast do pai em vez de somar.
+- `DatabaseSeeder` perdeu a criação de papéis duplicada e passou a chamar `Roles::provision()`, o
+  mesmo caminho dos papéis por empresa. Os rótulos em português moram ali; `Str::headline($slug)`
+  gerava "Administrator" e "Technician" na tela de permissões.
+- O subtítulo do cartão "Ordens na fila" prometia uma janela de datas diferente da consulta que o
+  alimentava. Texto, estado vazio e legenda agora dizem os mesmos sete dias que o `WHERE` usa.
+- Valor em reais quebrava em duas linhas dentro do KPI (são ~11 caracteres num corpo estreito): os
+  cartões de dinheiro ganharam escala própria (`.nf-kpi-value-money`) e `overflow-wrap`, e o corpo
+  do KPI recebeu `min-width: 0` de verdade — a classe `min-width-0` que estava na marcação não
+  existe no Bootstrap 5.3 nem no AdminLTE 4, então era classe morta.
+- Tabelas do painel rolavam na horizontal entre 768px e 1440px dentro do cartão, escondendo coluna
+  sem aviso: a regra global de `white-space: nowrap` (FASE 4, para tabelas de cinco colunas) vale
+  dentro de `.table-responsive`. As tabelas do painel marcaram `.nf-table-wrap`, que abre exceção
+  para a célula quebrar; em 320px o `min-content` ainda manda e a tabela rola, que é o
+  comportamento honesto para cinco colunas num celular.
 
 - As cores da sidebar do design system não chegavam à tela: o AdminLTE declara `--lte-sidebar-*`
   com `[data-bs-theme=dark].app-sidebar` (0,2,0), e a sobrescrita feita no `<html>` perdia por
@@ -139,10 +207,16 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Conhecido
 
-- O painel com KPIs operacionais chega na fase 8, junto do `DemoSeeder` local separado dos dados
-  reais. O que existe hoje em `/dashboard` é sessão, empresa e o que já está no banco — a estrutura
-  autenticada (barra lateral, cabeçalho, rodapé) está entregue e verificada em 320px, 768px,
-  1440px e 2560px, nos dois temas.
+- O painel lê o banco e nada mais: os blocos operacionais existem, mas as telas que produzem esses
+  dados (clientes, ordens, chamados, agenda, estoque, financeiro) chegam das fases 9 em diante. Por
+  isso o painel de hoje se comporta como agregação de tabelas que o `DemoSeeder` preencheu — as
+  rotas de CRUD ainda não estão no `Navigation`, e sem rota não há link no menu.
+- A demonstração mora na empresa `nexusfield-demo` e cria quatro usuários, um por papel de sistema
+  que o painel distingue (`admin.demo@`, `gestor.demo@`, `campo.demo@`, `cliente.demo@`, todos em
+  `nexusfield.local`), com senha vinda de `SEED_DEMO_PASSWORD` — que cai para `SEED_ADMIN_PASSWORD`
+  e, sem nenhum dos dois, é gerada e mostrada no console. É fixture de tela, não histórico de
+  operação: rodar o `DemoSeeder` limpa aquela empresa e regrava, e ela nunca deve ser semeada num
+  ambiente que opere de verdade.
 - O link de redefinição de senha sai pelo canal `log` (`MAIL_MAILER=log`), porque ainda não há SMTP
   configurado. Nada de credencial de e-mail no repositório: o servidor de envio entra por variável
   de ambiente quando for definido.

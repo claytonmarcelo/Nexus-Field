@@ -9,9 +9,12 @@ class ClientContact extends Model
 {
     protected $fillable = ['client_id', 'name', 'email', 'phone', 'role', 'is_primary'];
 
-    protected $casts = [
-        'is_primary' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'is_primary' => 'boolean',
+        ];
+    }
 
     public function client(): BelongsTo
     {

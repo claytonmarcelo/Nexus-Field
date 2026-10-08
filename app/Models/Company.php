@@ -17,11 +17,14 @@ class Company extends Model
         'expires_at', 'status',
     ];
 
-    protected $casts = [
-        'trial_ends_at' => 'datetime',
-        'subscribed_at' => 'datetime',
-        'expires_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'trial_ends_at' => 'datetime',
+            'subscribed_at' => 'datetime',
+            'expires_at' => 'datetime',
+        ];
+    }
 
     public function plan(): BelongsTo
     {
