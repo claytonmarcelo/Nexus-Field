@@ -24,7 +24,39 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'is_root' => 'boolean',
         ];
+    }
+
+    /**
+     * `is_root` fica fora de `$fillable` de propósito: request nenhum cria conta
+     * raiz. Ela nasce do seeder, que escreve a coluna direto.
+     */
+    protected static function booted(): void
+    {
+        // `deleting` dispara também no caminho do `forceDelete()` do SoftDeletes,
+        // então uma guarda só cobre exclusão lógica e física.
+        static::deleting(function (self $usuario) {
+            if ($usuario->isRoot()) {
+                $usuario->bloquear('não pode ser excluída');
+            }
+        });
+
+        static::updating(function (self $usuario) {
+            if (! $usuario->isRoot()) {
+                return;
+            }
+
+            foreach (['email' => 'ter o e-mail trocado', 'company_id' => 'mudar de empresa'] as $coluna => $motivo) {
+                if ($usuario->isDirty($coluna)) {
+                    $usuario->bloquear($motivo);
+                }
+            }
+
+            if ($usuario->isDirty('status') && $usuario->status !== 'active') {
+                $usuario->bloquear('ser desativada');
+            }
+        });
     }
 
     private ?array $permissionCache = null;
@@ -44,14 +76,34 @@ class User extends Authenticatable
         return $this->belongsTo(Technician::class);
     }
 
+    public function isRoot(): bool
+    {
+        return (bool) $this->is_root;
+    }
+
+    /** @throws \RuntimeException sempre: é chamado só quando a conta raiz seria alterada */
+    private function bloquear(string $motivo): void
+    {
+        throw new \RuntimeException(
+            "A conta raiz ({$this->email}) {$motivo}: ela é a identidade administrativa do ".
+            'sistema, e a regra dela vale mesmo quando o request vier de um administrador.'
+        );
+    }
+
     /**
      * Permissões efetivas: união das permissões de todos os papéis do usuário.
+     * A conta raiz tem o catálogo inteiro — domínio absoluto não pode depender de
+     * uma linha em `role_user`, que um `sync` de papéis apagaria.
      * O resultado fica em memória por request para não recarregar a cada checagem.
      */
     public function permissionSlugs(): array
     {
         if ($this->permissionCache !== null) {
             return $this->permissionCache;
+        }
+
+        if ($this->isRoot()) {
+            return $this->permissionCache = Permission::query()->pluck('slug')->all();
         }
 
         return $this->permissionCache = $this->roles()

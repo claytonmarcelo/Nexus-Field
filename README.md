@@ -65,12 +65,18 @@ nada, e o login cai em uma conta sem papel.
 Defina a senha antes de semear:
 
 ```env
-SEED_ADMIN_EMAIL=admin@nexusfield.local
-SEED_ADMIN_PASSWORD=troque-esta-senha-forte
+SEED_ADMIN_EMAIL=marcelolimadez@gmail.com
+SEED_ADMIN_PASSWORD=a-senha-da-conta-raiz
 ```
 
-Em produção o seeder recusa senha gerada automaticamente; o valor tem que vir do ambiente, nunca
-do código. A aplicação sobe em `http://localhost:8000`.
+Essa é a **conta raiz** do sistema: ela recebe o catálogo inteiro de permissões e não pode ser
+excluída, desativada, remanejada de empresa nem ter o e-mail trocado — a regra está no model
+(`User::booted()`), então vale mesmo para request de administrador. A senha, essa sim, é
+rotacionável: troque o valor no `.env` e rode `php artisan db:seed` de novo, ou altere a senha por
+dentro da aplicação. Em produção o seeder recusa senha gerada automaticamente; credencial nunca
+entra no código nem no Git.
+
+A aplicação sobe em `http://localhost:8000`.
 
 ## Executando em ambiente de desenvolvimento
 
@@ -161,6 +167,8 @@ tests/          testes unitários e de feature
 - Sessão em banco, com regeneração de identificador no login.
 - CSRF habilitado em todo formulário POST.
 - Autorização por permissão verificada no backend, não apenas escondendo controles no front.
+- Conta raiz protegida no model: não se exclui, desativa nem remaneja, e `is_root` não é
+  atribuível por request. A credencial dela fica no `.env`, nunca no código nem no Git.
 - Uploads validados por tipo e tamanho, gravados fora da raiz pública.
 
 ## Git

@@ -138,6 +138,24 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   `migrate`, e o `README.md` explica por que esse passo não é opcional (sem permissões semeadas não
   há papel que autorize nada), como o `DemoSeeder` entra no ambiente local e o que cada variável
   nova faz. Antes, o README terminava no `migrate` e a aplicação subia sem catálogo de permissões.
+- Conta raiz do sistema: a coluna `users.is_root` (migration própria) marca a identidade
+  administrativa permanente do projeto, e a guarda mora no model, não na tela. A conta raiz não
+  pode ser excluída (nem lógica nem física), não pode ser desativada, não pode trocar de e-mail nem
+  de empresa — `User::booted()` recusa com exceção em português. `is_root` ficou fora de
+  `$fillable` de propósito: request nenhum cria uma raiz, ela só nasce do seeder, que escreve a
+  coluna por `forceFill()` e num save separado, para o `updating` já valer contra o próprio seeder.
+- Domínio absoluto da conta raiz não depende de papel: `permissionSlugs()` devolve o catálogo
+  inteiro quando `is_root`, então um `roles()->sync([])` mal-enquadrado não tira o poder de quem
+  administra a plataforma. A senha continua rotacionável — sem isso uma credencial vazada ficaria
+  presa para sempre, o que é insegurança vestida de imutabilidade.
+- `SEED_ADMIN_EMAIL` passa a apontar a conta raiz (`DatabaseSeeder::ROOT_EMAIL`) e o método do
+  seeder se chama `seedRootAccount()`; em produção ele segue recusando senha gerada automaticamente,
+  e a credencial mora só no `.env`.
+- `tests/Feature/RootAccountTest.php` (9 testes, 31 asserções): raiz semeada sem se duplicar,
+  `is_root` ignorado em mass assignment, exclusão/desativação/troca de e-mail recusadas, rotação de
+  senha seguida de login real pelo `POST /login`, catálogo completo mesmo sem papel, painel com
+  todos os blocos, e as guardas valendo **somente** para a raiz — usuário comum continua editável e
+  excluível. A suíte fecha em 56 testes / 326 asserções.
 
 ### Corrigido
 

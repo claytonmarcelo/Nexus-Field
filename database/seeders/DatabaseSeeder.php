@@ -13,12 +13,20 @@ use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Conta raiz do sistema: e-mail administrativo permanente do projeto, definido
+     * no prompt mestre. O valor é identidade, não credencial — a senha continua só
+     * no `.env`, e `SEED_ADMIN_EMAIL` pode apontar para outro endereço sem tocar no
+     * código.
+     */
+    public const ROOT_EMAIL = 'marcelolimadez@gmail.com';
+
     public function run(): void
     {
         $permissions = $this->seedPermissions();
         $company = $this->seedCompany();
         $roles = $this->seedRoles($company, $permissions);
-        $this->seedAdministrator($company, $roles);
+        $this->seedRootAccount($company, $roles);
     }
 
     private function seedPermissions(): array
@@ -66,9 +74,9 @@ class DatabaseSeeder extends Seeder
         return Roles::provision($company, $permissions);
     }
 
-    private function seedAdministrator(Company $company, array $roles): void
+    private function seedRootAccount(Company $company, array $roles): void
     {
-        $email = env('SEED_ADMIN_EMAIL', 'admin@nexusfield.local');
+        $email = env('SEED_ADMIN_EMAIL', self::ROOT_EMAIL);
 
         $password = env('SEED_ADMIN_PASSWORD');
 
@@ -82,17 +90,22 @@ class DatabaseSeeder extends Seeder
                 );
             }
 
-            $this->command?->warn("Credenciais do administrador: {$email} / {$password}");
+            $this->command?->warn("Credenciais da conta raiz: {$email} / {$password}");
         }
 
-        $user = User::query()->firstOrNew(['email' => $email]);
-        $user->company_id = $company->id;
-        $user->name = 'Administrador Nexus-Field';
-        $user->password = $password;
-        $user->status = 'active';
-        $user->email_verified_at = now();
-        $user->save();
+        $usuario = User::query()->firstOrNew(['email' => $email]);
+        $usuario->company_id = $company->id;
+        $usuario->name = 'Administrador Nexus-Field';
+        $usuario->password = $password;
+        $usuario->status = 'active';
+        $usuario->email_verified_at = now();
+        $usuario->save();
 
-        $user->roles()->syncWithoutDetaching([$roles['administrator']->id]);
+        // A bandeira entra num save separado: enquanto ela é falsa o seeder ainda
+        // pode arrumar o e-mail da conta, e o `updating` da conta raiz passa a
+        // valer a partir daqui — inclusive contra o próprio seeder.
+        $usuario->forceFill(['is_root' => true])->save();
+
+        $usuario->roles()->syncWithoutDetaching([$roles['administrator']->id]);
     }
 }
