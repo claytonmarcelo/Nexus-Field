@@ -559,6 +559,29 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   com `#` precisa de aspas (sem aspas o dotenv corta a senha no `#` e o seeder recebe truncado) e
   aponta para `RETIRED_ROOT_EMAIL` em vez de repetir o endereço aposentado no texto. Na tabela de
   segurança, a linha da conta raiz passou a listar também "perder a própria bandeira".
+- README relido inteiro contra o repositório, linha por linha, com as seis telas conferidas contra o
+  aplicativo rodando. Cinco frases estavam atrás do código: o `favicon.ico` embute 16, 32 **e 48**
+  (contado no cabeçalho do próprio arquivo, não no que o README dizia); `Auditor`/`Auditable` faz mais
+  que registrar mudança de estado — o trait grava criar, alterar e excluir sozinho em `audit_logs`, e a
+  ação de negócio entra escrita à mão; `Roles` movimenta os dois seeders e não tinha linha na tabela de
+  camada própria; `TrataRegistrosAninhados` (a peça só é editável pela janela do cadastro-pai) estava
+  de fora da linha dos concerns de ficha; e `anyCompany()` era descrito como "reservado para agregação
+  interna e console", quando o único uso no projeto é `CompanySetting::valueFor()`, que desliga o
+  escopo global para filtrar na linha seguinte pelo `company_id` de quem está logado — não é porta de
+  saída, e o texto passou a dizer isso com o nome do ponto.
+- Árvore de pastas do README corrigida onde ela mentia: `Contact` não existe como model (o nome é
+  `ClientContact`), a lista de `app/Support` nomeava seis classes de doze, e a de models era um
+  "…" em vez de um número. Agora são 29 models contados no diretório, agrupados pelo que tem tela e
+  pelo que ainda é só schema, e `Notifier` aparece nominado como o que é — classe escrita, módulo na
+  fase 19. O parágrafo de testes ganhou quebra honesta e teve o número conferido na suíte: 151 testes,
+  1411 asserções, verde.
+- As seis capturas foram **conferidas**, não recapturadas por hábito. `04` e `05` já tinham o menu
+  claro do último commit; `01`, `02`, `03` e `06` são do commit anterior, e o único código que mudou
+  desde então é a sidebar — que não existe nas três telas abertas e está fora da tela no celular.
+  Prova medida antes de decidir: as três públicas foram capturadas de novo no quadro 1440×900 e
+  voltaram com o mesmo layout, os mesmos textos e o mesmo medalhão novo, variando 0,05% a 3% em bytes
+  pela fase da animação de auto nível no instante do clique — a série em produção ficou com o quadro
+  nivelado, então continua sendo a imagem fiel do que a aplicação desenha hoje.
 
 ### Corrigido
 

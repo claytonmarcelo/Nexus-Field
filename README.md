@@ -118,7 +118,9 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 
 - `TenantContext` por request, middleware `ResolveCompany`, escopo global `CompanyScope` e o trait
   `BelongsToCompany`
-- `anyCompany()` reservado para agregação interna e console — tela nenhuma enxerga fora da própria empresa
+- `anyCompany()` fura o escopo só quando o próprio código restringe pela empresa do request: o único uso
+  é `CompanySetting::valueFor()`, e a linha seguinte filtra pelo `company_id` de quem está logado. Tela
+  nenhuma enxerga fora da própria empresa
 
 ### Painel
 
@@ -210,8 +212,8 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura
 - O menu veste o tema da página: no claro ele é a superfície elevada com o verde de marca em quem está
   ativo, no escuro encosta no preto e só o fio de borda separa as duas áreas
-- Marca nos navegadores: `favicon.ico` com 16 e 32 embutidos, PNGs de 32 e 192 e `apple-touch-icon`
-  achatado sobre preto, todos gerados do medalhão oficial
+- Marca nos navegadores: `favicon.ico` com 16, 32 e 48 embutidos, PNGs de 32 e 192 servidos por
+  `<link rel="icon">` e `apple-touch-icon` achatado sobre preto, todos gerados do medalhão oficial
 - Auto nível nas telas abertas: a logo do hero balança em amplitude decrescente e para nivelada, com o
   halo acendendo no assentamento; o mesmo gesto, menor, acima do título de entrada. É CSS, não GIF, para
   continuar legível nos dois temas e respeitar `prefers-reduced-motion`
@@ -280,15 +282,16 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 | Nome | Para quê |
 | --- | --- |
 | `PermissionCatalog` | Módulos e ações de permissão em um único lugar, lidos por seeder, menu e middleware |
+| `Roles` | Os cinco papéis de sistema e seus rótulos em português, para o seeder real e o de demonstração não divergirem |
 | `TenantContext` / `CompanyScope` / `ResolveCompany` | Isolamento por empresa em toda query |
 | `DashboardMetrics` | As contagens do painel, todas em SQL contra a empresa logada |
 | `StatusCatalog` / `Formatters` | Estados e formatações (dinheiro, decimal, data, hora e duração) num único lugar |
 | `ListFilters` | Busca, filtro por coluna, ordenação e por-página lidos do query string |
 | `Export` | CSV com BOM e separador `;`, escrito a partir da mesma consulta da tela |
 | `TextoSeguro` | Lista fechada de tags, atributos e esquemas de link: o HTML do editor sai seguro antes de virar byte no banco |
-| `Auditor` / `Auditable` | Trilha de auditoria gravada nas mudanças de estado, sem mudar tela nenhuma |
+| `Auditor` / `Auditable` | Trilha de auditoria: criar, alterar e excluir são gravados pelo trait em `audit_logs` sem o controller lembrar, e a ação de negócio que não é CRUD (aprovar ordem, montar quadro, mover estado) entra escrita à mão, com o verbo certo |
 | `TemEnderecos` | Endereços polimórficos e o endereço principal de um cadastro |
-| `EmEdicao` / `CuidaDeEnderecos` | Edição em linha na própria ficha e o ciclo de vida do endereço aninhado |
+| `EmEdicao` / `CuidaDeEnderecos` / `TrataRegistrosAninhados` | Edição em linha na própria ficha, o ciclo de vida do endereço aninhado e a conferência de que a peça pertence mesmo ao cadastro aberto — id chutado em outra linha da mesma empresa responde 404 |
 | `Navigation` | Menu montado por permissão e rota existente |
 | `Nf` (`theme`, `toast`, `confirm`, `forms`, `flash`, `passwords`, `editor`) | Únicos caminhos permitidos para tema, aviso, diálogo e texto rico na tela |
 
@@ -303,12 +306,14 @@ nexusfield/
 │   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians, Catalog, Orders,
 │   │   │                      Tickets e os Concerns compartilhados
 │   │   └── Middleware/      → ResolveCompany (tenancy) e EnsurePermission (autorização)
-│   ├── Models/              → Company, Plan, User, Role, Permission, Client, Contact, Address,
-│   │                          Technician, Team, Specialty, Service, ServiceCategory, Product,
-│   │                          ServiceOrder, ServiceOrderItem, ServiceOrderAssignment, Ticket,
-│   │                          TicketComment, TicketStatusHistory…
-│   └── Support/             → PermissionCatalog, Navigation, StatusCatalog, Formatters,
-│                              TenantContext, TextoSeguro
+│   ├── Models/              → 29 modelos do domínio: empresa e plano, usuário e RBAC, cliente com
+│   │                          contato e endereço, técnico, equipe e especialidade, catálogo, ordem
+│   │                          com linha/quadro/check-in/histórico, chamado com conversa e histórico,
+│   │                          e as tabelas que ainda só têm schema — agenda, estoque, financeiro,
+│   │                          configuração, notificação, auditoria e anexo
+│   └── Support/             → PermissionCatalog, Roles, TenantContext, StatusCatalog, Formatters,
+│                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro e
+│                              Navigation — mais Notifier, que espera a fase 19
 ├── bootstrap/               → inicialização e registro de rotas
 ├── config/                  → banco, sessão, filesystem, temas
 ├── database/
@@ -328,9 +333,10 @@ nexusfield/
 ├── routes/                  → web.php
 ├── storage/                 → logs, cache e uploads (fora da raiz pública)
 ├── tests/
-│   ├── Feature/             → entrada e recuperação, autorização por papel, tenancy, layout
-│   │                          autenticado, painel, demonstração, conta raiz, clientes, técnicos,
-│   │                          catálogo, ordens de serviço e chamados
+│   ├── Feature/             → entrada e recuperação, gate de permissão por papel, tenancy, layout
+│   │                          autenticado, as três telas abertas de acesso, campo de senha, painel,
+│   │                          demonstração, conta raiz e a troca do e-mail dela, clientes, técnicos,
+│   │                          catálogo, ordens de serviço, chamados e a proibição dos diálogos nativos
 │   └── Unit/                → paleta dos dois temas, contrato das capturas, iniciais do usuário
 └── CHANGELOG.md             → histórico por fase
 ```
@@ -529,21 +535,21 @@ php artisan test
 ```
 
 Hoje são **151 testes / 1411 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
-vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com
-token válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato
-do seletor de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG
-—inclusive a tinta do menu sobre o painel claro— e a marca verde medida do medalhão, o contrato das
-seis capturas deste README (existem, estão linkadas e medem 1440×900), a proibição dos diálogos
-nativos do navegador, o CRUD de clientes com
-contatos e endereços, o de técnicos, equipes e especialidades, o do catálogo — inclusive o saldo
-central somado das movimentações, a unidade fora do catálogo recusada e a exclusão vetada quando já
-existe histórico — e o de ordens de serviço: sequência anual por empresa, estado que só anda pelo fluxo
-com carimbo e aprovação, linha que congela o preço, total somado no SQL, quadro de comissão com
-passagem preservada, alcance do técnico e da conta de cliente no painel e na listagem, e o CSV sendo a
-mesma consulta da tela — e o de chamados: protocolo que não repete o da empresa ao lado, prioridade que
-calcula o prazo, atraso medido pelo banco, nota obrigatória para resolver, passo recusado quando o fluxo
-não existe, nota interna que não aparece para quem não pode ler, HTML malicioso que chega inteiro na tela
-e volta limpo do banco, e o alcance do técnico e da conta de cliente na ficha e na conversa.
+vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
+válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
+de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
+tinta do menu sobre o painel claro — e a marca verde medida do medalhão, o contrato das seis capturas
+deste README (existem, estão linkadas e medem 1440×900), a proibição dos diálogos nativos do navegador,
+o CRUD de clientes com contatos e endereços, o de técnicos, equipes e especialidades, o do catálogo —
+inclusive o saldo central somado das movimentações, a unidade fora do catálogo recusada e a exclusão
+vetada quando já existe histórico — e o de ordens de serviço: sequência anual por empresa, estado que só
+anda pelo fluxo com carimbo e aprovação, linha que congela o preço, total somado no SQL, quadro de
+comissão com passagem preservada, alcance do técnico e da conta de cliente no painel e na listagem, e o
+CSV sendo a mesma consulta da tela — e o de chamados: protocolo que não repete o da empresa ao lado,
+prioridade que calcula o prazo, atraso medido pelo banco, nota obrigatória para resolver, passo recusado
+quando o fluxo não existe, nota interna que não aparece para quem não pode ler, HTML malicioso que chega
+inteiro na tela e volta limpo do banco, e o alcance do técnico e da conta de cliente na ficha e na
+conversa.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
