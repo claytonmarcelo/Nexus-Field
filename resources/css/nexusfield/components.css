@@ -1628,3 +1628,56 @@
 [data-bs-theme="dark"] .note-modal-content .modal-footer {
     border-color: var(--nf-line);
 }
+
+/*
+ * Check-in de campo. A linha de leitura é o único lugar da tela que troca de cor
+ * sozinha, porque ela conta o que o aparelho respondeu. Os quatro estados dela usam
+ * os mesmos tokens de tinta do resto da casa: nenhuma cor literal aqui, já que o
+ * `PaletteTest` varre os CSS do tema e o quadro tem de continuar legível no claro e
+ * no escuro pela mesma régua.
+ */
+.nf-checkin {
+    display: grid;
+    gap: .75rem;
+    padding-block-end: 1rem;
+    border-block-end: 1px solid var(--nf-line);
+    margin-block-end: 1rem;
+}
+
+.nf-checkin-leitura,
+.nf-checkin-aberta {
+    margin: 0;
+    font-size: .82rem;
+    line-height: 1.45;
+    border-radius: .55rem;
+    padding: .55rem .7rem;
+    border: 1px solid var(--nf-line);
+    background: color-mix(in srgb, var(--nf-elevated) 82%, transparent);
+    color: var(--nf-text-muted);
+}
+
+.nf-checkin-leitura[data-tom="lendo"] {
+    border-color: color-mix(in srgb, var(--nf-info) 45%, var(--nf-line));
+    color: var(--nf-info);
+}
+
+.nf-checkin-leitura[data-tom="ok"] {
+    border-color: color-mix(in srgb, var(--nf-success) 45%, var(--nf-line));
+    color: var(--nf-success);
+}
+
+.nf-checkin-leitura[data-tom="aviso"] {
+    border-color: color-mix(in srgb, var(--nf-warning) 50%, var(--nf-line));
+    color: var(--nf-warning);
+}
+
+.nf-checkin-aberta {
+    color: var(--nf-text);
+    background: color-mix(in srgb, var(--nf-primary-soft) 60%, transparent);
+}
+
+.nf-checkin-erro {
+    margin: 0;
+    font-size: .82rem;
+    color: var(--nf-danger);
+}

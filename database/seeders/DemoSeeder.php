@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Appointment;
 use App\Models\Client;
 use App\Models\Company;
+use App\Models\CompanySetting;
 use App\Models\FinancialRecord;
 use App\Models\Notification;
 use App\Models\Payment;
@@ -24,6 +25,7 @@ use App\Models\Technician;
 use App\Models\Ticket;
 use App\Models\TicketStatusHistory;
 use App\Models\User;
+use App\Support\Distancia;
 use App\Support\Roles;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -46,6 +48,19 @@ class DemoSeeder extends Seeder
     public const COMPANY_SLUG = 'nexusfield-demo';
 
     public const COMPANY_NAME = 'Nexus-Field Demonstração';
+
+    /** Raio que a empresa de demonstração aceita entre a posição lida e o endereço. */
+    private const RAIO_DEMO_METROS = 300.0;
+
+    /** Desvio determinístico da chegada, em metros, por técnico semeado. */
+    private const DESVIOS_METROS = [0 => 46.0, 1 => 118.0, 2 => 74.0, 3 => 168.0, 5 => 402.0];
+
+    /**
+     * Ordens cuja visita é semeada sem posição lida. Existe de propósito: a tela
+     * precisa mostrar que registrar sem GPS continua sendo um registro válido, e
+     * que "sem medida" não é a mesma coisa que "fora do raio".
+     */
+    private const VISITAS_SEM_GPS = ['OS-2026-0101'];
 
     private Company $empresa;
 
@@ -85,6 +100,7 @@ class DemoSeeder extends Seeder
         DB::transaction(function () {
             $this->empresa();
             $this->limpar();
+            $this->configuracoes();
             $this->usuarios();
             $this->clientes();
             $this->catalogo();
@@ -201,6 +217,20 @@ class DemoSeeder extends Seeder
         }
 
         DB::table('roles')->where('company_id', $empresa)->delete();
+    }
+
+    /**
+     * A escolha da empresa, gravada na tabela e não no código. O raio aceito do
+     * check-in mora aqui porque é decisão de operação, e a tela de configurações
+     * (FASE 21) é quem passa a mandá-lo: a demonstração já deixa o campo pronto
+     * para mostrar uma tolerância diferente do padrão da casa.
+     */
+    private function configuracoes(): void
+    {
+        CompanySetting::query()->updateOrCreate(
+            ['company_id' => $this->empresa->id, 'key' => ServiceOrderCheckin::CHAVE_RAIO],
+            ['value' => ['value' => self::RAIO_DEMO_METROS]],
+        );
     }
 
     private function usuarios(): void
@@ -596,21 +626,68 @@ class DemoSeeder extends Seeder
         }
     }
 
+    /**
+     * A visita de campo da demonstração é medida, não inventada: a coordenada
+     * gravada é um desvio determinístico do endereço da ordem, e a distância que
+     * aparece na tela sai do mesmo App\Support\Distancia que o controlador usa.
+     * Se alguém mexer no desvio, o número junto muda junto — a linha nunca conta
+     * uma geometrya diferente da que está guardada.
+     */
     private function checkin(ServiceOrder $ordem, int $tecnico, $entrada, $saida): void
     {
+        $semGps = in_array($ordem->number, self::VISITAS_SEM_GPS, true);
+        $chegada = $semGps ? null : $this->posicaoProxima($ordem, $this->desvio($tecnico));
+        $partida = $saida === null || $semGps ? null : $this->posicaoProxima($ordem, $this->desvio($tecnico) + 26.0);
+
         ServiceOrderCheckin::query()->create([
             'company_id' => $this->empresa->id,
             'service_order_id' => $ordem->id,
             'technician_id' => $this->tecnicos[$tecnico]->id,
             'checkin_at' => $entrada->copy()->addMinutes(12),
-            'checkin_latitude' => $ordem->latitude,
-            'checkin_longitude' => $ordem->longitude,
+            'checkin_latitude' => $chegada['latitude'] ?? null,
+            'checkin_longitude' => $chegada['longitude'] ?? null,
+            'checkin_distance' => $chegada['distancia'] ?? null,
             'checkout_at' => $saida,
-            'checkout_latitude' => $saida === null ? null : $ordem->latitude,
-            'checkout_longitude' => $saida === null ? null : $ordem->longitude,
+            'checkout_latitude' => $partida['latitude'] ?? null,
+            'checkout_longitude' => $partida['longitude'] ?? null,
+            'checkout_distance' => $partida['distancia'] ?? null,
             'status' => $saida === null ? 'open' : 'closed',
-            'observation' => $saida === null ? 'Técnico no local, serviço em andamento.' : 'Saída registrada após o teste.',
+            'observation' => match (true) {
+                $semGps => 'O aparelho não respondeu posição: chegada registrada sem medida.',
+                $saida === null => 'Técnico no local, serviço em andamento.',
+                default => 'Saída registrada após o teste do equipamento.',
+            },
         ]);
+    }
+
+    /**
+     * Uma posição aceita a poucos metros do endereço. O deslocamento é dividido
+     * 0,8 em latitude e 0,6 em longitude — um triângulo retângulo cujo resultado
+     * sai próximo dos metros pedidos — e a distância guardada é a medida real entre
+     * os dois pontos, não o número desta conta.
+     *
+     * @return array{latitude: ?string, longitude: ?string, distancia: ?float}
+     */
+    private function posicaoProxima(ServiceOrder $ordem, float $metros): array
+    {
+        if ($ordem->latitude === null || $ordem->longitude === null) {
+            return ['latitude' => null, 'longitude' => null, 'distancia' => null];
+        }
+
+        $graus = $metros / 111_000;
+        $latitude = (float) $ordem->latitude + $graus * 0.8;
+        $longitude = (float) $ordem->longitude + $graus * 0.6;
+
+        return [
+            'latitude' => number_format($latitude, 7, '.', ''),
+            'longitude' => number_format($longitude, 7, '.', ''),
+            'distancia' => Distancia::metros($ordem->latitude, $ordem->longitude, $latitude, $longitude),
+        ];
+    }
+
+    private function desvio(int $tecnico): float
+    {
+        return self::DESVIOS_METROS[$tecnico] ?? 90.0;
     }
 
     private function produtoPorSku(string $sku): Product
@@ -1024,6 +1101,7 @@ class DemoSeeder extends Seeder
     {
         return ServiceOrder::query()->count().' ordens, '
             .Ticket::query()->count().' chamados, '
+            .ServiceOrderCheckin::query()->count().' visitas de campo, '
             .Client::query()->count().' clientes e '
             .Appointment::query()->count().' compromissos de agenda';
     }

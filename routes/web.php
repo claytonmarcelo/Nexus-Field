@@ -10,6 +10,7 @@ use App\Http\Controllers\Clients\AddressController;
 use App\Http\Controllers\Clients\ClientContactController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Orders\CheckinController;
 use App\Http\Controllers\Orders\OrderAssignmentController;
 use App\Http\Controllers\Orders\OrderController;
 use App\Http\Controllers\Orders\OrderItemController;
@@ -71,6 +72,12 @@ Route::middleware(['auth', 'company'])->group(function () {
 
             Route::post('{ordem}/tecnicos', [OrderAssignmentController::class, 'store'])->name('assignments.store');
             Route::delete('{ordem}/tecnicos/{tecnico}', [OrderAssignmentController::class, 'destroy'])->name('assignments.destroy');
+
+            // Registrar presença é conduzir a execução: `orders.execute`. Quem é o
+            // técnico da passagem, porém, não vem do formulário — vem da ficha de
+            // quem está logado, e a resposta para quem não tem ficha de técnico é
+            // dada dentro do controlador, com a permissão de aprovação no meio.
+            Route::post('{ordem}/chegada', [CheckinController::class, 'store'])->name('checkin');
         });
 
         Route::delete('{ordem}', [OrderController::class, 'destroy'])
@@ -80,6 +87,31 @@ Route::middleware(['auth', 'company'])->group(function () {
         Route::get('{ordem}', [OrderController::class, 'show'])
             ->middleware('permission:orders.view')
             ->name('show');
+    });
+
+    /*
+     * As passagens do campo têm tela própria porque a pergunta do escritório não é
+     * "o que está escrito nesta ordem?", é "quem esteve onde, quando e por quanto
+     * tempo?". A chegada continua aninhada na ordem (`ordens/{ordem}/chegada`),
+     * porque é ela que responde pelo endereço medido; a saída é do registro, porque
+     * uma ordem pode ter dois técnicos em campo ao mesmo tempo.
+     */
+    Route::prefix('visitas')->name('checkins.')->group(function () {
+        Route::get('/', [CheckinController::class, 'index'])
+            ->middleware('permission:orders.view')
+            ->name('index');
+
+        Route::get('exportar', [CheckinController::class, 'export'])
+            ->middleware('permission:orders.export')
+            ->name('export');
+
+        // Fechar a passagem é ato de quem conduziu a execução — ou de quem responde
+        // pela escala, que é o degrau acima. O supervisor aprova a ordem mas não
+        // conduz o próprio campo, e ainda assim precisa poder encerrar uma visita
+        // que ficou aberta num celular sem bateria.
+        Route::patch('{visita}/saida', [CheckinController::class, 'checkout'])
+            ->middleware('permission:orders.execute,orders.approve')
+            ->name('checkout');
     });
 
     Route::prefix('chamados')->name('tickets.')->group(function () {

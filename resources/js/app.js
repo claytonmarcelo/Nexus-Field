@@ -20,6 +20,7 @@ import * as passwords from './nexusfield/passwords';
 import * as confirmacao from './nexusfield/confirm';
 import * as listas from './nexusfield/listas';
 import * as editor from './nexusfield/editor';
+import * as checkin from './nexusfield/checkin';
 
 window.Nf = {
     theme,
@@ -36,6 +37,7 @@ passwords.init();
 confirmacao.init();
 listas.init();
 editor.init();
+checkin.init();
 
 /*
  * O calendário é o único peso da tela que nenhuma outra página usa. Ele entra sob

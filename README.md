@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-163%20testes%20%2F%201542%20asser%C3%A7%C3%B5es-brightgreen" alt="163 testes, 1542 asserções">
+  <img src="https://img.shields.io/badge/testes-173%20testes%20%2F%201719%20asser%C3%A7%C3%B5es-brightgreen" alt="173 testes, 1719 asserções">
 </p>
 
 <p align="center">
@@ -223,6 +223,34 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - O calendário é o único pacote carregado sob demanda: o chunk do FullCalendar só desce na tela que o
   desenha, e o resto da aplicação continua do tamanho de antes. Sem JavaScript a tela diz a verdade em vez
   de deixar um quadro vazio fingindo que carrega
+- **Visitas de campo**: a chegada é registrada na ficha da ordem (`ordens/{ordem}/chegada`) e a saída na
+  passagem (`visitas/{visita}/saida`), porque uma ordem pode ter dois técnicos em campo ao mesmo tempo e
+  quem responde pelo endereço medido é a ordem
+- Hora, autor, técnico e distância não chegam pelo request: `checkin_at` é o relógio do servidor na conta
+  de quem loga, `technician_id` é deduzido da conta — ou da ordem, quando quem registra é do escritório —
+  e a distância é a fórmula de haversine do servidor (`Distancia::metros`) entre a coordenada lida e o
+  endereço congelado na ficha da ordem
+- Coordenada é opcional e a falta dela tem nome: visita sem GPS aparece como **sem posição lida**, nunca
+  como `0,00 m`. Medida que não existe não é medida no portão, e o filtro `?sem_posicao=1` existe para o
+  escritório achar exatamente essas visitas
+- O raio aceito é decisão guardada no banco da empresa (`company_settings`, chave `checkin_raio`, padrão
+  250 m), lida por `ServiceOrderCheckin::raioAceito()`. Fora do raio a visita **é gravada e marcada**: o
+  sistema registra o que foi medido, não recusa a presença de quem foi trabalhar — GPS falha em prédio e
+  em subsolo, e quem está no local continua tendo estado lá
+- Chegada em rascunho é recusada (a ordem precisa ser liberada para o campo antes), e abrir a ordem pelo
+  check-in segue o fluxo `FLUXO`: escreve em `service_order_status_history` quem mudou, de onde para onde
+  e quando. A saída encerra a passagem e **não** encerra a ordem — relatório de serviço é outra decisão
+- O alcance manda na leitura: o escritório conta a empresa inteira na tela `/visitas`, o técnico só as
+  próprias passagens (e não vê o seletor de técnico nem o de cliente), a conta de cliente só os técnicos
+  da carteira dela, e uma visita da empresa ao lado é 404 antes de qualquer comparação de permissão.
+  Encerrar passagem é `orders.execute` **ou** `orders.approve`, porque o supervisor responde pela ordem
+  e precisa fechar a visita que ficou aberta num aparelho sem bateria
+- A posição é lida no aparelho (`navigator.geolocation`) pelo botão "Ler posição do aparelho", com o raio
+  e a coordenada da ordem entregues à página como dados, e o resultado é medido no servidor. Sem
+  JavaScript o mesmo formulário continua registrando a chegada — só que sem medida, e dizendo isso
+- `/visitas` usa os mesmos `ListFilters`, a mesma paginação própria e o mesmo CSV (`;`, BOM, `Export`) da
+  listagem: período, técnico, cliente, situação, busca por número de ordem ou nome, e o estado desenhado
+  de vazio quando nada bate com os filtros
 
 ### Interface
 
@@ -261,7 +289,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vêm uma fase por vez.
 | Ordens de serviço | ✅ | ✅ | ✅ |
 | Chamados | ✅ | ✅ | ✅ |
 | Agenda e compromissos | ✅ | ✅ | ✅ |
-| Check-in / check-out com geolocalização | ✅ | ✅ | 🚧 fase 15 |
+| Check-in / check-out com geolocalização | ✅ | ✅ | ✅ |
 | Estoque e movimentações | ✅ | ✅ | 🚧 fase 16 |
 | Financeiro | ✅ | ✅ | 🚧 fase 17 |
 | Relatórios e exportações | ✅ | ✅ | 🚧 fase 18 |
@@ -311,6 +339,7 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 | `StatusCatalog` / `Formatters` | Estados e formatações (dinheiro, decimal, data, hora e duração) num único lugar |
 | `ListFilters` | Busca, filtro por coluna, ordenação e por-página lidos do query string |
 | `Export` | CSV com BOM e separador `;`, escrito a partir da mesma consulta da tela |
+| `Distancia` | Haversine em metros, calculado no servidor: coordenada que falta devolve `null`, e `null` não é zero |
 | `TextoSeguro` | Lista fechada de tags, atributos e esquemas de link: o HTML do editor sai seguro antes de virar byte no banco |
 | `Auditor` / `Auditable` | Trilha de auditoria: criar, alterar e excluir são gravados pelo trait em `audit_logs` sem o controller lembrar, e a ação de negócio que não é CRUD (aprovar ordem, montar quadro, mover estado) entra escrita à mão, com o verbo certo |
 | `TemEnderecos` | Endereços polimórficos e o endereço principal de um cadastro |
@@ -326,8 +355,9 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 nexusfield/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians, Catalog, Orders,
-│   │   │                      Tickets, Agenda e os Concerns compartilhados
+│   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians, Catalog, Orders (com o
+│   │   │                      CheckinController das visitas de campo), Tickets, Agenda e os Concerns
+│   │   │                      compartilhados
 │   │   └── Middleware/      → ResolveCompany (tenancy) e EnsurePermission (autorização)
 │   ├── Models/              → 29 modelos do domínio: empresa e plano, usuário e RBAC, cliente com
 │   │                          contato e endereço, técnico, equipe e especialidade, catálogo, ordem
@@ -335,12 +365,12 @@ nexusfield/
 │   │                          compromisso de agenda, e as tabelas que ainda só têm schema —
 │   │                          estoque, financeiro, configuração, notificação, auditoria e anexo
 │   └── Support/             → PermissionCatalog, Roles, TenantContext, StatusCatalog, Formatters,
-│                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro e
+│                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro, Distancia e
 │                              Navigation — mais Notifier, que espera a fase 19
 ├── bootstrap/               → inicialização e registro de rotas
 ├── config/                  → banco, sessão, filesystem, temas
 ├── database/
-│   ├── migrations/          → 19 migrations do schema nexusfield
+│   ├── migrations/          → 20 migrations do schema nexusfield
 │   └── seeders/             → DatabaseSeeder (plano, empresa, RBAC, conta raiz) e DemoSeeder
 ├── docs/
 │   ├── branding/            → o medalhão e a arte completa da marca oficial
@@ -350,18 +380,19 @@ nexusfield/
 ├── resources/
 │   ├── css/nexusfield/      → tokens.css, base.css, components.css, listings.css, agenda.css, public.css
 │   ├── js/nexusfield/       → theme, notify, dialog, confirm, forms, flash, passwords, listas, editor,
-│   │                          agenda, jquery
+│   │                          agenda, checkin, jquery
 │   └── views/               → Blade: componentes ui/ e layouts, páginas públicas, de entrada,
 │                              de clientes, de técnicos, de equipes, de especialidades, de serviços,
-│                              de produtos, de categorias, de ordens de serviço, de chamados e de agenda
+│                              de produtos, de categorias, de ordens de serviço, de chamados, de agenda
+│                              e de visitas de campo
 ├── routes/                  → web.php
 ├── storage/                 → logs, cache e uploads (fora da raiz pública)
 ├── tests/
 │   ├── Feature/             → entrada e recuperação, gate de permissão por papel, tenancy, layout
 │   │                          autenticado, as três telas abertas de acesso, campo de senha, painel,
 │   │                          demonstração, conta raiz e a troca do e-mail dela, clientes, técnicos,
-│   │                          catálogo, ordens de serviço, chamados, agenda e a proibição dos
-│   │                          diálogos nativos
+│   │                          catálogo, ordens de serviço, chamados, agenda, check-in de campo e a
+│   │                          proibição dos diálogos nativos
 │   └── Unit/                → paleta dos dois temas, contrato das capturas, iniciais do usuário
 └── CHANGELOG.md             → histórico por fase
 ```
@@ -538,6 +569,7 @@ com as chaves nomeadas e nenhuma credencial preenchida.
 | Força bruta | 5 tentativas por e-mail e IP, mais throttle de 10 requests/min na rota de entrada |
 | Autorização | `EnsurePermission` no servidor, por permissão do catálogo; a tela não decide nada |
 | Texto rico | HTML de editor passa por `TextoSeguro` (lista fechada de tags, atributos e esquemas de URL) antes do banco; sem isso seria XSS estocado |
+| Posição em campo | O aparelho lê a coordenada, mas quem mede a distância é o servidor, contra o endereço gravado na ordem; latitude/longitude fora de ±90/±180, com mais de sete decimais ou incompletas são recusadas antes de virar linha, e `technician_id`, `checkin_at` e a medida enviados pelo request são ignorados |
 | Tenancy | `CompanyScope` global; leitura fora da empresa exige `anyCompany()` explícito |
 | Conta raiz | `is_root` não é atribuível por request e a conta raiz resiste a exclusão, desativação, remanejamento e a perder a própria bandeira |
 | Diálogos | `alert()`, `confirm()` e `prompt()` nativos vetados e cobertos por teste; SweetAlert2 e Toastr escapam HTML |
@@ -559,7 +591,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **163 testes / 1542 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **173 testes / 1719 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
@@ -576,7 +608,12 @@ quando o fluxo não existe, nota interna que não aparece para quem não pode le
 inteiro na tela e volta limpo do banco, e o alcance do técnico e da conta de cliente na ficha e na
 conversa — e o de agenda: o JSON que só devolve o que a conta alcança, a janela de leitura com teto, o
 arraste que grava no banco ou volta ao lugar, o dia inteiro deslocado por dias inteiros, o concluído que
-não se move mais, o estado que só anda pelo fluxo e o painel contando o mesmo que o quadro.
+não se move mais, o estado que só anda pelo fluxo e o painel contando o mesmo que o quadro — e o de
+check-in: a hora e o técnico que o request tenta forjar e o servidor ignora, a distância medida no servidor
+contra o endereço da ordem, a ausência de GPS que não vira zero, a saída que encerra a passagem sem tocar
+na ordem, o raio escolhido pela empresa que marca mas não recusa, o alcance de escritório, técnico, cliente
+e conta de outra empresa na tela, no CSV e no cartão do painel, e a ficha que só oferece o formulário a quem
+pode registrar.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -627,13 +664,16 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 - [x] **Fase 11** — Catálogo de serviços, produtos e categorias: preço, duração, SKU e saldo lido das movimentações
 - [x] **Fase 12** — Ordens de serviço: sequência anual por empresa, fluxo de estado com carimbo, linhas que congelam o preço, quadro de comissão e total somado no SQL
 - [x] **Fase 13** — Chamados: protocolo por empresa e ano, prioridade que calcula o prazo, conversa com nota interna, estado conduzido por `tickets.execute` e HTML do editor limpo no servidor
-
-### Planejado
-
 - [x] **Fase 14** — Agenda (FullCalendar 6): feed JSON por janela com alcance e teto de varredura, CRUD de
   compromisso, estado pelo fluxo, arraste que grava no banco ou volta ao lugar, e a ordem agendada como
   evento somente-leitura
-- [ ] Fase 15 — Check-in e check-out com geolocalização
+- [x] **Fase 15** — Check-in e check-out com geolocalização: chegada na ficha da ordem e saída na passagem,
+  hora/técnico/distância decididos pelo servidor, raio aceito lido das configurações da empresa (marca, não
+  recusa), ausência de GPS tratada como medida inexistente, tela `/visitas` com filtros, paginação e CSV, e
+  o alcance de escritório, técnico e conta de cliente em cada leitura
+
+### Planejado
+
 - [ ] Fase 16 — Estoque e movimentações
 - [ ] Fase 17 — Financeiro
 - [ ] Fase 18 — Relatórios e exportações

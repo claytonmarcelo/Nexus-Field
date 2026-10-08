@@ -530,6 +530,69 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   move mais, o compromisso que nasce agendado e herda o cliente do que prende, a recusa de fim depois
   do início, o estado que só anda pelo fluxo e por quem conduz, a paridade painel/calendário e o apagar
   que não apaga o trabalho. A suíte fecha em 163 testes / 1542 asserções.
+- FASE 15 — presença em campo medida, não declarada. A migration
+  `2026_10_08_000005_add_distance_columns_to_service_order_checkins_table.php` acrescenta
+  `checkin_distance` e `checkout_distance` (`decimal(8,2)`, nullable) a `service_order_checkins`: a distância
+  é consequência de uma coordenada lida, então ela é gravada junto do ponto que a produziu, e as duas
+  colunas ficam nulas quando não houve leitura.
+- `App\Support\Distancia` calcula a distância sobre a superfície pela fórmula de haversine, no servidor, com
+  o raio da Terra como constante nomeada. O projeto não ganhou biblioteca de geo: 400 metros de um endereço
+  de assistência técnica não pedem pacote de projeção cartográfica. Coordenada que falta devolve `null` —
+  e `null` não vira zero, porque visita sem GPS é visita sem medida, não visita no portão. O `decimal:7` do
+  Eloquent devolve string, então `grau()` aceita `mixed` e recusa o que não é número: quem chama não precisa
+  saber de onde o valor veio.
+- `ServiceOrderCheckin::raioAceito()` lê `company_settings` pela chave `checkin_raio` (constante
+  `CHAVE_RAIO`) e cai em `RAIO_PADRAO_METROS = 250.0` quando a empresa não escolheu um ou quando o valor
+  gravado não é utilizável; `foraDoRaio()` responde `true`, `false` ou `null`, e o `null` aparece na tela
+  como "sem posição lida" em vez de cor de aprovado. O raio é decisão guardada no banco da empresa, não
+  número escrito em código — a tela que o edita entra na fase 21.
+- `App\Http\Controllers\Orders\CheckinController` responde por chegada, saída, listagem e CSV. A chegada
+  está aninhada na ordem (`POST ordens/{ordem}/chegada`) porque é ela que responde pelo endereço medido e
+  pelo responsável; a saída é do registro (`PATCH visitas/{visita}/saida`) porque uma ordem pode ter dois
+  técnicos em campo ao mesmo tempo. `checkin_at` e `checkout_at` são o relógio do servidor na conta de quem
+  loga, `technician_id` vem da ficha de quem loga — ou do responsável da ordem quando quem registra é do
+  escritório — e a medida é recalculada no servidor: um request que trouxer técnico, hora ou distância
+  forjados recebe a linha que o banco manda, não a que ele pediu.
+- Chegada em rascunho e em ordem encerrada são recusadas com a frase que diz o motivo, e um técnico não
+  abre segunda passagem na mesma ordem enquanto a dele estiver aberta. Abrir a execução pelo check-in passa
+  por `podeMudarPara('in_progress')` + `mudarStatus()`, dentro da mesma transação da passagem, com nota na
+  trilha — não é um `update` que troca a coluna por fora do fluxo. A saída encerra a passagem e não encerra
+  a ordem: ir embora não é terminar o serviço, e concluir continua sendo decisão com estado, nota e quem
+  aprova.
+- Validade da coordenada antes do byte: `latitude`/`longitude` pedem `nullable numeric between:-90,90`
+  (resp. ±180) e `decimal:0,7`, com `required_with` impedindo meio par; `observacao` tem teto de 500
+  caracteres. A saída aceita relato novo e, quando o campo volta vazio, preserva o da chegada em vez de
+  riscá-lo.
+- Autorização por rota, com o alcance respondendo primeiro: listar é `orders.view`, o CSV é `orders.export`,
+  registrar a chegada é `orders.update,orders.execute` e encerrar passagem é `orders.execute,orders.approve`
+  — o supervisor responde pela ordem e precisa fechar a visita que ficou aberta num aparelho sem bateria.
+  `garantirVisitaVisivel()` devolve 404 para quem não alcança a passagem (inclusive a da empresa ao lado)
+  antes de qualquer comparação de papel, e `garantirResponsavel()` devolve 403 para quem alcança mas não
+  conduz. Na chegada, quem não tem ficha de técnico recebe a resposta do controlador, não um registro órfão.
+- Tela `/visitas` ("Visitas de campo", `fa-location-crossing`, no menu de Operação) com o alcance de quem lê
+  antes dos filtros: escritório conta a empresa inteira, técnico só as próprias passagens — e nem vê o
+  seletor de técnico nem o de cliente —, conta de cliente só os técnicos da carteira dela. Período, técnico,
+  cliente, situação, `?sem_posicao=1` e busca por número de ordem ou nome passam pelos `ListFilters`, com a
+  paginação própria e o caption que declara o raio aceito por aquela empresa. O CSV é a mesma consulta, com
+  "sem posição" e "sem medida" escritos onde não houve leitura.
+- Card "Check-in de campo" na ficha da ordem: o formulário só aparece para quem pode registrar
+  (`$podeRegistrar`), entrega raio e coordenada do endereço como `data-*`, lê a posição no aparelho pelo
+  botão "Ler posição do aparelho" (`resources/js/nexusfield/checkin.js`) e mostra "Em campo desde …" com a
+  ajuda de que sair do local não encerra a ordem. Sem JavaScript o mesmo formulário continua gravando a
+  presença — só que sem medida, e dizendo isso na linha. As passagens antigas ficam listadas com entrada,
+  saída, duração, distância, coordenadas e relato.
+- `DashboardMetrics` ganhou o cartão "Técnicos em campo agora", contado em SQL sobre as passagens abertas
+  dentro do alcance de quem lê, e o `DemoSeeder` agora grava o raio da empresa de demonstração (300 m) e
+  produz 14 visitas com desvio medido de verdade — uma fora do raio (390,98 m), uma sem GPS e o resto
+  dentro —, porque tela de check-in sem visita registrada é tela que não demonstra nada.
+- `tests/Feature/CheckinsTest.php` (10 testes / 175 asserções) cobre o request que tenta forjar técnico,
+  hora e distância, a posição ausente que não vira zero, a saída que fecha a passagem sem tocar na ordem,
+  o rascunho / a encerrada / a passagem já aberta que recusam, o alcance de supervisor, funcionário, técnico
+  e conta de cliente na chegada e na saída, a tela e o CSV por conta de cada papel (inclusive a visita da
+  empresa ao lado, que é 404), o raio escolhido pela empresa mandando na marca e não na recusa, a queda
+  para o padrão diante de valor inútil, o cartão do painel contando só o alcance de quem lê, a ficha que não
+  oferece formulário a quem não pode registrar, e a coordenada absurda / relato imenso barrados na
+  validação. A suíte fecha em 173 testes / 1719 asserções.
 
 ### Alterado
 
@@ -885,18 +948,19 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Conhecido
 
-- O painel lê o banco e nada mais: os blocos operacionais existem, e a tela que produz os de ordem e os
-  de chamado já estão no ar. Faltam as telas que alimentam os blocos de agenda, estoque e financeiro,
-  que chegam das fases 14 em diante. Clientes, técnicos, equipes, especialidades, catálogo, ordens e
-  chamados já estão no `Navigation` e alimentam os indicadores que dependem de cadastro; o que ainda não
-  tem rota não tem link no menu, por decisão e não por descuido.
+- O painel lê o banco e nada mais: os blocos operacionais existem, e as telas que produzem os de ordem,
+  chamado, agenda e presença em campo já estão no ar. Faltam as telas que alimentam os blocos de estoque e
+  financeiro, que chegam das fases 16 e 17. Clientes, técnicos, equipes, especialidades, catálogo, ordens,
+  chamados, visitas e agenda já estão no `Navigation` e alimentam os indicadores que dependem de cadastro;
+  o que ainda não tem rota não tem link no menu, por decisão e não por descuido.
 - A ficha da equipe e a do serviço já abrem a ordem pelo botão, porque `orders.show` existe desde a fase
   12. O que continua condicionado é o botão "Movimentações" da listagem de produtos e a nota de estoque
   da ficha de ordem: ambos só são desenhados quando a rota `movements.index` existir (fase 16). A tela
   não promete um link que o aplicativo ainda não desenha.
-- O card de check-in da ficha de ordem é somente leitura, e a legenda diz isso: quem escreve entrada,
-  saída e coordenada é a aplicação de campo da fase 15. As colunas de endereço e coordenada da ordem já
-  são gravadas hoje — é a elas que o check-in vai se comparar.
+- O raio aceito pelo check-in é lido de `company_settings` (`checkin_raio`, 250 m por padrão), mas ainda não
+  há tela para a empresa escolhê-lo: hoje ele entra pelo banco — e a demonstração grava 300 m de propósito,
+  para que a marca "fora do raio" apareça em tela. A tela de configurações é a fase 21. Registrar a chegada
+  com o aparelho bloqueado continua sendo possível: a visita entra sem medida, marcada como tal.
 - A conta de cliente já tem alcance (`users.client_id`), mas quem amarra o login à carteira hoje é o
   seeder e a mão do escritório no banco; a tela que escolhe a carteira é da fase 20 (usuários e papéis).
 - O saldo central do produto é calculado sobre `stock_movements`, e a empresa de demonstração já tem
@@ -922,7 +986,7 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   compilação de views cai em `tempnam()` e o teste devolve 500 no lugar da falha real. É restrição
   da máquina, não do projeto — `php vendor/phpunit/phpunit/phpunit` chamado do PowerShell grava as
   views compiladas e passa.
-- `pint --test app resources/views tests` passa limpo nos 88 arquivos. O preset do Pint quer snake_case
+- `pint --test app resources/views tests` passa limpo nos 100 arquivos. O preset do Pint quer snake_case
   nos nomes de método de teste, e aqui o nome é frase em português — os dois convivem, e o único
   verdadeiro desvio (`test_anyCompany_...` no meio das frases) foi corrigido em vez de o padrão ser
   abandonado.

@@ -30,14 +30,27 @@ class ListFilters
             return $query;
         }
 
-        $escapado = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $termo);
-        $como = '%'.$escapado.'%';
+        $como = static::como($termo);
 
         return $query->where(function (Builder $sub) use ($colunas, $como) {
             foreach ($colunas as $coluna) {
                 $sub->orWhere($coluna, 'like', $como);
             }
         });
+    }
+
+    /**
+     * O termo de busca virando padrão `LIKE`, com os curingas escapados. Existe
+     * separado porque a busca de um módulo pode atravessar relações — a visita de
+     * campo procura o número da ordem e o nome do técnico, colunas que não estão
+     * na tabela que a tela lista — e o escape é uma regra só, não uma regra por
+     * controller.
+     */
+    public static function como(string $termo): string
+    {
+        $escapado = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($termo));
+
+        return '%'.$escapado.'%';
     }
 
     /** @param array<int, string> $permitidos */

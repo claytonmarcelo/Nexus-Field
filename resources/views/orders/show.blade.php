@@ -502,35 +502,116 @@
         </div>
 
         <div class="col-12 col-xl-6">
-            <x-ui.card title="Check-ins do campo" subtitle="O que o técnico registrou ao chegar e ao sair.">
+            <x-ui.card title="Check-in de campo"
+                :subtitle="$podeRegistrar
+                    ? 'A hora de cada carimbo é a do servidor; a posição é a que o aparelho ler agora.'
+                    : 'O que foi medido na chegada e na saída desta ordem, direto do banco.'">
+
+                @if ($podeRegistrar)
+                    @php
+                        $form = $visitaAberta
+                            ? ['acao' => route('checkins.checkout', $visitaAberta), 'metodo' => 'PATCH',
+                               'rotulo' => 'Registrar saída', 'icone' => 'fa-solid fa-person-walking-arrow-right',
+                               'ajuda' => 'Sair do local não encerra a ordem: concluir é outro passo, com nota e quem aprova.']
+                            : ['acao' => route('orders.checkin', $ordem), 'metodo' => null,
+                               'rotulo' => 'Registrar chegada', 'icone' => 'fa-solid fa-location-dot',
+                               'ajuda' => 'A chegada move a ordem para “em execução” pelo fluxo dela, com a passagem registrada.'];
+                    @endphp
+
+                    <form method="POST" action="{{ $form['acao'] }}" class="nf-checkin" data-nf-checkin
+                        data-lat-ordem="{{ $ordem->latitude }}" data-lon-ordem="{{ $ordem->longitude }}"
+                        data-raio="{{ $raio }}" data-nf-guard novalidate>
+                        @csrf
+                        @if ($form['metodo'])
+                            @method($form['metodo'])
+                        @endif
+
+                        <input type="hidden" name="latitude" data-nf-lat value="{{ old('latitude') }}">
+                        <input type="hidden" name="longitude" data-nf-lon value="{{ old('longitude') }}">
+
+                        <p class="nf-checkin-leitura" data-nf-leitura data-tom="espera">
+                            Posição ainda não lida. Sem ela o registro sai marcado como sem posição — e continua sendo registro válido.
+                        </p>
+
+                        @error('latitude')
+                            <p class="nf-checkin-erro">{{ $message }}</p>
+                        @enderror
+
+                        @error('longitude')
+                            <p class="nf-checkin-erro">{{ $message }}</p>
+                        @enderror
+
+                        @if ($visitaAberta)
+                            <p class="nf-checkin-aberta">
+                                Em campo desde <span class="nf-mono">{{ Formatters::dateTime($visitaAberta->checkin_at) }}</span>
+                                por {{ $visitaAberta->technician?->name ?? 'técnico sem ficha' }}.
+                            </p>
+                        @endif
+
+                        <x-ui.textarea label="Relato do local" name="observacao" :rows="2"
+                            placeholder="Portão fechado, cliente avisado, equipamento no 3º andar..." />
+
+                        <div class="nf-form-acoes">
+                            <x-ui.button type="button" variant="ghost" size="sm"
+                                icon="fa-solid fa-satellite-dish" data-nf-ler>
+                                Ler posição do aparelho
+                            </x-ui.button>
+
+                            <x-ui.button type="submit" variant="primary" size="sm" :icon="$form['icone']"
+                                data-loading="false">
+                                {{ $form['rotulo'] }}
+                            </x-ui.button>
+                        </div>
+
+                        <p class="nf-text-muted-2 small mb-0">{{ $form['ajuda'] }}</p>
+                    </form>
+                @endif
+
                 @if ($ordem->checkins->isEmpty())
-                    <x-ui.state tone="empty" title="Nenhum check-in nesta ordem"
-                        text="A chegada e a saída medidas por GPS são gravadas pelo aplicativo de campo; esta ficha só lê o que o campo registrou." />
+                    @unless ($podeRegistrar)
+                        <x-ui.state tone="empty" title="Nenhum check-in nesta ordem"
+                            text="Chegada e saída são registradas pelo técnico responsável, na ficha da ordem. Esta conta lê o que o campo mediu." />
+                    @endunless
                 @else
                     <ul class="nf-itens mb-0">
                         @foreach ($ordem->checkins as $registro)
+                            @php
+                                $fora = $registro->foraDoRaio();
+                            @endphp
                             <li class="nf-item-linha nf-item-linha-lado">
                                 <div>
                                     <p class="mb-0 fw-semibold">
                                         {{ $registro->technician?->name ?? 'Técnico sem ficha' }}
-                                        @if ($registro->checkout_at)
-                                            <span class="nf-status nf-status-done">saída registrada</span>
-                                        @else
-                                            <span class="nf-status nf-status-progress">em campo</span>
-                                        @endif
+                                        <span class="{{ StatusCatalog::badge('checkin', $registro->status) }}">
+                                            {{ StatusCatalog::label('checkin', $registro->status) }}
+                                        </span>
                                     </p>
                                     <p class="mb-0 nf-text-muted-2 small">
                                         entrada <span class="nf-mono">{{ Formatters::dateTime($registro->checkin_at) }}</span>
-                                        @if ($registro->checkin_latitude && $registro->checkin_longitude)
-                                            · <span class="nf-mono">
-                                                {{ Formatters::decimal($registro->checkin_latitude, 6) }},
+                                        @if ($registro->checkout_at)
+                                            · saída <span class="nf-mono">{{ Formatters::dateTime($registro->checkout_at) }}</span>
+                                            · <span class="nf-mono">{{ Formatters::duration($registro->duracaoMinutos()) }}</span> no local
+                                        @endif
+                                        <br>
+                                        @if ($fora === null)
+                                            <span class="nf-status nf-status-draft">sem posição lida</span>
+                                        @elseif ($fora)
+                                            <span class="nf-status nf-status-waiting">
+                                                fora do raio: {{ Formatters::decimal($registro->checkin_distance) }} m do endereço
+                                            </span>
+                                        @else
+                                            <span class="nf-status nf-status-done">
+                                                {{ Formatters::decimal($registro->checkin_distance) }} m do endereço
+                                            </span>
+                                        @endif
+
+                                        @if ($registro->checkin_latitude !== null && $registro->checkin_longitude !== null)
+                                            <span class="nf-mono">
+                                                · {{ Formatters::decimal($registro->checkin_latitude, 6) }},
                                                 {{ Formatters::decimal($registro->checkin_longitude, 6) }}
                                             </span>
                                         @endif
-                                        <br>
-                                        @if ($registro->checkout_at)
-                                            saída <span class="nf-mono">{{ Formatters::dateTime($registro->checkout_at) }}</span>
-                                        @endif
+
                                         @if ($registro->observation)
                                             <br>{{ $registro->observation }}
                                         @endif
@@ -541,13 +622,11 @@
                     </ul>
                 @endif
 
-                @if (Route::has('movements.index'))
-                    @can('stock.view')
-                        <p class="nf-text-muted-2 small mb-0 mt-2">
-                            O produto consumido por esta ordem sai do estoque na tela de movimentações.
-                        </p>
-                    @endcan
-                @endif
+                <p class="nf-text-muted-2 small mb-0 mt-2">
+                    O raio aceito por esta empresa é de {{ Formatters::decimal($raio) }} m. Carimbo, coordenada e
+                    distância medida não têm campo de edição: o que o campo registrou é histórico, e a correção de
+                    um erro se faz com outra passagem, nunca riscando a primeira.
+                </p>
             </x-ui.card>
         </div>
     </div>

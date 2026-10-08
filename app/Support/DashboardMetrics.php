@@ -276,7 +276,12 @@ class DashboardMetrics
 
         $total = Technician::query()->active()->count();
         $disponiveis = Technician::query()->available()->count();
-        $emCampo = ServiceOrderCheckin::query()->open()
+        // O mesmo alcance da tela de visitas: quem lê a própria escala conta a
+        // própria presença em campo, não a empresa inteira num cartão que parece
+        // ser dele.
+        $emCampo = ServiceOrderCheckin::query()
+            ->visiveisPara($this->usuario)
+            ->open()
             ->distinct()
             ->count('technician_id');
 

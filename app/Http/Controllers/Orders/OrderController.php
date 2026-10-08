@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceOrder;
+use App\Models\ServiceOrderCheckin;
 use App\Models\ServiceOrderStatusHistory;
 use App\Models\Team;
 use App\Models\Technician;
@@ -141,6 +142,14 @@ class OrderController extends Controller
             'statusHistory.user', 'checkins.technician',
         ]);
 
+        // A ficha oferece a chegada e a saída a quem pode dá-las, e só depois de
+        // saber qual passagem é a desta conta: um técnico com duas ordens abertas no
+        // mesmo dia vê o botão de saída na visita dele, não na do colega.
+        $emCampo = $ordem->checkins->filter(fn ($visita) => $visita->estaAberto());
+        $minha = $usuario->technician === null
+            ? null
+            : $emCampo->first(fn ($visita) => (int) $visita->technician_id === (int) $usuario->technician->id);
+
         return view('orders.show', [
             'ordem' => $ordem,
             'proximosEstados' => $this->proximosEstados($ordem, $usuario),
@@ -148,7 +157,24 @@ class OrderController extends Controller
             'servicos' => $this->servicos(),
             'produtos' => $this->produtos(),
             'tecnicos' => $this->tecnicos(),
+            'visitaAberta' => $minha ?? ($usuario->hasPermission('orders.approve') ? $emCampo->first() : null),
+            'podeRegistrar' => $this->podeRegistrar($ordem, $usuario),
+            'raio' => ServiceOrderCheckin::raioAceito(),
         ]);
+    }
+
+    /**
+     * Registrar presença é `orders.execute`, mas só de quem tem ficha de técnico —
+     * ou de quem responde pela escala, que registra pelo responsável da ordem. A
+     * conta de cliente lê a ficha e não oferece botão nenhum.
+     */
+    private function podeRegistrar(ServiceOrder $ordem, User $usuario): bool
+    {
+        if (! $usuario->hasPermission('orders.execute') || $ordem->estaEncerrada() || $ordem->status === 'draft') {
+            return false;
+        }
+
+        return $usuario->technician !== null || $usuario->hasPermission('orders.approve');
     }
 
     public function edit(Request $request, ServiceOrder $ordem): View

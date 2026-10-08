@@ -46,6 +46,12 @@ class Navigation
                         'permission' => 'agenda.view',
                         'icon' => 'fa-solid fa-calendar-days',
                     ],
+                    [
+                        'label' => 'Visitas de campo',
+                        'route' => 'checkins.index',
+                        'permission' => 'orders.view',
+                        'icon' => 'fa-solid fa-location-crossing',
+                    ],
                 ],
             ],
             [
