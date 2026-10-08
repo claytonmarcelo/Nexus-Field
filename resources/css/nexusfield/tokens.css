@@ -257,3 +257,28 @@
     --nf-duration: 180ms;
     --nf-ease: cubic-bezier(.22, .61, .36, 1);
 }
+
+/*
+ * A sidebar é painel escuro nos dois temas: ela é a moldura fixa da aplicação,
+ * e mantê-la escura dá um contraste estável com o conteúdo, que troca de tema.
+ *
+ * O AdminLTE declara `--lte-sidebar-*` no próprio `.app-sidebar` e ainda por
+ * cima com `[data-bs-theme=dark].app-sidebar` (0,2,0), então a sobrescrita
+ * precisa ter a mesma especificidade do seletor que vence hoje. tokens.css
+ * entra depois do CSS oficial na ordem de import, e é isso que decide.
+ */
+.app-sidebar[data-bs-theme="dark"] {
+    --lte-sidebar-color: #ccd3de;
+    --lte-sidebar-hover-color: #f4f1ea;
+    --lte-sidebar-hover-bg: rgba(244, 241, 234, .07);
+    --lte-sidebar-active-color: #f4f1ea;
+    --lte-sidebar-menu-active-bg: rgba(63, 158, 140, .2);
+    --lte-sidebar-menu-active-color: #cfeede;
+    --lte-sidebar-submenu-bg: transparent;
+    --lte-sidebar-submenu-color: #a7a296;
+    --lte-sidebar-submenu-hover-color: #ece8df;
+    --lte-sidebar-submenu-hover-bg: rgba(244, 241, 234, .06);
+    --lte-sidebar-submenu-active-color: #cfeede;
+    --lte-sidebar-submenu-active-bg: rgba(63, 158, 140, .16);
+    --lte-sidebar-header-color: #8b93a1;
+}

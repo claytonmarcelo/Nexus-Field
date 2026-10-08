@@ -75,8 +75,39 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 - `SEED_ADMIN_EMAIL` e `SEED_ADMIN_PASSWORD` documentados no `.env.example`: a credencial do
   administrador semeado vem do ambiente, nunca do código, e o seeder recusa senha gerada
   automaticamente em produção.
+- Layout autenticado na estrutura oficial do AdminLTE 4: `x-layouts.app` com `app-wrapper` em
+  grid, `x-app.sidebar` (marca + menu), `x-app.navbar` (hambúrguer `data-lte-toggle="sidebar"`,
+  chave de tema e menu do usuário com sair por POST+CSRF), `x-app.content-header` (título,
+  subtítulo e trilha) e `x-app.footer`. O estado da sidebar mora no `<body>`, como o template
+  manda, e `<html data-lte-color-mode="off">` desliga o ColorMode do AdminLTE para a chave de
+  tema do projeto continuar sendo a única.
+- `App\Support\Navigation`, o mapa do menu lateral: uma entrada só aparece se a rota dela existir
+  **e** se o papel do usuário tiver a permissão correspondente. Link para tela que não existe é
+  funcionalidade falsa, e link que o papel não pode abrir seria um 403 na cara de quem entrou.
+- `DashboardController` e a tela de dashboard: sessão, empresa, plano, papéis e último acesso na
+  tela, mais quatro contagens que saem de consultas reais ao MySQL desta empresa (usuários,
+  clientes, papéis e permissões do catálogo). Nenhum indicador antes de existir módulo que o
+  produza.
+- `<x-signature />`, a assinatura de rodapé (NEXUS-FIELD · Clayton Marcelo · 2026) compartilhada
+  entre a página pública e a autenticada; o crédito estava escrito em dois arquivos.
+- `User::initials()`, as iniciais do avatar — identificação que não depende de upload de foto.
+- 38 testes (119 asserções), com `tests/Feature/AuthenticatedLayoutTest.php` cobrindo convidado
+  mandado para o login, dados de sessão e empresa na tela, contagem batendo com o banco, menu sem
+  link morto, item sem permissão fora do menu e recusado no gate, logout por POST com CSRF, o
+  contrato do layout (classes do body, treeview, atalhos de teclado em português) e o rodapé.
 
 ### Corrigido
+
+- As cores da sidebar do design system não chegavam à tela: o AdminLTE declara `--lte-sidebar-*`
+  com `[data-bs-theme=dark].app-sidebar` (0,2,0), e a sobrescrita feita no `<html>` perdia por
+  especificidade. A sobrescrita agora ataca o mesmo seletor.
+- Título e subtítulo do cartão colavam no cabeçalho: o AdminLTE flutua `.card-title` para ele
+  dividir linha com as ferramentas, o que empurrava o subtítulo para o lado do título. O
+  `.card-header` passou a ser uma grade de duas colunas, com as ferramentas centradas à direita.
+- Em 320px o nome do usuário no navbar empurrava a seta do dropdown para fora da tela. Abaixo de
+  576px sobra o avatar, e abaixo de 480px a lista de definição empilha rótulo e valor.
+- `.nf-status` perdia a cor semântica no tema escuro: uma regra `[data-bs-theme="dark"] .nf-status`
+  pintava todo estado com `--nf-text` e apagava a diferença entre concluído, atrasado e cancelado.
 
 - O guarda de envio bloqueava mesmo: com `novalidate` no formulário, o navegador não cancela o
   request por conta própria, e o listener devolvia sem `preventDefault()` — um clique com campo
@@ -108,10 +139,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Conhecido
 
-- O layout autenticado em AdminLTE 4 (barra lateral, cabeçalho, rodapé) chega na fase 7 e o painel
-  com KPIs consultados no banco na fase 8. Até lá a rota `/dashboard` ainda é uma closure sem view,
-  então o login bem-sucedido cai em "View [dashboard] not found" — o caminho de autenticação em si
-  está funcionando e é coberto por teste.
+- O painel com KPIs operacionais chega na fase 8, junto do `DemoSeeder` local separado dos dados
+  reais. O que existe hoje em `/dashboard` é sessão, empresa e o que já está no banco — a estrutura
+  autenticada (barra lateral, cabeçalho, rodapé) está entregue e verificada em 320px, 768px,
+  1440px e 2560px, nos dois temas.
 - O link de redefinição de senha sai pelo canal `log` (`MAIL_MAILER=log`), porque ainda não há SMTP
   configurado. Nada de credencial de e-mail no repositório: o servidor de envio entra por variável
   de ambiente quando for definido.
@@ -122,10 +153,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 - O `php` do `PATH` desta máquina é o 8.4.23 de `C:\Program Files\PHP`, sem `mbstring`; os
   comandos de artisan e de teste precisam usar o build do WAMP (`php8.3.28`), o mesmo que o
   Apache carrega.
-- No Windows deste posto, `php artisan test` executa o `vendor/bin/phpunit` (`.bat`) através do
-  `cmd.exe`, que não tem permissão de escrita em `C:\wamp64`; isso derruba a compilação de views
-  durante os testes. Rodar `php vendor/phpunit/phpunit/phpunit` diretamente contorna o problema,
-  que é da máquina e não do projeto.
+- A suíte precisa rodar de um processo com permissão de escrita em `C:\wamp64`: sem isso a
+  compilação de views cai em `tempnam()` e o teste devolve 500 no lugar da falha real. É restrição
+  da máquina, não do projeto — `php vendor/phpunit/phpunit/phpunit` chamado do PowerShell grava as
+  views compiladas e passa.
 
 ## [0.1.0] — 2026-10-07
 

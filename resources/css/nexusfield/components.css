@@ -13,11 +13,96 @@
     min-height: 100vh;
 }
 
+/*
+ * Em telas muito largas a linha de texto cresce demais e a leitura piora. O
+ * container continua fluido, só para de esticar depois de um certo ponto.
+ */
+.nf-content {
+    max-width: 1680px;
+    margin-inline: auto;
+}
+
 .app-header {
     background-color: color-mix(in srgb, var(--nf-surface) 88%, transparent);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--nf-line);
     box-shadow: var(--nf-shadow-sm);
+}
+
+.app-header .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding-inline: .75rem;
+    color: var(--nf-text-muted);
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+.app-header .nav-link:hover,
+.app-header .nav-link:focus-visible {
+    color: var(--nf-primary);
+}
+
+.nf-nav-item-toggle {
+    display: flex;
+    align-items: center;
+}
+
+.nf-nav-user-name {
+    font-weight: 600;
+    font-size: .875rem;
+    max-width: 14rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nf-user-menu {
+    min-width: 17rem;
+}
+
+.nf-user-menu-id {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    padding: .65rem .75rem;
+}
+
+.nf-user-menu-text {
+    min-width: 0;
+}
+
+.nf-user-menu-name {
+    font-weight: 700;
+    margin-bottom: 0;
+    overflow-wrap: anywhere;
+}
+
+.nf-user-menu-mail,
+.nf-user-menu-org,
+.nf-user-menu-roles {
+    font-size: .8rem;
+    color: var(--nf-text-muted);
+    margin-bottom: 0;
+    overflow-wrap: anywhere;
+}
+
+.nf-user-menu-roles {
+    padding: 0 .75rem;
+    font-weight: 600;
+}
+
+.nf-user-menu-out {
+    color: var(--nf-danger);
+    font-weight: 600;
+}
+
+.nf-user-menu-out:focus,
+.nf-user-menu-out:hover {
+    background-color: var(--nf-danger-soft);
+    color: var(--nf-danger);
 }
 
 .brand-link {
@@ -26,15 +111,14 @@
     letter-spacing: .01em;
 }
 
-.app-sidebar,
-.app-sidebar[data-bs-theme="light"] {
+.app-sidebar {
     background:
         radial-gradient(120% 60% at 50% 0%, rgba(63, 158, 140, .16) 0%, transparent 62%),
         linear-gradient(180deg, #171b24 0%, #121620 100%);
     border-right: 1px solid rgba(255, 255, 255, .06);
 }
 
-.app-sidebar .nav-sidebar > .nav-item > .nav-link {
+.app-sidebar .sidebar-menu > .nav-item > .nav-link {
     border-radius: var(--bs-border-radius-sm);
     margin-inline: .5rem;
     padding-block: .5rem;
@@ -42,13 +126,27 @@
         color var(--nf-duration) var(--nf-ease);
 }
 
-.app-sidebar .nav-sidebar .nav-link.active {
+.app-sidebar .sidebar-menu .nav-link.active {
     box-shadow: inset 2px 0 0 var(--nf-accent);
 }
 
 .app-content-header {
     background-color: transparent;
     border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-content-header-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .35rem 1rem;
+}
+
+.nf-content-subtitle {
+    font-size: .85rem;
+    color: var(--nf-text-muted);
+    margin: .1rem 0 0;
 }
 
 .app-content {
@@ -58,6 +156,117 @@
 .app-footer {
     border-top: 1px solid var(--nf-line);
     color: var(--nf-text-muted);
+}
+
+.nf-footer-note {
+    font-size: .82rem;
+    color: var(--nf-text-muted);
+}
+
+/* ------------------------------------------------------------------ *
+ * Assinatura de rodapé (pública e autenticada usam a mesma)
+ * ------------------------------------------------------------------ */
+.nf-signature {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .4em;
+    font-size: .85rem;
+    color: var(--nf-text-muted);
+}
+
+.nf-signature-brand {
+    font-family: var(--nf-font-display);
+    font-weight: 600;
+    letter-spacing: .02em;
+    color: var(--nf-text);
+}
+
+.nf-signature-dot {
+    color: var(--nf-text-faint);
+}
+
+/* ------------------------------------------------------------------ *
+ * Definições e listas de fatos
+ * ------------------------------------------------------------------ */
+.nf-dl {
+    display: grid;
+    gap: .6rem;
+}
+
+.nf-dl > div {
+    display: grid;
+    grid-template-columns: minmax(7rem, 9.5rem) minmax(0, 1fr);
+    gap: .25rem 1rem;
+    align-items: baseline;
+}
+
+.nf-dl dt {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+}
+
+.nf-dl dd {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .45rem;
+}
+
+.nf-fact-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nf-fact-list li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: .55rem;
+    border-bottom: 1px solid var(--nf-line);
+    font-size: .875rem;
+}
+
+.nf-fact-list li:last-child {
+    border-bottom: 0;
+}
+
+.nf-fact-list strong {
+    font-family: var(--nf-font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.nf-session {
+    min-width: 0;
+}
+
+/*
+ * Em 320px o nome do usuário empurrava a seta do dropdown para fora da tela. O
+ * avatar continua, o nome sai: a identidade não depende de texto comprido.
+ */
+@media (max-width: 575.98px) {
+    .nf-nav-user-name {
+        display: none;
+    }
+}
+
+/* Uma coluna por linha: rótulo em cima, valor embaixo, quando não há lado. */
+@media (max-width: 479.98px) {
+    .nf-dl > div {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+    }
+
+    .nf-dl dt {
+        margin-top: .45rem;
+    }
 }
 
 /* ------------------------------------------------------------------ *
@@ -85,6 +294,35 @@
 
 .card-header {
     border-bottom-width: 1px;
+    /*
+     * O AdminLTE flutua o título para ele dividir linha com as ferramentas. Com
+     * subtítulo na jogada, o flutuante empurra tudo. Grade resolve os três
+     * papéis: texto à esquerda em duas linhas, ferramentas à direita centradas.
+     */
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 1rem;
+    align-items: center;
+}
+
+.card-header > .card-title {
+    float: none;
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.card-header > .card-subtitle {
+    clear: none;
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.card-header > .card-tools {
+    float: none;
+    margin-right: 0;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    justify-self: end;
 }
 
 .card-title {
@@ -416,8 +654,6 @@
 .nf-status-waiting { color: var(--nf-accent); }
 .nf-status-done { color: var(--nf-success); }
 .nf-status-canceled { color: var(--nf-danger); }
-
-[data-bs-theme="dark"] .nf-status { color: var(--nf-text); }
 
 /* ------------------------------------------------------------------ *
  * Navegação auxiliar

@@ -81,4 +81,15 @@ class User extends Authenticatable
     {
         return $this->hasRole('administrator');
     }
+
+    /**
+     * Iniciais para o avatar: primeira e última palavra do nome. Sem foto
+     * uploadada ainda, é a identificação que não depende de arquivo algum.
+     */
+    public function initials(): string
+    {
+        $palavras = preg_split('/\s+/', trim($this->name) ?: 'Usuario', -1, PREG_SPLIT_NO_EMPTY);
+
+        return mb_strtoupper(mb_substr($palavras[0], 0, 1).mb_substr($palavras[count($palavras) - 1], 0, 1));
+    }
 }
