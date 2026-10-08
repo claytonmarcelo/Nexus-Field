@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Catalog\ProductController;
+use App\Http\Controllers\Catalog\ServiceCategoryController;
+use App\Http\Controllers\Catalog\ServiceController;
 use App\Http\Controllers\Clients\AddressController;
 use App\Http\Controllers\Clients\ClientContactController;
 use App\Http\Controllers\Clients\ClientController;
@@ -138,6 +141,75 @@ Route::middleware(['auth', 'company'])->group(function () {
 
         Route::delete('{especialidade}', [SpecialtyController::class, 'destroy'])
             ->middleware('permission:technicians.delete')
+            ->name('destroy');
+    });
+
+    Route::prefix('servicos')->name('services.')->group(function () {
+        Route::get('/', [ServiceController::class, 'index'])
+            ->middleware('permission:services.view')
+            ->name('index');
+
+        Route::middleware('permission:services.create')->group(function () {
+            Route::get('novo', [ServiceController::class, 'create'])->name('create');
+            Route::post('/', [ServiceController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:services.update')->group(function () {
+            Route::get('{servico}/editar', [ServiceController::class, 'edit'])->name('edit');
+            Route::put('{servico}', [ServiceController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('permission:services.delete')->group(function () {
+            Route::delete('{servico}', [ServiceController::class, 'destroy'])->name('destroy');
+            Route::patch('{servico}/restaurar', [ServiceController::class, 'restore'])->name('restore');
+        });
+
+        Route::get('{servico}', [ServiceController::class, 'show'])
+            ->middleware('permission:services.view')
+            ->name('show');
+    });
+
+    Route::prefix('produtos')->name('products.')->group(function () {
+        Route::get('/', [ProductController::class, 'index'])
+            ->middleware('permission:products.view')
+            ->name('index');
+
+        Route::middleware('permission:products.create')->group(function () {
+            Route::get('novo', [ProductController::class, 'create'])->name('create');
+            Route::post('/', [ProductController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:products.update')->group(function () {
+            Route::get('{produto}/editar', [ProductController::class, 'edit'])->name('edit');
+            Route::put('{produto}', [ProductController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('permission:products.delete')->group(function () {
+            Route::delete('{produto}', [ProductController::class, 'destroy'])->name('destroy');
+            Route::patch('{produto}/restaurar', [ProductController::class, 'restore'])->name('restore');
+        });
+
+        Route::get('{produto}', [ProductController::class, 'show'])
+            ->middleware('permission:products.view')
+            ->name('show');
+    });
+
+    // A categoria agrupa serviço, então quem cuida do catálogo de serviços cuida dela.
+    Route::prefix('categorias-de-servico')->name('categories.')->group(function () {
+        Route::get('/', [ServiceCategoryController::class, 'index'])
+            ->middleware('permission:services.view')
+            ->name('index');
+
+        Route::post('/', [ServiceCategoryController::class, 'store'])
+            ->middleware('permission:services.create')
+            ->name('store');
+
+        Route::put('{categoria}', [ServiceCategoryController::class, 'update'])
+            ->middleware('permission:services.update')
+            ->name('update');
+
+        Route::delete('{categoria}', [ServiceCategoryController::class, 'destroy'])
+            ->middleware('permission:services.delete')
             ->name('destroy');
     });
 });

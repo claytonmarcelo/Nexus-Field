@@ -23,6 +23,29 @@ class Formatters
         return number_format((float) $valor, $casas, ',', '.');
     }
 
+    /**
+     * Tempo de execução lido como o operador lê: minuto até uma hora, hora e
+     * resto acima dela. Null é traço, não zero — estimativa que ninguém deu
+     * não deve aparecer como serviço de zero minuto.
+     */
+    public static function duration(?int $minutos): string
+    {
+        if ($minutos === null) {
+            return self::TIME_NULL;
+        }
+
+        if ($minutos < 60) {
+            return $minutos.' min';
+        }
+
+        $horas = intdiv($minutos, 60);
+        $resto = $minutos % 60;
+
+        return $resto === 0
+            ? $horas.' h'
+            : $horas.' h '.strval($resto).' min';
+    }
+
     public static function date(Carbon|string|null $data): string
     {
         if ($data === null || $data === '') {

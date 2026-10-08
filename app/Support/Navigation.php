@@ -59,6 +59,29 @@ class Navigation
                     ],
                 ],
             ],
+            [
+                'label' => 'Catálogo',
+                'items' => [
+                    [
+                        'label' => 'Serviços',
+                        'route' => 'services.index',
+                        'permission' => 'services.view',
+                        'icon' => 'fa-solid fa-screwdriver-wrench',
+                    ],
+                    [
+                        'label' => 'Produtos',
+                        'route' => 'products.index',
+                        'permission' => 'products.view',
+                        'icon' => 'fa-solid fa-boxes-stacked',
+                    ],
+                    [
+                        'label' => 'Categorias de serviço',
+                        'route' => 'categories.index',
+                        'permission' => 'services.view',
+                        'icon' => 'fa-solid fa-layer-group',
+                    ],
+                ],
+            ],
         ];
     }
 

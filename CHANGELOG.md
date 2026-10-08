@@ -263,7 +263,44 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   no endereço e no quadro de equipe, os filtros de situação, região e especialidade, a paginação com a
   contagem do banco, a exclusão recusada quando há ordem e aceita quando não há, o `left_at` do quadro
   com a liderança que se desfaz, a especialidade que protege quem a usa e a matriz de permissões dos
-  papéis. A suíte fecha em 106 testes / 790 asserções.
+  papéis.
+- Fase 11 — o catálogo no ar. `ServiceController` (`/servicos`) lista com busca (nome e código),
+  filtro por situação — ativas, inativas e o painel dos excluídos com `onlyTrashed()` — e por
+  categoria, ordenação presa em `ORDENAVEIS`, paginação própria e colunas de uso lidas do banco
+  (`service_orders_count` e `items_count`) para a pessoa saber o que está mexendo antes de inativar.
+  O preço é string decimal no MySQL e sai formatado por `Formatters::money`; a duração estimada, em
+  minutos, passa por `Formatters::duration`, que diz "45 min", "1 h" ou "1 h 30 min" e "—" quando
+  ainda não foi preenchida — é ela que a agenda da fase 14 vai reservar.
+- `ProductController` (`/produtos`) acrescenta dois filtros que não existem em nenhum outro lugar do
+  projeto: situação de estoque (`abaixo` / `ok`) e unidade. A unidade aceita só o que está em
+  `Product::UNIDADES`, e o seletor mostra apenas as unidades em uso pela empresa, contadas num
+  `distinct` do próprio banco. O saldo central não é coluna da tabela: `scopeWithCentralBalance`
+  calcula por subconsulta a soma sinalizada de `stock_movements` com `StockMovement::CENTRAL_SIGN`,
+  e `belowReorderPoint()` / `atOrAboveReorderPoint()` repetem a expressão crua no `whereRaw`, porque
+  o MySQL recusa alias de SELECT dentro do WHERE.
+- `ServiceCategoryController` (`/categorias-de-servico`) é o grupo curto do catálogo: o slug nasce do
+  nome em `Str::slug`, a lista conta os serviços de cada categoria e do catálogo inteiro numa
+  consulta só, e excluir recusado enquanto houver serviço no grupo. As rotas herdam as permissões de
+  `services.*`, porque quem cuida do serviço cuida do grupo dele.
+- A sidebar ganha a seção "Catálogo" (Serviços, Produtos, Categorias de serviço) entre a escala e o
+  que ainda não tem rota. Quem não tem `services.view` nem `products.view` não vê a seção: o
+  `Navigation` filtra por permissão antes de montar o item.
+- Ficha honesta dos dois lados. `services/show` mostra o cadastro, o escopo, quantas ordens e itens
+  já cobraram aquele serviço e as últimas ordens em que ele apareceu; `products/show` mostra o
+  cadastro, a margem (preço menos custo, calculada na tela a partir dos dois campos do banco), o
+  saldo central com o ponto de reposição e o movimento a movimento com o efeito real no estoque —
+  incluindo o ajuste, que carrega o sinal na própria quantidade e por isso aparece com `+` ou `−`
+  conforme o número, não conforme o tipo.
+- Ninguém digita saldo: a tela de produto diz em letras que o estoque só nasce da primeira
+  movimentação, e a própria página de edição não tem campo nenhum para `central_balance`.
+- `tests/Feature/CatalogTest.php` (11 testes / 148 asserções) cobre isolamento de tenant em serviço,
+  produto e categoria, os três filtros do serviço e os quatro do produto, a paginação com a contagem
+  do banco, nome e SKU únicos dentro da empresa (e repetíveis na empresa ao lado), categoria de outra
+  empresa recusada, unidade fora do catálogo recusada, slug automático e duplicado de categoria, o
+  saldo central somado tipo a tipo (`compra 10 − carga 4 − consumo 2 − ajuste 1 = 5`), o filtro
+  `estoque=abaixo`, a exclusão vetada quando o registro já cobrou ou já foi movimentado, a restauração
+  e a matriz de permissões: técnico e cliente levam 403 em tudo do catálogo, o funcionário lê mas não
+  escreve, e o supervisor escreve sem poder excluir. A suíte fecha em 117 testes / 944 asserções.
 
 ### Alterado
 
@@ -446,6 +483,19 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 - `pint --test app` fechou em `PASS` nos 61 arquivos: `DashboardMetrics`, `ListFilters` e
   `TenantContext` carregavam importações sem uso e `!` colado na variável, e os controladores de
   cliente e técnico importavam classe que não usavam mais depois dos traits compartilhados.
+- A ficha do produto caía em 500 com `ParseError: syntax error, unexpected token "endif"`: o
+  atributo `:subtitle='…'` foi escrito com aspas simples e o PHP de dentro também usa aspas simples,
+  então o atributo se encerrava no primeiro `'SKU '` e a tag de abertura de `<x-layouts.app>` nunca
+  era compilada — sobrava um `@endif` órfão no texto cru, e a linha do erro do PHP apontava para o
+  último `endif` do arquivo, não para a causa. Atributo Blade com expressão leva aspas duplas.
+- Cabeçalho da listagem de categorias quebrado em duas linhas fonte (`{{ total }}` de um lado, o
+  rótulo do outro): a interpolação multilinha injeta quebra e indentação no HTML, e a frase
+  "1 categoria cadastrada" não existia junta na tela nem no teste. Entrou numa linha só, como já
+  faz a listagem de clientes.
+- Os controladores de catálogo importavam `EmEdicao`, pediam `Request` no `show()` e mandavam
+  `situacoes` para uma ficha que não desenha seletor de situação — herança do esquema da fase 10 que
+  não servia a nada. Saíram os três, e `pint --test app resources/views` fecha em `PASS` nos
+  64 arquivos.
 
 ### Removido
 
@@ -464,7 +514,11 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 - A ficha da equipe lista as ordens em aberto de quem está no quadro, mas o botão de abrir uma ordem
   só é desenhado quando a rota `orders.show` existir (fase 12). Até lá a linha mostra o número, o
   título e o técnico, e a legenda diz "tela de ordens na fase 12" — a tela não promete um link que o
-  aplicativo ainda não desenha.
+  aplicativo ainda não desenha. O mesmo critério vale para o serviço (suas últimas ordens) e para o
+  botão "Movimentações" da listagem de produtos, que espera a rota `movements.index` da fase 16.
+- O saldo central do produto é calculado sobre `stock_movements`, e a empresa de demonstração já tem
+  movimentações semeadas; a tela que registra movimentação ainda não existe (fase 16). Hoje o número
+  é leitura fiel do banco, não edição.
 - A demonstração mora na empresa `nexusfield-demo` e cria quatro usuários, um por papel de sistema
   que o painel distingue (`admin.demo@`, `gestor.demo@`, `campo.demo@`, `cliente.demo@`, todos em
   `nexusfield.local`), com senha vinda de `SEED_DEMO_PASSWORD` — que cai para `SEED_ADMIN_PASSWORD`

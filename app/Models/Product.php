@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,21 @@ use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
-    use BelongsToCompany, SoftDeletes;
+    use Auditable, BelongsToCompany, SoftDeletes;
+
+    /** Unidades que a tela oferece; o cadastro aceita qualquer uma delas. */
+    public const UNIDADES = [
+        'un' => 'Unidade',
+        'kg' => 'Quilograma',
+        'g' => 'Grama',
+        'l' => 'Litro',
+        'ml' => 'Mililitro',
+        'm' => 'Metro',
+        'cm' => 'Centímetro',
+        'cx' => 'Caixa',
+        'pct' => 'Pacote',
+        'par' => 'Par',
+    ];
 
     protected $fillable = [
         'company_id', 'sku', 'name', 'description', 'unit', 'cost', 'price', 'reorder_point',
@@ -39,6 +54,12 @@ class Product extends Model
         return $this->hasMany(StockMovement::class);
     }
 
+    /** Itens de ordem que já cobraram este produto. */
+    public function items(): HasMany
+    {
+        return $this->hasMany(ServiceOrderItem::class);
+    }
+
     public function scopeWithCentralBalance(Builder $q): Builder
     {
         // Subquery correlacionada em vez de join + groupBy: o groupBy substituiria o SELECT
@@ -58,6 +79,15 @@ class Product extends Model
         // MySQL não aceita alias de SELECT no WHERE: a expressão entra de novo, crua.
         return $q->withCentralBalance()
             ->whereRaw('('.$balance->toSql().') < products.reorder_point', $balance->getBindings());
+    }
+
+    /** O avesso do filtro acima: o que ainda aguenta uma saída sem virar alerta. */
+    public function scopeAtOrAboveReorderPoint(Builder $q): Builder
+    {
+        $balance = static::centralBalanceQuery();
+
+        return $q->withCentralBalance()
+            ->whereRaw('('.$balance->toSql().') >= products.reorder_point', $balance->getBindings());
     }
 
     private static function centralBalanceQuery(): QueryBuilder

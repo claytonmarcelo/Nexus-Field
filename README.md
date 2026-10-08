@@ -18,12 +18,13 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-106%20testes%20%2F%20790%20asser%C3%A7%C3%B5es-brightgreen" alt="106 testes, 790 asserções">
+  <img src="https://img.shields.io/badge/testes-117%20testes%20%2F%20944%20asser%C3%A7%C3%B5es-brightgreen" alt="117 testes, 944 asserções">
 </p>
 
 <p align="center">
-  <sub>Estágio atual: fundação completa (fases 1 a 8) e os dois primeiros módulos de cadastro no ar
-  (fase 9 — clientes, fase 10 — técnicos, equipes e especialidades). A tabela
+  <sub>Estágio atual: fundação completa (fases 1 a 8) e os cadastros e o catálogo no ar
+  (fase 9 — clientes, fase 10 — técnicos, equipes e especialidades, fase 11 — serviços, produtos e
+  categorias). A tabela
   <a href="#módulos">Módulos</a> diz, um por um, o que já está no ar e
   o que ainda é só schema.</sub>
 </p>
@@ -144,6 +145,20 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - As três telas de lista passam pelos mesmos `ListFilters`, pela mesma paginação própria e pelos mesmos
   estados desenhados de vazio e de nenhum resultado com estes filtros
 
+### Catálogo
+
+- **Serviços**: preço e duração estimada por linha do catálogo; a ficha mostra onde o serviço já foi
+  aberto como ordem e já foi cobrado como item, contado no banco, e é essa soma que segura a exclusão
+- **Produtos**: SKU único por empresa, unidade vinda do catálogo do projeto e saldo que ninguém digita —
+  ele é a subquery que soma as movimentações com o sinal de cada tipo (`StockMovement::CENTRAL_SIGN`),
+  então consumo não mexe no estoque central e ajuste de inventário pode baixar
+- **Categorias de serviço**: agrupamento que a listagem de serviços usa como filtro; o slug nasce do
+  nome e a exclusão é recusada enquanto houver serviço no grupo
+- Nome de serviço, SKU e slug são únicos **dentro da empresa**, não no banco inteiro — a mesma regra de
+  tenant que vale para cliente e técnico
+- Serviço e produto com histórico não somem: inativar tira da escolha e preserva o preço praticado;
+  excluir só é permitido quando a contagem do banco dá zero
+
 ### Interface
 
 - AdminLTE 4 na estrutura oficial, Bootstrap 5.3 nos componentes e camada de tokens própria
@@ -168,7 +183,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vêm uma fase por vez.
 | Temas, diálogos e estados de interface | — | — | ✅ |
 | Clientes e contatos | ✅ | ✅ | ✅ |
 | Técnicos, equipes e especialidades | ✅ | ✅ | ✅ |
-| Catálogo de serviços e produtos | ✅ | ✅ | 🚧 fase 11 |
+| Catálogo de serviços e produtos | ✅ | ✅ | ✅ |
 | Ordens de serviço | ✅ | ✅ | 🚧 fase 12 |
 | Chamados | ✅ | ✅ | 🚧 fase 13 |
 | Agenda e compromissos | ✅ | ✅ | 🚧 fase 14 |
@@ -217,7 +232,7 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 | `PermissionCatalog` | Módulos e ações de permissão em um único lugar, lidos por seeder, menu e middleware |
 | `TenantContext` / `CompanyScope` / `ResolveCompany` | Isolamento por empresa em toda query |
 | `DashboardMetrics` | As contagens do painel, todas em SQL contra a empresa logada |
-| `StatusCatalog` / `Formatters` | Estados e formatações (dinheiro, decimal, data e hora) num único lugar |
+| `StatusCatalog` / `Formatters` | Estados e formatações (dinheiro, decimal, data, hora e duração) num único lugar |
 | `ListFilters` | Busca, filtro por coluna, ordenação e por-página lidos do query string |
 | `Export` | CSV com BOM e separador `;`, escrito a partir da mesma consulta da tela |
 | `Auditor` / `Auditable` | Trilha de auditoria gravada nas mudanças de estado, sem mudar tela nenhuma |
@@ -234,10 +249,10 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 nexusfield/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians e os Concerns compartilhados
+│   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians, Catalog e os Concerns compartilhados
 │   │   └── Middleware/      → ResolveCompany (tenancy) e EnsurePermission (autorização)
 │   ├── Models/              → Company, Plan, User, Role, Permission, Client, Contact, Address,
-│   │                          Technician, Team, Specialty…
+│   │                          Technician, Team, Specialty, Service, ServiceCategory, Product…
 │   └── Support/             → PermissionCatalog, Navigation, StatusCatalog, Formatters, TenantContext
 ├── bootstrap/               → inicialização e registro de rotas
 ├── config/                  → banco, sessão, filesystem, temas
@@ -253,12 +268,14 @@ nexusfield/
 │   ├── css/nexusfield/      → tokens.css, base.css, components.css, public.css, listings.css
 │   ├── js/nexusfield/       → theme, notify, dialog, confirm, forms, flash, passwords, listas, jquery
 │   └── views/               → Blade: componentes ui/ e layouts, páginas públicas, de entrada,
-│                              de clientes, de técnicos, de equipes e de especialidades
+│                              de clientes, de técnicos, de equipes, de especialidades, de serviços,
+│                              de produtos e de categorias
 ├── routes/                  → web.php
 ├── storage/                 → logs, cache e uploads (fora da raiz pública)
 ├── tests/
 │   ├── Feature/             → entrada e recuperação, autorização por papel, tenancy, layout
-│   │                          autenticado, painel, demonstração, conta raiz, clientes e técnicos
+│   │                          autenticado, painel, demonstração, conta raiz, clientes, técnicos
+│   │                          e catálogo
 │   └── Unit/                → paleta dos dois temas, contrato das capturas, iniciais do usuário
 └── CHANGELOG.md             → histórico por fase
 ```
@@ -288,6 +305,7 @@ nexusfield/
 │  companies ─┬─ users ─ roles ─ permissions  │
 │             ├─ clients ─ contacts ─ addresses │
 │             ├─ technicians ─ teams ─ specialties │
+│             ├─ services ─ categories ─ products │
 │             ├─ orders ─ tickets ─ appointments │
 │             ├─ check-in ─ estoque ─ financeiro │
 │             └─ settings ─ notifications ─ auditoria │
@@ -448,14 +466,15 @@ Depois:
 php artisan test
 ```
 
-Hoje são **106 testes / 790 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **117 testes / 944 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com
 token válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato
 do seletor de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG
 e a marca verde medida do medalhão, o contrato das seis capturas deste README (existem, estão
 linkadas e medem 1440×900), a proibição dos diálogos nativos do navegador, o CRUD de clientes com
-contatos e endereços, e o de técnicos, equipes e especialidades — inclusive a ficha de outra empresa
-que a rota não alcança e a exclusão recusada quando já existe histórico.
+contatos e endereços, o de técnicos, equipes e especialidades, e o do catálogo — inclusive o saldo
+central somado das movimentações, a unidade fora do catálogo recusada e a exclusão vetada quando já
+existe histórico.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -503,14 +522,14 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 - [x] **Fase 8.3** — Paleta global: fundo preto no escuro, branco neutro no claro, texto acima do AA
 - [x] **Fase 9** — Clientes: CRUD, filtros, paginação própria, ficha com contatos e endereços
 - [x] **Fase 10** — Técnicos, equipes e especialidades: escala, quadro com histórico de passagem e base de trabalho
+- [x] **Fase 11** — Catálogo de serviços, produtos e categorias: preço, duração, SKU e saldo lido das movimentações
 
 ### Em curso
 
-- [ ] Fase 11 — Catálogo de serviços e produtos
+- [ ] Fase 12 — Ordens de serviço
 
 ### Planejado
 
-- [ ] Fase 12 — Ordens de serviço
 - [ ] Fase 13 — Chamados
 - [ ] Fase 14 — Agenda (FullCalendar 6)
 - [ ] Fase 15 — Check-in e check-out com geolocalização
