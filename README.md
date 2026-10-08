@@ -288,7 +288,7 @@ nexusfield/
 ├── bootstrap/               → inicialização e registro de rotas
 ├── config/                  → banco, sessão, filesystem, temas
 ├── database/
-│   ├── migrations/          → 17 migrations do schema nexusfield
+│   ├── migrations/          → 18 migrations do schema nexusfield
 │   └── seeders/             → DatabaseSeeder (plano, empresa, RBAC, conta raiz) e DemoSeeder
 ├── docs/
 │   ├── branding/            → o medalhão e a arte completa da marca oficial
@@ -353,7 +353,7 @@ A regra de dependência é uma só: tela nenhuma decide autorização. O middlew
 **MySQL 8+**, schema `nexusfield`, engine InnoDB obrigatória (chave estrangeira e transação), charset
 `utf8mb4` / `utf8mb4_unicode_ci`.
 
-O schema é versionado em 16 migrations (`database/migrations/`) e cobre o domínio inteiro: planos e
+O schema é versionado em 18 migrations (`database/migrations/`) e cobre o domínio inteiro: planos e
 empresas, usuários e RBAC, clientes e endereços, técnicos e equipes, catálogo de serviços e produtos,
 ordens de serviço, estoque, check-in, chamados, agenda, financeiro, configurações, notificações,
 auditoria e anexos.
@@ -429,12 +429,18 @@ php artisan serve  # apenas o servidor HTTP
 
 ### Contas e acesso
 
-A conta criada pelo `db:seed` é a **conta raiz** do sistema: recebe o catálogo inteiro de permissões
-e não pode ser excluída, desativada, remanejada de empresa nem ter o e-mail trocado — a regra está no
-model (`User::booted()`), então vale mesmo para request de administrador. A senha é rotacionável:
-troque o valor no `.env` e rode `php artisan db:seed` de novo, ou altere a senha por dentro da
-aplicação. Em produção o seeder recusa senha gerada automaticamente; credencial nunca entra no código
-nem no Git.
+A conta criada pelo `db:seed` é a **conta raiz** do sistema — identidade permanente
+`nexusfield.admin@gmail.com`. Ela recebe o catálogo inteiro de permissões e não pode ser excluída,
+desativada, remanejada de empresa, ter o e-mail trocado nem perder a condição de raiz: a regra está no
+model (`User::booted()`), então vale mesmo para request de administrador. O endereço que a raiz usava
+antes (`marcelolimadez@gmail.com`) foi aposentado por medida de segurança; a migration
+`2026_10_08_000004_replace_root_account_email.php` renomeia a linha em vez de criar outra — o histórico
+de papéis, auditoria e notificações continua na mesma conta — e o seeder recusa semear nele.
+
+A senha é rotacionável: troque o valor no `.env` e rode `php artisan db:seed` de novo, ou altere a
+senha por dentro da aplicação. Se a senha contiver `#`, escreva o valor entre aspas no `.env` — sem
+aspas o dotenv lê o `#` como início de comentário e a senha chega truncada. Em produção o seeder
+recusa senha gerada automaticamente; credencial nunca entra no código nem no Git.
 
 **Não há cadastro por conta própria (`/register`).** As contas deste estágio vêm do seeder: o seeder
 padrão cria a conta raiz, e `DemoSeeder` cria as quatro contas de demonstração. O motivo de não abrir
@@ -477,7 +483,7 @@ com as chaves nomeadas e nenhuma credencial preenchida.
 | Força bruta | 5 tentativas por e-mail e IP, mais throttle de 10 requests/min na rota de entrada |
 | Autorização | `EnsurePermission` no servidor, por permissão do catálogo; a tela não decide nada |
 | Tenancy | `CompanyScope` global; leitura fora da empresa exige `anyCompany()` explícito |
-| Conta raiz | `is_root` não é atribuível por request e a conta raiz resiste a exclusão, desativação e remanejamento |
+| Conta raiz | `is_root` não é atribuível por request e a conta raiz resiste a exclusão, desativação, remanejamento e a perder a própria bandeira |
 | Diálogos | `alert()`, `confirm()` e `prompt()` nativos vetados e cobertos por teste; SweetAlert2 e Toastr escapam HTML |
 | Segredos | `.env` fora do Git; `.env.example` sem valor; nenhuma credencial em código, seed ou teste |
 
@@ -544,7 +550,7 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 ### Concluído
 
 - [x] **Fase 1** — Estrutura base e Git
-- [x] **Fase 2** — Modelagem e migrations do banco `nexusfield` (16 migrations, InnoDB, FKs)
+- [x] **Fase 2** — Modelagem e migrations do banco `nexusfield` (InnoDB, FKs em todo o domínio)
 - [x] **Fase 3** — Autenticação, autorização por permissão e multi-tenancy
 - [x] **Fase 4** — Design system "Premium Gourmet + Technology" sobre AdminLTE 4
 - [x] **Fase 5** — Página pública de apresentação

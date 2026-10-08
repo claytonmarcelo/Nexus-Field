@@ -14,12 +14,19 @@ use Illuminate\Support\Str;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Conta raiz do sistema: e-mail administrativo permanente do projeto, definido
-     * no prompt mestre. O valor é identidade, não credencial — a senha continua só
-     * no `.env`, e `SEED_ADMIN_EMAIL` pode apontar para outro endereço sem tocar no
-     * código.
+     * Conta raiz do sistema: e-mail administrativo permanente e absoluto do projeto,
+     * definido pelo dono em 2026-10-08. O valor é identidade, não credencial — a senha
+     * continua só no `.env`. `SEED_ADMIN_EMAIL` pode apontar para outro endereço, menos
+     * para o endereço aposentado abaixo: esse o seeder recusa.
      */
-    public const ROOT_EMAIL = 'marcelolimadez@gmail.com';
+    public const ROOT_EMAIL = 'nexusfield.admin@gmail.com';
+
+    /**
+     * Endereço que foi a conta raiz até 2026-10-08 e saiu do sistema por medida de
+     * segurança. Ele não volta nem por `.env`: a migration que o aposentou é
+     * irreversível, e o seeder recusa semear raiz nele.
+     */
+    public const RETIRED_ROOT_EMAIL = 'marcelolimadez@gmail.com';
 
     public function run(): void
     {
@@ -77,6 +84,17 @@ class DatabaseSeeder extends Seeder
     private function seedRootAccount(Company $company, array $roles): void
     {
         $email = env('SEED_ADMIN_EMAIL', self::ROOT_EMAIL);
+
+        // O `.env` pode apontar a raiz para outro endereço, mas não para o aposentado:
+        // sem esta guarda, um `SEED_ADMIN_EMAIL` velho faria o seeder ressuscitar a
+        // identidade que saiu do sistema por medida de segurança.
+        if (Str::lower($email) === self::RETIRED_ROOT_EMAIL) {
+            throw new \RuntimeException(
+                'A conta raiz não pode ser semeada em '.self::RETIRED_ROOT_EMAIL.
+                ': esse endereço foi aposentado por medida de segurança. '.
+                'Defina SEED_ADMIN_EMAIL com a identidade vigente.'
+            );
+        }
 
         $password = env('SEED_ADMIN_PASSWORD');
 

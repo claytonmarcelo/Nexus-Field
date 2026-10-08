@@ -10,9 +10,10 @@ use Tests\CreatesFixtures;
 use Tests\TestCase;
 
 /**
- * A conta raiz é a identidade administrativa do projeto: ela tem o domínio inteiro
- * do sistema, não pode ser apagada, desativada ou remanejada por request nenhum, e
- * essa proteção mora no model e no schema — não na tela que esconde o botão.
+ * A conta raiz é a identidade administrativa do projeto: ela tem o domínio inteiro do
+ * sistema, não pode ser apagada, desativada, remanejada, nem deixar de ser raiz por
+ * request nenhum, e essa proteção mora no model e no schema — não na tela que esconde
+ * o botão. O endereço vigente vem de `DatabaseSeeder::ROOT_EMAIL`.
  */
 class RootAccountTest extends TestCase
 {
@@ -22,8 +23,7 @@ class RootAccountTest extends TestCase
     {
         // O seeder lê o e-mail do ambiente. O teste fixa a constante para não
         // depender do `.env` de quem roda a suíte.
-        putenv('SEED_ADMIN_EMAIL='.DatabaseSeeder::ROOT_EMAIL);
-        $_ENV['SEED_ADMIN_EMAIL'] = $_SERVER['SEED_ADMIN_EMAIL'] = DatabaseSeeder::ROOT_EMAIL;
+        $this->mudarAmbientePara(DatabaseSeeder::ROOT_EMAIL);
 
         $this->seed(DatabaseSeeder::class);
 
@@ -94,6 +94,18 @@ class RootAccountTest extends TestCase
         $raiz->save();
     }
 
+    public function test_a_conta_raiz_nao_pode_deixar_de_ser_raiz(): void
+    {
+        $raiz = $this->raiz();
+
+        // Sem esta guarda bastaria desligar a bandeira para que a linha seguinte
+        // passasse no `deleting` e a conta sumisse do sistema.
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('perder a condição de conta raiz');
+
+        $raiz->forceFill(['is_root' => false])->save();
+    }
+
     public function test_a_troca_de_senha_da_conta_raiz_continua_possivel(): void
     {
         $raiz = $this->raiz();
@@ -148,5 +160,38 @@ class RootAccountTest extends TestCase
 
         $comum->delete();
         $this->assertSoftDeleted($comum);
+    }
+
+    public function test_o_endereco_aposentado_da_raiz_nao_volta_a_ser_semeado(): void
+    {
+        $this->raiz();
+
+        $this->assertSame(0, User::query()->where('email', DatabaseSeeder::RETIRED_ROOT_EMAIL)->count());
+
+        // O `.env` manda no endereço da raiz, então é por ele que o aposentado poderia
+        // voltar. A recusa tem que estar no seeder, não na tela que não mostra o campo.
+        $this->mudarAmbientePara(DatabaseSeeder::RETIRED_ROOT_EMAIL);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('aposentado por medida de segurança');
+
+        $this->seed(DatabaseSeeder::class);
+    }
+
+    /**
+     * `putenv` sobrevive ao método e à classe: sem o `tearDown` devolvendo a constante,
+     * a próxima classe que semeasse herdaria o endereço recusado.
+     */
+    private function mudarAmbientePara(string $email): void
+    {
+        putenv('SEED_ADMIN_EMAIL='.$email);
+        $_ENV['SEED_ADMIN_EMAIL'] = $_SERVER['SEED_ADMIN_EMAIL'] = $email;
+    }
+
+    protected function tearDown(): void
+    {
+        $this->mudarAmbientePara(DatabaseSeeder::ROOT_EMAIL);
+
+        parent::tearDown();
     }
 }

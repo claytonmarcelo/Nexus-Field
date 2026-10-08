@@ -378,6 +378,24 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   instante em que a marca assenta (`nf-acender`), um fio claro em volta do desenho devolve o "FIELD"
   que sobre o preto era ilegível, e quem pede movimento reduzido recebe a logo parada e nivelada pela
   regra global de `base.css`.
+- Troca de identidade da conta raiz no schema: `2026_10_08_000004_replace_root_account_email.php`
+  renomeia a linha em vez de criar outra, porque o `id` da raiz é o que papéis, auditoria e
+  notificações penduram — identidade nova com histórico órfão seria só outro bug. A migration não
+  encosta em credencial alguma (senha continua só no `.env`), passa direto quando o endereço antigo já
+  não existe, e recusa em vez de escolher quem perde o índice único quando o endereço novo já está
+  ocupado. `down()` lança exceção: desfazer recolocaria no sistema o endereço aposentado.
+- `DatabaseSeeder::RETIRED_ROOT_EMAIL` e a recusa do seeder de semear raiz nele. Como
+  `SEED_ADMIN_EMAIL` manda no endereço, sem essa guarda um `.env` desatualizado ressuscitaria por
+  `db:seed` exatamente a identidade que saiu do sistema por medida de segurança.
+- Guarda que faltava no `User::booted()`: a conta raiz não pode **desligar** a própria bandeira.
+  `is_root` já era fora de `$fillable`, mas `forceFill(['is_root' => false])` deixava a linha sem
+  proteção no save seguinte — e aí o `deleting` já não barrava nada. O seeder só liga a bandeira,
+  então continua passando por aqui.
+- Sete casos de teste na identidade raiz: `tests/Feature/RootAccountEmailSwapTest.php` (renomeia com o
+  mesmo `id`, roda duas vezes sem dobrar, passa em banco vazio, recusa conflito e rollback recusado) e
+  mais dois em `RootAccountTest` — a raiz que não deixa de ser raiz e o seeder que recusa o endereço
+  aposentado, com `tearDown` devolvendo o ambiente para a classe seguinte não herdar o endereço
+  recusado.
 
 ### Alterado
 
@@ -470,6 +488,16 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   autenticado, com o mesmo corte de moldura dos dois lados da aplicação. As seis telas do README
   foram recapturadas em 1440×900 depois disso, porque o topo, o filete da sidebar e as linhas dos
   cartões de indicador mudaram de verdade.
+- Identidade raiz trocada por decisão do dono: `DatabaseSeeder::ROOT_EMAIL` passa a
+  `nexusfield.admin@gmail.com`, com a senha rotacionada no `.env` de quem mantém a máquina — nenhum
+  caractere de credencial entra em arquivo versionado, e a regra de produção do seeder (recusar senha
+  gerada automaticamente) continua valendo como antes. Como `User::booted()` prende as guardas na
+  bandeira `is_root` e não no endereço, a identidade nova herdou a proteção absoluta no instante em
+  que a migration terminou; `nexusfield` seguiu sendo a empresa dela.
+- `.env.example` e README acompanhando a troca: o exemplo mostra o endereço vigente, avisa que senha
+  com `#` precisa de aspas (sem aspas o dotenv corta a senha no `#` e o seeder recebe truncado) e
+  aponta para `RETIRED_ROOT_EMAIL` em vez de repetir o endereço aposentado no texto. Na tabela de
+  segurança, a linha da conta raiz passou a listar também "perder a própria bandeira".
 
 ### Corrigido
 
@@ -626,6 +654,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   (-24px) passava do respiro do container (12px) e o documento media 432px dentro de uma janela de 420.
   A linha passou a `gx-4 gy-5`, que devolve os 3rem de respiro vertical entre os blocos sem sair da
   grade — medido no navegador, `scrollWidth` voltou a bater com a largura da janela em 420px.
+- Contagem de migrations no README: a árvore dizia 17 e a prosa dizia 16 para o mesmo diretório, e
+  nenhuma das duas batia com o que `git ls-files database/migrations` devolve. Agora os dois lados
+  dizem 18, e a linha da Fase 2 perdeu o número — ela descreve o que a fase entregou, não o total de
+  hoje, que é exatamente o tipo de cifra que apodrece em documentação.
 
 ### Removido
 

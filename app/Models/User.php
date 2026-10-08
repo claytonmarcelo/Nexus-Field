@@ -44,6 +44,13 @@ class User extends Authenticatable
         });
 
         static::updating(function (self $usuario) {
+            // Desligar a bandeira é a única porta para as guardas abaixo: quem deixa
+            // de ser raiz passa a poder ser apagado no save seguinte. O seeder só liga
+            // a bandeira, nunca desliga, então ele continua passando por aqui.
+            if ($usuario->isDirty('is_root') && $usuario->getOriginal('is_root')) {
+                $usuario->bloquear('perder a condição de conta raiz');
+            }
+
             if (! $usuario->isRoot()) {
                 return;
             }
