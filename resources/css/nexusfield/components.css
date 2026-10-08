@@ -155,15 +155,17 @@
 }
 
 /*
- * A sidebar declara o próprio `data-bs-theme="dark"` para manter o painel escuro nos
- * dois temas, então o fundo não pode vir dos tokens de tema do `<html>` — dentro dela
- * eles já estariam resolvidos como escuro. O gradiente é preso pelo tema da página.
+ * O menu é a superfície da casa, não um painel escuro fixo: no claro ele é o
+ * elevado do tema com o halo de marca no topo e o fio de borda na emenda, no
+ * escuro ele desce até o preto e continua separado pelo mesmo fio. Os tokens de
+ * tinta de cada tema moram em tokens.css, porque o AdminLTE os declara no próprio
+ * elemento.
  */
 .app-sidebar {
     background:
-        radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--nf-primary) 16%, transparent) 0%, transparent 62%),
-        linear-gradient(180deg, #1b1b1e 0%, #121213 100%);
-    border-right: 1px solid rgba(255, 255, 255, .07);
+        radial-gradient(120% 55% at 50% 0%, color-mix(in srgb, var(--nf-primary) 9%, transparent) 0%, transparent 62%),
+        linear-gradient(180deg, var(--nf-elevated) 0%, var(--nf-surface) 100%);
+    border-right: 1px solid var(--nf-line);
 }
 
 [data-bs-theme="dark"] .app-sidebar {
@@ -182,7 +184,7 @@
 }
 
 .app-sidebar .sidebar-menu .nav-link.active {
-    box-shadow: inset 2px 0 0 var(--nf-brand-vivid);
+    box-shadow: inset 2px 0 0 var(--lte-sidebar-menu-active-color);
 }
 
 .app-content-header {

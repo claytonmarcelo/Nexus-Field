@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-150%20testes%20%2F%201386%20asser%C3%A7%C3%B5es-brightgreen" alt="150 testes, 1386 asserções">
+  <img src="https://img.shields.io/badge/testes-151%20testes%20%2F%201411%20asser%C3%A7%C3%B5es-brightgreen" alt="151 testes, 1411 asserções">
 </p>
 
 <p align="center">
@@ -208,6 +208,8 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - Topo e pé enxutos: 44px de altura no cabeçalho (a mesma nos dois lados da aplicação) e uma linha no
   rodapé das telas abertas
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura
+- O menu veste o tema da página: no claro ele é a superfície elevada com o verde de marca em quem está
+  ativo, no escuro encosta no preto e só o fio de borda separa as duas áreas
 - Marca nos navegadores: `favicon.ico` com 16 e 32 embutidos, PNGs de 32 e 192 e `apple-touch-icon`
   achatado sobre preto, todos gerados do medalhão oficial
 - Auto nível nas telas abertas: a logo do hero balança em amplitude decrescente e para nivelada, com o
@@ -526,12 +528,13 @@ Depois:
 php artisan test
 ```
 
-Hoje são **150 testes / 1386 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **151 testes / 1411 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com
 token válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato
 do seletor de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG
-e a marca verde medida do medalhão, o contrato das seis capturas deste README (existem, estão
-linkadas e medem 1440×900), a proibição dos diálogos nativos do navegador, o CRUD de clientes com
+—inclusive a tinta do menu sobre o painel claro— e a marca verde medida do medalhão, o contrato das
+seis capturas deste README (existem, estão linkadas e medem 1440×900), a proibição dos diálogos
+nativos do navegador, o CRUD de clientes com
 contatos e endereços, o de técnicos, equipes e especialidades, o do catálogo — inclusive o saldo
 central somado das movimentações, a unidade fora do catálogo recusada e a exclusão vetada quando já
 existe histórico — e o de ordens de serviço: sequência anual por empresa, estado que só anda pelo fluxo

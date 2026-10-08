@@ -155,7 +155,10 @@ class AuthenticatedLayoutTest extends TestCase
             ->assertSee('Ir para a navegação', false)
             ->assertDontSee('Skip to main content', false)
             ->assertSee('data-lte-toggle="sidebar"', false)
-            ->assertSee('data-lte-toggle="treeview"', false);
+            ->assertSee('data-lte-toggle="treeview"', false)
+            // O menu não declara tema próprio: ele herda o `data-bs-theme` do <html>,
+            // e é isso que o mantém claro no dia claro.
+            ->assertSee('<aside class="app-sidebar">', false);
     }
 
     /**

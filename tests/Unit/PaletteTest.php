@@ -150,6 +150,49 @@ class PaletteTest extends TestCase
         }
     }
 
+    /**
+     * O menu veste o tema da página. No claro ele é a superfície elevada da casa,
+     * então a tinta do item precisa vir dos tokens do tema — e não de um hex claro
+     * herdado do painel escuro que a sidebar já foi.
+     */
+    public function test_o_menu_do_tema_claro_le_no_painel_claro_com_contraste_minimo(): void
+    {
+        $claro = $this->tokens($this->bloco(':root,'."\n".'[data-bs-theme="light"]'));
+        $menu = $this->tokens($this->blocoDeLinha('.app-sidebar'));
+
+        $estaNoMenu = ['--lte-sidebar-color', '--lte-sidebar-menu-active-color', '--lte-sidebar-header-color'];
+
+        foreach ($estaNoMenu as $token) {
+            $this->assertArrayHasKey($token, $menu, "{$token} sumiu do bloco .app-sidebar");
+            $this->assertMatchesRegularExpression(
+                '/^var\(--nf-[a-z-]+\)$/',
+                $menu[$token],
+                "o item {$token} do menu claro voltou a ter hex próprio em vez de token do tema"
+            );
+        }
+
+        $tinta = fn (string $token): string => $claro[substr($menu[$token], 4, -1)];
+
+        $pares = [
+            '--lte-sidebar-color' => $claro['--nf-elevated'],
+            '--lte-sidebar-header-color' => $claro['--nf-elevated'],
+            '--lte-sidebar-menu-active-color' => $claro['--nf-primary-soft'],
+        ];
+
+        foreach ($pares as $token => $fundo) {
+            $razao = $this->contraste($tinta($token), $fundo);
+            $this->assertGreaterThanOrEqual(
+                4.5,
+                $razao,
+                sprintf('menu claro: %s sobre %s rende %.2f:1', $token, $fundo, $razao)
+            );
+        }
+
+        // O escuro continua com a tinta própria do painel preto, medida à parte.
+        $escuro = $this->tokens($this->blocoDeLinha('[data-bs-theme="dark"] .app-sidebar'));
+        $this->assertArrayHasKey('--lte-sidebar-color', $escuro, 'o menu escuro perdeu a própria tinta');
+    }
+
     private function bloco(string $seletor): string
     {
         $inicio = strpos($this->css, $seletor);
@@ -159,6 +202,23 @@ class PaletteTest extends TestCase
         $this->assertNotFalse($fim);
 
         return substr($this->css, $inicio, $fim - $inicio);
+    }
+
+    /**
+     * Bloco cujo seletor abre a linha — é assim que se pega `.app-sidebar` sem
+     * cair no texto de um comentário que cite a mesma classe.
+     */
+    private function blocoDeLinha(string $seletor): string
+    {
+        $localizado = preg_match(
+            '/^'.preg_quote($seletor, '/').'\s*\{\n(.*?)^\}/ms',
+            $this->css,
+            $casos,
+        );
+
+        $this->assertSame(1, $localizado, "bloco {$seletor} não existe em tokens.css");
+
+        return $casos[1];
     }
 
     /** @return array<string, string> */

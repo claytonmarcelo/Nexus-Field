@@ -751,6 +751,23 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 - `pint --test` nos arquivos da fase: `DemoSeeder` carregava dois imports sem uso e docblocks com
   `\Carbon\Carbon` onde a classe já estava importada; `TicketsTest` tinha um import fora de ordem.
   Rodados e conferidos depois, com a suíte ainda verde.
+- Menu do tema claro pintado de painel escuro: a sidebar declarava o próprio
+  `data-bs-theme="dark"` no Blade, então no dia claro a casa se partia em duas metades que não se
+  conhecem — conteúdo branco, menu grafite. O atributo saiu do `<aside>` e o menu passou a herdar o
+  tema do `<html>`. Os `--lte-sidebar-*` do claro agora apontam para tokens do tema (tinta
+  `--nf-text-muted` sobre `--nf-elevated`, item ativo `--nf-brand-deep` sobre `--nf-primary-soft`,
+  cabeçalho de seção `--nf-text-faint`), todos medidos acima de 4,5:1, e o filete de item ativo saiu
+  do hex solto para a mesma cor do rótulo ativo. O escuro ficou como estava, tinta por tinta.
+- Tokens de sidebar e de campo de busca declarados no `<html>` não produziam efeito nenhum: o
+  AdminLTE redeclara `--lte-sidebar-*` no próprio `.app-sidebar` (0,1,0), e declaração no elemento
+  vence herança. Os valores mortos saíram dos blocos de tema e a sobrescrita foi para o elemento, na
+  especificidade que realmente ganha; `.sidebar-search`/`.navbar-search` não existem nesta interface,
+  e os `--lte-search-field-*` que só existiam no papel foram apagados junto.
+- As duas capturas de painel do `README.md` refeitas contra o aplicativo rodando, no quadro
+  1440×900 de sempre: a do tema claro ilustraria um menu que a aplicação não desenha mais. A conta de
+  demonstração entrou com a senha emprestada do ambiente e o hash original dela voltou ao banco
+  byte a byte depois da foto — a troca de credenciais da raiz continua sem efeito nas contas demo até
+  alguém rodar `db:seed --class=DemoSeeder`.
 
 ### Removido
 

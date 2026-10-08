@@ -131,23 +131,6 @@
     --bs-light: var(--nf-elevated);
     --bs-light-rgb: 253, 253, 254;
     --bs-light-border-subtle: var(--nf-line);
-
-    /* AdminLTE 4: sidebar e campos de busca na mesma matéria-prima */
-    --lte-sidebar-color: #e8eaee;
-    --lte-sidebar-hover-color: #ffffff;
-    --lte-sidebar-hover-bg: rgba(255, 255, 255, .07);
-    --lte-sidebar-menu-active-bg: rgba(255, 255, 255, .13);
-    --lte-sidebar-menu-active-color: #ffffff;
-    --lte-sidebar-submenu-bg: transparent;
-    --lte-sidebar-submenu-color: #c8ccd3;
-    --lte-sidebar-submenu-hover-color: #ffffff;
-    --lte-sidebar-submenu-active-bg: rgba(255, 255, 255, .11);
-    --lte-sidebar-submenu-active-color: #ffffff;
-    --lte-sidebar-header-color: #a2a8b2;
-    --lte-search-field-bg: rgba(255, 255, 255, .07);
-    --lte-search-field-color: #f2f3f6;
-    --lte-search-field-border-color: rgba(242, 243, 246, .2);
-    --lte-search-field-placeholder-color: rgba(242, 243, 246, .52);
 }
 
 [data-bs-theme="dark"] {
@@ -249,22 +232,6 @@
     --bs-light: var(--nf-elevated);
     --bs-light-rgb: 21, 21, 22;
     --bs-light-border-subtle: var(--nf-line-strong);
-
-    --lte-sidebar-color: #dcdbe0;
-    --lte-sidebar-hover-color: #ffffff;
-    --lte-sidebar-hover-bg: rgba(255, 255, 255, .06);
-    --lte-sidebar-menu-active-bg: rgba(94, 184, 94, .18);
-    --lte-sidebar-menu-active-color: #a9dd9f;
-    --lte-sidebar-submenu-bg: transparent;
-    --lte-sidebar-submenu-color: #a5a49e;
-    --lte-sidebar-submenu-hover-color: #ebeae6;
-    --lte-sidebar-submenu-active-bg: rgba(94, 184, 94, .14);
-    --lte-sidebar-submenu-active-color: #a9dd9f;
-    --lte-sidebar-header-color: #8c8b86;
-    --lte-search-field-bg: rgba(255, 255, 255, .05);
-    --lte-search-field-color: #eae9e5;
-    --lte-search-field-border-color: rgba(234, 233, 229, .17);
-    --lte-search-field-placeholder-color: rgba(234, 233, 229, .48);
 }
 
 :root {
@@ -295,15 +262,34 @@
 }
 
 /*
- * A sidebar é o painel escuro da aplicação: no claro ela é grafite neutro, no
- * escuro ela encosta no preto do fundo e só o fio de borda separa as duas áreas.
+ * O menu veste o tema da página. No claro ele é a superfície elevada da casa com
+ * o verde de marca em quem está ativo; no escuro encosta no preto do fundo e só o
+ * fio de borda separa as duas áreas. Antes a sidebar era o painel escuro fixo — e
+ * no claro isso deixava a casa partida em duas metades que não se conhecem.
  *
- * O AdminLTE declara `--lte-sidebar-*` no próprio `.app-sidebar` e ainda por
- * cima com `[data-bs-theme=dark].app-sidebar` (0,2,0), então a sobrescrita
- * precisa ter a mesma especificidade do seletor que vence hoje. tokens.css
- * entra depois do CSS oficial na ordem de import, e é isso que decide.
+ * O AdminLTE declara `--lte-sidebar-*` no próprio `.app-sidebar` (0,1,0), e ainda
+ * `[data-bs-theme=dark].app-sidebar` (0,2,0). Valor posto no `<html>` não entra
+ * aqui: declaração no elemento vence herança. Por isso a sobrescrita recai sobre
+ * o mesmo elemento, na mesma especificidade, e tokens.css vem depois do CSS
+ * oficial na ordem de import — é isso que decide.
  */
-.app-sidebar[data-bs-theme="dark"] {
+.app-sidebar {
+    --lte-sidebar-color: var(--nf-text-muted);
+    --lte-sidebar-hover-color: var(--nf-text);
+    --lte-sidebar-hover-bg: rgba(27, 29, 33, .05);
+    --lte-sidebar-active-color: var(--nf-text);
+    --lte-sidebar-menu-active-bg: var(--nf-primary-soft);
+    --lte-sidebar-menu-active-color: var(--nf-brand-deep);
+    --lte-sidebar-submenu-bg: transparent;
+    --lte-sidebar-submenu-color: var(--nf-text-muted);
+    --lte-sidebar-submenu-hover-color: var(--nf-text);
+    --lte-sidebar-submenu-hover-bg: rgba(27, 29, 33, .05);
+    --lte-sidebar-submenu-active-color: var(--nf-brand-deep);
+    --lte-sidebar-submenu-active-bg: var(--nf-primary-soft);
+    --lte-sidebar-header-color: var(--nf-text-faint);
+}
+
+[data-bs-theme="dark"] .app-sidebar {
     --lte-sidebar-color: #d5d4d8;
     --lte-sidebar-hover-color: #ffffff;
     --lte-sidebar-hover-bg: rgba(255, 255, 255, .07);

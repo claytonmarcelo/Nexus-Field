@@ -1,13 +1,15 @@
 {{-- Sidebar no contrato do AdminLTE 4: .app-sidebar > .sidebar-brand +
      .sidebar-wrapper > .sidebar-menu[data-lte-toggle="treeview"]. O estado
-     (recolhida/aberta) vive no <body>, quem muda é o botão do navbar. --}}
+     (recolhida/aberta) vive no <body>, quem muda é o botão do navbar. O tema é o
+     da página: sem `data-bs-theme` próprio ela herda do <html>, e é isso que faz o
+     menu claro no dia claro e preto na noite de preto. --}}
 @props(['user'])
 
 @php
     $secoes = \App\Support\Navigation::for($user);
 @endphp
 
-<aside class="app-sidebar" data-bs-theme="dark">
+<aside class="app-sidebar">
     <div class="sidebar-brand">
         <a class="brand-link" href="{{ route('welcome') }}" aria-label="NEXUS-FIELD, página inicial">
             <x-ui.brand-mark />
