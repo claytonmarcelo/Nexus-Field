@@ -18,13 +18,13 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-78%20testes%20%2F%20621%20asser%C3%A7%C3%B5es-brightgreen" alt="78 testes, 621 asserções">
+  <img src="https://img.shields.io/badge/testes-93%20testes%20%2F%20697%20asser%C3%A7%C3%B5es-brightgreen" alt="93 testes, 697 asserções">
 </p>
 
 <p align="center">
-  <sub>Estágio atual: fundação completa (fases 1 a 8). Os módulos de operação vêm das fases 9 em
-  diante — a tabela <a href="#módulos">Módulos</a> diz, um por um, o que já está no ar e o que ainda
-  é só schema.</sub>
+  <sub>Estágio atual: fundação completa (fases 1 a 8) e o primeiro módulo de operação no ar
+  (fase 9 — clientes). A tabela <a href="#módulos">Módulos</a> diz, um por um, o que já está no ar e
+  o que ainda é só schema.</sub>
 </p>
 
 ---
@@ -147,7 +147,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vêm uma fase por vez.
 | Painel e indicadores | ✅ | ✅ | ✅ |
 | Página pública de apresentação | — | — | ✅ |
 | Temas, diálogos e estados de interface | — | — | ✅ |
-| Clientes e contatos | ✅ | ✅ | 🚧 fase 9 |
+| Clientes e contatos | ✅ | ✅ | ✅ |
 | Técnicos e equipes | ✅ | ✅ | 🚧 fase 10 |
 | Catálogo de serviços e produtos | ✅ | ✅ | 🚧 fase 11 |
 | Ordens de serviço | ✅ | ✅ | 🚧 fase 12 |
@@ -471,14 +471,14 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 - [x] **Fase 8.1** — Conta raiz permanente, protegida no model
 - [x] **Fase 8.2** — Refino de cabeçalho e rodapé, chave de tema em pílula e revelar senha
 - [x] **Fase 8.3** — Paleta global: fundo preto no escuro, branco neutro no claro, texto acima do AA
+- [x] **Fase 9** — Clientes: CRUD, filtros, paginação própria, ficha com contatos e endereços
 
 ### Em curso
 
-- [ ] **Fase 9** — Clientes: CRUD, filtros e paginação própria
+- [ ] Fase 10 — Técnicos e equipes
 
 ### Planejado
 
-- [ ] Fase 10 — Técnicos e equipes
 - [ ] Fase 11 — Catálogo de serviços e produtos
 - [ ] Fase 12 — Ordens de serviço
 - [ ] Fase 13 — Chamados

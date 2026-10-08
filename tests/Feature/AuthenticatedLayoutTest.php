@@ -96,15 +96,15 @@ class AuthenticatedLayoutTest extends TestCase
 
         $role = Role::create([
             'company_id' => $company->id,
-            'name' => 'Sem dashboard',
-            'slug' => 'sem-dashboard',
+            'name' => 'Sem clientes',
+            'slug' => 'sem-clientes',
             'is_system' => false,
         ]);
-        $role->permissions()->attach(Permission::where('slug', 'clients.view')->value('id'));
+        $role->permissions()->attach(Permission::where('slug', 'dashboard.view')->value('id'));
 
         $user = User::create([
             'company_id' => $company->id,
-            'name' => 'Conta sem dashboard',
+            'name' => 'Conta sem clientes',
             'email' => 'nd@test.local',
             'password' => 'Senha-Forte-123',
             'status' => 'active',
@@ -112,10 +112,16 @@ class AuthenticatedLayoutTest extends TestCase
         $user->roles()->attach($role->id);
         $user = $user->fresh('roles.permissions');
 
-        $this->assertTrue($user->hasPermission('clients.view'));
-        $this->assertSame([], Navigation::for($user));
+        $this->assertTrue($user->hasPermission('dashboard.view'));
+        $this->assertFalse($user->hasPermission('clients.view'));
 
-        $this->actingAs($user)->get(route('dashboard'))->assertForbidden();
+        $rotulos = collect(Navigation::for($user))
+            ->flatMap(fn (array $secao) => array_column($secao['items'], 'label'))
+            ->all();
+        $this->assertSame(['Dashboard'], $rotulos);
+
+        $this->actingAs($user)->get(route('dashboard'))->assertOk();
+        $this->actingAs($user)->get(route('clients.index'))->assertForbidden();
     }
 
     public function test_sair_e_um_post_com_csrf_e_derruba_a_sessao(): void

@@ -17,6 +17,8 @@ import { confirmDialog, infoDialog, promptDialog } from './nexusfield/dialog';
 import * as forms from './nexusfield/forms';
 import * as flash from './nexusfield/flash';
 import * as passwords from './nexusfield/passwords';
+import * as confirmacao from './nexusfield/confirm';
+import * as listas from './nexusfield/listas';
 
 window.Nf = {
     theme,
@@ -30,3 +32,5 @@ theme.init();
 forms.init();
 flash.init();
 passwords.init();
+confirmacao.init();
+listas.init();

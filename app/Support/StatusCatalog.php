@@ -56,6 +56,69 @@ class StatusCatalog
             'active' => ['Ativo', 'done'],
             'inactive' => ['Inativo', 'draft'],
         ],
+        // Serviços e produtos vivem o mesmo vocabulário de catálogo.
+        'catalogo' => [
+            'active' => ['Ativo', 'done'],
+            'inactive' => ['Inativo', 'draft'],
+        ],
+        'team' => [
+            'active' => ['Ativa', 'done'],
+            'inactive' => ['Inativa', 'draft'],
+        ],
+        'user' => [
+            'active' => ['Ativo', 'done'],
+            'disabled' => ['Desativado', 'canceled'],
+        ],
+        'company' => [
+            'active' => ['Ativa', 'done'],
+            'inactive' => ['Inativa', 'draft'],
+            'suspended' => ['Suspensa', 'canceled'],
+        ],
+        'subscription' => [
+            'trial' => ['Período de teste', 'open'],
+            'active' => ['Assinatura ativa', 'done'],
+            'past_due' => ['Pagamento atrasado', 'progress'],
+            'expired' => ['Expirada', 'canceled'],
+            'canceled' => ['Cancelada', 'draft'],
+        ],
+        'appointment' => [
+            'scheduled' => ['Agendado', 'open'],
+            'completed' => ['Concluído', 'done'],
+            'canceled' => ['Cancelado', 'canceled'],
+        ],
+        'checkin' => [
+            'open' => ['Em campo', 'progress'],
+            'closed' => ['Encerrado', 'done'],
+        ],
+        'movement' => [
+            'purchase' => ['Compra', 'done'],
+            'load' => ['Carga para o técnico', 'open'],
+            'consume' => ['Consumo em ordem de serviço', 'progress'],
+            'return' => ['Devolução', 'waiting'],
+            'adjustment' => ['Ajuste de inventário', 'draft'],
+        ],
+        'financial_type' => [
+            'revenue' => ['Receita', 'done'],
+            'expense' => ['Despesa', 'canceled'],
+        ],
+        'payment_method' => [
+            'pix' => ['PIX', 'open'],
+            'credit_card' => ['Cartão de crédito', 'waiting'],
+            'debit_card' => ['Cartão de débito', 'waiting'],
+            'cash' => ['Dinheiro', 'progress'],
+            'transfer' => ['Transferência', 'done'],
+        ],
+        'address' => [
+            'service' => ['Assistência técnica', 'open'],
+            'commercial' => ['Ponto comercial', 'waiting'],
+            'storage' => ['Depósito', 'draft'],
+        ],
+        'appointment_type' => [
+            'order' => ['Ordem de serviço', 'open'],
+            'visit' => ['Visita técnica', 'waiting'],
+            'ticket' => ['Chamado', 'progress'],
+            'custom' => ['Compromisso interno', 'draft'],
+        ],
     ];
 
     public static function label(string $grupo, ?string $valor): string

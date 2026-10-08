@@ -1,0 +1,294 @@
+/*
+ * Peças de listagem e formulário que o AdminLTE não traz: barra de filtros,
+ * paginação própria, cabeçalho de coluna ordenável, grades de formulário e a
+ * faixa de ações da tabela. Tudo em token do design system — nenhum cor literal
+ * aqui, porque o mesmo componente precisa sair correto no claro e no escuro.
+ */
+
+/* ── Barra de filtros ───────────────────────────────────────────────────── */
+.nf-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.75rem 1rem;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1rem;
+    background: var(--nf-surface);
+    border: 1px solid var(--nf-line);
+    border-radius: var(--bs-border-radius);
+}
+
+.nf-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 0.75rem 1rem;
+    flex: 1 1 22rem;
+    min-width: 0;
+}
+
+/* A busca merece mais largo que uma seleção de situação. */
+.nf-filters-largo {
+    grid-column: span 2;
+    min-width: 0;
+}
+
+@media (max-width: 575.98px) {
+    .nf-filters-largo {
+        grid-column: span 1;
+    }
+}
+
+/*
+ * Dentro da barra o campo não precisa do pé de página que ele tem no formulário.
+ * O `!important` é o único jeito de ganhar do utilitário `.mb-3` do Bootstrap,
+ * que também vem marcado como importante.
+ */
+.nf-filters .mb-3 {
+    margin-bottom: 0 !important;
+}
+
+.nf-filters .form-label {
+    margin-bottom: 0.2rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+}
+
+.nf-filters-acoes {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Faixa acima da tabela: título da lista + exportar/criar ─────────────── */
+.nf-list-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.nf-list-head-titulo {
+    margin: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+}
+
+.nf-list-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Coluna ordenável ───────────────────────────────────────────────────── */
+.nf-th-sort {
+    white-space: nowrap;
+}
+
+.nf-sort-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+.nf-sort-link i {
+    opacity: 0.4;
+    font-size: 0.75em;
+}
+
+.nf-sort-link:hover i,
+.nf-sort-link.is-active i {
+    opacity: 1;
+    color: var(--nf-primary);
+}
+
+.nf-sort-link:focus-visible {
+    outline: 2px solid var(--nf-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* ── Paginação própria ──────────────────────────────────────────────────── */
+.nf-pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--nf-line);
+}
+
+.nf-pager-resumo {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--nf-text-muted);
+}
+
+.nf-pager-lado {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.nf-pager-por {
+    display: flex;
+    align-items: center;
+}
+
+.nf-pager-por select {
+    min-width: 8.5rem;
+}
+
+/* ── Formulário de cadastro ─────────────────────────────────────────────── */
+.nf-form-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0 1.25rem;
+}
+
+.nf-form-grade .nf-form-largo {
+    grid-column: 1 / -1;
+}
+
+.nf-form-secao {
+    padding: 1.25rem 0 0.25rem;
+    margin-bottom: 0.5rem;
+    border-top: 1px solid var(--nf-line);
+}
+
+.nf-form-secao:first-child {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.nf-form-secao h2 {
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+    margin-bottom: 0.9rem;
+}
+
+.nf-form-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--nf-line);
+}
+
+/* ── Formulário inline dentro da linha da tabela ────────────────────────── */
+.nf-inline-form {
+    display: inline;
+}
+
+.nf-btn-acao-perigo {
+    color: var(--nf-danger);
+}
+
+.nf-btn-acao-perigo:hover,
+.nf-btn-acao-perigo:focus-visible {
+    color: var(--nf-danger);
+    background: var(--nf-danger-soft);
+}
+
+/* ── Linhas de item (ordem de serviço, movimentação de estoque) ─────────── */
+.nf-itens {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.nf-item-linha {
+    display: grid;
+    grid-template-columns: minmax(8rem, 2fr) minmax(4rem, 0.6fr) minmax(5rem, 0.8fr) minmax(5rem, 0.8fr) auto;
+    align-items: end;
+    gap: 0.5rem;
+    padding: 0.6rem 0.7rem;
+    background: var(--nf-bg);
+    border: 1px solid var(--nf-line);
+    border-radius: var(--bs-border-radius);
+}
+
+.nf-item-linha .mb-3 {
+    margin-bottom: 0 !important;
+}
+
+/* Linha de ficha com um bloco de texto e as ações ao lado: uma coluna larga e o
+   resto abraçando o que couber, em vez das cinco colunas da ordem de serviço. */
+.nf-item-linha-lado {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: start;
+}
+
+.nf-item-valor {
+    display: flex;
+    align-items: end;
+    min-height: 2.2rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--nf-text);
+}
+
+.nf-total-linha {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.35rem 1.5rem;
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--nf-line-strong);
+    font-variant-numeric: tabular-nums;
+}
+
+.nf-total-linha dt {
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+}
+
+.nf-total-linha dd {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Observação digitada no cadastro volta na tela com as quebras de linha que o
+   usuário fez, sem precisar de Rich Text. */
+.nf-pre-line {
+    white-space: pre-line;
+}
+
+@media (max-width: 767.98px) {
+    .nf-item-linha-lado {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .nf-item-linha {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .nf-filters-acoes {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nf-sort-link i {
+        transition: none;
+    }
+}

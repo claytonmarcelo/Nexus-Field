@@ -21,7 +21,7 @@
                 <nav aria-label="Trilha de navegação">
                     <ol class="breadcrumb">
                         @foreach ($trilha as $rotulo => $url)
-                            @if ($url === null || $iterator->last)
+                            @if ($url === null || $loop->last)
                                 <li class="breadcrumb-item active" aria-current="page">{{ $rotulo }}</li>
                             @else
                                 <li class="breadcrumb-item"><a href="{{ $url }}">{{ $rotulo }}</a></li>

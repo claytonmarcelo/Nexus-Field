@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 /**
  * Mapa do menu lateral. Uma entrada só aparece quando a rota dela existe e o
@@ -29,6 +30,17 @@ class Navigation
                     ],
                 ],
             ],
+            [
+                'label' => 'Cadastros',
+                'items' => [
+                    [
+                        'label' => 'Clientes',
+                        'route' => 'clients.index',
+                        'permission' => 'clients.view',
+                        'icon' => 'fa-solid fa-building-user',
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -51,7 +63,10 @@ class Navigation
                     'label' => $item['label'],
                     'url' => route($item['route']),
                     'icon' => $item['icon'],
-                    'active' => request()->routeIs($item['route']),
+                    // Uma tela de detalhe continua dentro do módulo: o item do
+                    // menu fica aceso em index, show, create e edição.
+                    'active' => request()->routeIs($item['route'])
+                        || request()->routeIs(static::familia($item['route'])),
                 ];
             }
 
@@ -61,5 +76,11 @@ class Navigation
         }
 
         return $visible;
+    }
+
+    /** `clients.index` => `clients.*`; rota sem ponto (dashboard) fica ela mesma. */
+    private static function familia(string $rota): string
+    {
+        return str_contains($rota, '.') ? Str::beforeLast($rota, '.').'.*' : $rota;
     }
 }

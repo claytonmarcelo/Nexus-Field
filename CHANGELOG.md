@@ -213,6 +213,32 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   mais 29 hexes na lista de veto (a marca teal e o bronze antigos, com todos os derivados) e a
   exigência de que o canal verde da marca vença vermelho e azul nos dois temas. A suíte fecha em
   78 testes / 621 asserções.
+- Fase 9 — clientes no ar, do formulário ao CSV. `ClientController` lista com busca (nome, razão
+  social, documento, e-mail), filtro por situação — ativo, inativo e o painel dos excluídos
+  temporariamente, que usa `onlyTrashed()` — filtro por cidade lida do próprio banco de endereços
+  da empresa, ordenação presa numa lista de colunas permitidas e paginação própria (`por_pagina`
+  de 10 a 100, `page`, `withQueryString` e a contagem do banco escrita na tela, não o tamanho da
+  página). `clients/form.blade.php` cadastra e edita sobre o mesmo Blade, com `data-nf-guard` no
+  lugar de diálogo nativo; `clients/show.blade.php` é a ficha: cadastro, observações, o que o
+  cliente já gerou (ordens, chamados, compromissos e lançamentos contados no MySQL) e as duas
+  relações aninhadas editáveis na própria tela — contatos e endereços, com um único namespace de
+  campos por formulário (`contato_*`, `endereco_*`) para que um `old()` não invada o outro, e
+  edição inline por `?editar_contato=<id>`, que funciona sem JavaScript.
+- Primícias de UI reutilizadas em todo o módulo: `x-ui.filters` (busca com autossubmit, situação,
+  cidade e ordenação), paginação com o seletor de itens por página, `x-ui.contact-fields` e
+  `x-ui.address-fields` — estes dois prontos para os endereços polimórficos de técnicos (fase 10)
+  e do check-in (fase 15) — e o trait `TrataRegistrosAninhados`, que obriga o filho a pertencer ao
+  cadastro aberto antes de aceitar `update`/`destroy`. Contato principal é único por cliente, o
+  servidor rebaixa os outros; endereço principal idem.
+- Exportação CSV de verdade: `clients/exportar` honra a busca e a situação que estão na tela,
+  atravessa a empresa em lotes de 200 com `lazyById`, escreve BOM (para o Excel abrir acento
+  direito), separa por `;` e nunca leva registro da empresa ao lado.
+- Excluir quem já trabalhou é recusado no servidor, com o motivo no toast: a tela explica que o
+  caminho honesto é inativar. `tests/Feature/ClientsTest.php` (15 testes / 72 asserções) cobra
+  isolamento de tenant na lista, na ficha, na exportação e pela URL direta, as três situações, a
+  paginação, a unicidade de documento por empresa, a posse morfológica dos registros aninhados, a
+  matriz de permissões (técnico e cliente papéis reais levam 403 em criar, editar, excluir e
+  exportar) e a exclusão recusada. A suíte fecha em 93 testes / 697 asserções.
 
 ### Alterado
 
@@ -354,6 +380,25 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   derrubava a stack do teste ao gravar (`errno=9`) e a falha real ficava escondida.
 - `routes/web.php` usa um `WelcomeController` em vez de fechar a rota de entrada numa closure,
   mantendo a página pública testável.
+- **Abertura de tenant pela rota**: `ResolveCompany` entrava no grupo `web` depois de
+  `SubstituteBindings`, então o modelo da rota era resolvido com o `CompanyScope` ainda cego e
+  `GET /clientes/{id}` de outra empresa respondia 200. A resolução do tenant agora é registrada na
+  lista de prioridade imediatamente antes de `SubstituteBindings` (`prependToPriorityList` em
+  `bootstrap/app.php`), depois de sessão e autenticação e antes de qualquer binding. O teste
+  `test_um_cliente_de_outra_empresa_nao_e_alcancavel_pela_rota` fecha essa porta.
+- Parametrização das rotas de clientes: `{client}` ao lado de `Client $cliente` no controller. O
+  binding implícito do Laravel compara o nome do parâmetro com o nome da variável, e a divergência
+  injetava um `Client` vazio montado pelo container em vez de procurar no banco — a ficha abria
+  sem registro, `clients.show` não conseguia gerar URL e o update de um endereço recebia string.
+  Toda a rota passou a se chamar `{cliente}`, e `{contato}`/`{endereco}` entraram no mesmo padrão.
+- `x-app.content-header` usava `$iterator->last` dentro do `@foreach` do breadcrumb. A variável
+  nem existe no Blade 13: qualquer tela com trilha de dois níveis caía em `Undefined variable`.
+  Agora `$loop->last`, que é o nome certo.
+- `Rule::unique` do documento tinha verificador com `Closure(Builder $query)`; o
+  `DatabasePresenceVerifier` entrega um query builder cru, não o builder do Eloquent, e a tipagem
+  derrubava a validação com `TypeError` antes de dizer que o documento já existia.
+- O seletor de cidade da listagem nascia vazio: a lista de cidades vinha como lista simples e o
+  componente de select esperava mapa rótulo→rótulo. Agora `pluck('city', 'city')`.
 
 ### Removido
 
