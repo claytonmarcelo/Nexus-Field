@@ -1,9 +1,14 @@
 /*
  * Tokens do NEXUS-FIELD — identidade "PREMIUM GOURMET + TECNOLOGIA".
  *
- * Duas paletas, nenhuma com branco puro dominante:
- *   claro = "um dia bonito"  (porcelana quente, nada de #fff de fundo)
- *   escuro = "uma noite bonita" (grafite azulado, nada de #000)
+ * Duas rampas neutras, sem casta de cor no fundo:
+ *   claro = "um dia bonito"  (branco neutro-frio, sem tom rosado e sem #fff puro)
+ *   escuro = "uma noite de preto" (fundo #000 global, elevação por superfície
+ *           levemente mais clara e fio de borda — nada de grafite azulado)
+ *
+ * A escolha do dono do projeto em 2026-10-08: preto no escuro, branco bonito no
+ * claro. O preto puro entra só no fundo; as superfícies por cima dele continuam
+ * escalonadas para cartão, tabela e modal não virarem mancha única.
  *
  * Tudo é escrito por cima das variáveis do Bootstrap 5.3 e do AdminLTE 4, então os
  * componentes oficiais continuam funcionando — só trocam de matéria-prima.
@@ -14,42 +19,48 @@
     color-scheme: light;
 
     /* Superfícies */
-    --nf-bg: #f3eee6;
-    --nf-surface: #faf6ef;
-    --nf-elevated: #fdfbf7;
-    --nf-line: #e5dbca;
-    --nf-line-strong: #d2c4ac;
+    --nf-bg: #f5f6f8;
+    --nf-surface: #fafbfc;
+    --nf-elevated: #fdfdfe;
+    --nf-line: #e2e5ea;
+    --nf-line-strong: #848e9c;
 
     /* Texto */
-    --nf-text: #221e19;
-    --nf-text-muted: #6c6156;
-    --nf-text-faint: #93877a;
+    --nf-text: #1b1d21;
+    --nf-text-muted: #5b626a;
+    --nf-text-faint: #676e79;
 
     /* Marca */
     --nf-primary: #1b6a5b;
     --nf-primary-hover: #145548;
-    --nf-primary-soft: #dcebe5;
-    --nf-accent: #b96c2c;
-    --nf-accent-soft: #f5e6d5;
+    --nf-primary-soft: #d9e9e4;
+    --nf-accent: #a45d1f;
+    --nf-accent-hover: #91521b;
+    --nf-accent-active: #834a18;
+    --nf-accent-soft: #f3e5d3;
+
+    /* Letra que senta em cima da cor de marca (botão verde, pill ativo, knob) */
+    --nf-on-brand: #fbfdfc;
 
     /* Semânticos */
     --nf-success: #2c7a50;
-    --nf-success-soft: #dcece2;
+    --nf-success-soft: #d8eade;
     --nf-danger: #a83b34;
-    --nf-danger-soft: #f4e0dd;
-    --nf-warning: #b5811b;
-    --nf-warning-soft: #f6eacf;
+    --nf-danger-soft: #f2dedb;
+    --nf-warning: #96670f;
+    --nf-warning-soft: #f3e8cd;
     --nf-info: #2e6a86;
-    --nf-info-soft: #dcebf2;
+    --nf-info-soft: #dbe8f0;
 
-    /* Profundidade */
-    --nf-shadow-sm: 0 1px 2px rgba(60, 44, 24, .07), 0 1px 1px rgba(60, 44, 24, .04);
-    --nf-shadow-md: 0 6px 18px -6px rgba(60, 44, 24, .16), 0 2px 6px rgba(60, 44, 24, .06);
-    --nf-shadow-lg: 0 22px 48px -20px rgba(60, 44, 24, .28), 0 6px 16px rgba(60, 44, 24, .08);
+    /* Profundidade: sombra neutra-fria, sem marrom por baixo dos cartões */
+    --nf-shadow-sm: 0 1px 2px rgba(27, 31, 40, .07), 0 1px 1px rgba(27, 31, 40, .04);
+    --nf-shadow-md: 0 6px 18px -6px rgba(27, 31, 40, .16), 0 2px 6px rgba(27, 31, 40, .06);
+    --nf-shadow-lg: 0 22px 48px -20px rgba(27, 31, 40, .28), 0 6px 16px rgba(27, 31, 40, .08);
 
-    /* Malha: gradiente sutil que sustenta o "gourmet" sem virar estampa */
-    --nf-gradient-app: linear-gradient(180deg, #f7f2ea 0%, var(--nf-bg) 42%, #efe8dd 100%);
+    /* Malha: gradiente que sustenta o "premium" sem virar estampa */
+    --nf-gradient-app: linear-gradient(180deg, #fbfcfd 0%, var(--nf-bg) 42%, #ebedf1 100%);
     --nf-gradient-brand: linear-gradient(135deg, var(--nf-primary) 0%, #22836f 55%, var(--nf-accent) 130%);
+
 
     --bs-body-bg: var(--nf-bg);
     --bs-body-color: var(--nf-text);
@@ -68,174 +79,182 @@
     --bs-primary-rgb: 27, 106, 91;
     --bs-primary-text-emphasis: #145548;
     --bs-primary-bg-subtle: var(--nf-primary-soft);
-    --bs-primary-border-subtle: #a8ccc0;
+    --bs-primary-border-subtle: #a4c9c1;
 
     --bs-success: var(--nf-success);
     --bs-success-rgb: 44, 122, 80;
     --bs-success-text-emphasis: #1f5a3a;
     --bs-success-bg-subtle: var(--nf-success-soft);
-    --bs-success-border-subtle: #a8cfba;
+    --bs-success-border-subtle: #a4cbba;
 
     --bs-danger: var(--nf-danger);
     --bs-danger-rgb: 168, 59, 52;
     --bs-danger-text-emphasis: #862f29;
     --bs-danger-bg-subtle: var(--nf-danger-soft);
-    --bs-danger-border-subtle: #e0aba6;
+    --bs-danger-border-subtle: #dfa8a3;
 
     --bs-warning: var(--nf-warning);
-    --bs-warning-rgb: 181, 129, 27;
-    --bs-warning-text-emphasis: #7a5813;
+    --bs-warning-rgb: 150, 103, 15;
+    --bs-warning-text-emphasis: #775213;
     --bs-warning-bg-subtle: var(--nf-warning-soft);
-    --bs-warning-border-subtle: #e6cf9b;
+    --bs-warning-border-subtle: #e0cb94;
 
     --bs-info: var(--nf-info);
     --bs-info-rgb: 46, 106, 134;
     --bs-info-text-emphasis: #22505f;
     --bs-info-bg-subtle: var(--nf-info-soft);
-    --bs-info-border-subtle: #a7c9d7;
+    --bs-info-border-subtle: #a3c5d4;
 
-    --bs-secondary: #6c6156;
-    --bs-secondary-rgb: 108, 97, 86;
-    --bs-secondary-text-emphasis: #4c443c;
-    --bs-secondary-bg-subtle: #ece4d8;
-    --bs-secondary-border-subtle: #d2c4ac;
+    --bs-secondary: #5b626a;
+    --bs-secondary-rgb: 91, 98, 106;
+    --bs-secondary-text-emphasis: #45484f;
+    --bs-secondary-bg-subtle: #e6e8ec;
+    --bs-secondary-border-subtle: #848e9c;
 
-    --bs-dark: #2b2620;
-    --bs-dark-rgb: 43, 38, 32;
-    --bs-dark-text-emphasis: #221e19;
-    --bs-dark-bg-subtle: #e7dfd3;
-    --bs-dark-border-subtle: #cbc0ae;
+    --bs-dark: #262931;
+    --bs-dark-rgb: 38, 41, 49;
+    --bs-dark-text-emphasis: #1b1d21;
+    --bs-dark-bg-subtle: #dfe2e7;
+    --bs-dark-border-subtle: #c3c9d2;
 
     --bs-light: var(--nf-elevated);
-    --bs-light-rgb: 253, 251, 247;
+    --bs-light-rgb: 253, 253, 254;
     --bs-light-border-subtle: var(--nf-line);
 
     /* AdminLTE 4: sidebar e campos de busca na mesma matéria-prima */
-    --lte-sidebar-color: #f0e9df;
-    --lte-sidebar-hover-color: #fffaf1;
-    --lte-sidebar-hover-bg: rgba(255, 250, 241, .07);
-    --lte-sidebar-menu-active-bg: rgba(255, 250, 241, .13);
-    --lte-sidebar-menu-active-color: #fffaf1;
+    --lte-sidebar-color: #e8eaee;
+    --lte-sidebar-hover-color: #ffffff;
+    --lte-sidebar-hover-bg: rgba(255, 255, 255, .07);
+    --lte-sidebar-menu-active-bg: rgba(255, 255, 255, .13);
+    --lte-sidebar-menu-active-color: #ffffff;
     --lte-sidebar-submenu-bg: transparent;
-    --lte-sidebar-submenu-color: #d9cfc0;
-    --lte-sidebar-submenu-hover-color: #fffaf1;
-    --lte-sidebar-submenu-active-bg: rgba(255, 250, 241, .11);
-    --lte-sidebar-submenu-active-color: #fffaf1;
-    --lte-sidebar-header-color: #cbbfae;
-    --lte-search-field-bg: rgba(255, 255, 255, .06);
-    --lte-search-field-color: #f3ede3;
-    --lte-search-field-border-color: rgba(243, 237, 227, .22);
-    --lte-search-field-placeholder-color: rgba(243, 237, 227, .55);
+    --lte-sidebar-submenu-color: #c8ccd3;
+    --lte-sidebar-submenu-hover-color: #ffffff;
+    --lte-sidebar-submenu-active-bg: rgba(255, 255, 255, .11);
+    --lte-sidebar-submenu-active-color: #ffffff;
+    --lte-sidebar-header-color: #a2a8b2;
+    --lte-search-field-bg: rgba(255, 255, 255, .07);
+    --lte-search-field-color: #f2f3f6;
+    --lte-search-field-border-color: rgba(242, 243, 246, .2);
+    --lte-search-field-placeholder-color: rgba(242, 243, 246, .52);
 }
 
 [data-bs-theme="dark"] {
     color-scheme: dark;
 
-    --nf-bg: #101319;
-    --nf-surface: #151922;
-    --nf-elevated: #1b2130;
-    --nf-line: #272e3c;
-    --nf-line-strong: #364052;
+    /* Fundo preto global; a hierarquia vem da superfície acima dele */
+    --nf-bg: #000000;
+    --nf-surface: #0c0c0d;
+    --nf-elevated: #151516;
+    --nf-line: #27272a;
+    --nf-line-strong: #5f5f63;
 
-    --nf-text: #e8e6e1;
-    --nf-text-muted: #99a2b0;
-    --nf-text-faint: #6f7a89;
+    --nf-text: #f1f0ed;
+    --nf-text-muted: #a8a7a3;
+    --nf-text-faint: #8c8b87;
 
-    --nf-primary: #3f9e8c;
-    --nf-primary-hover: #58b9a5;
-    --nf-primary-soft: #16302c;
-    --nf-accent: #d9954f;
-    --nf-accent-soft: #31241a;
+    --nf-primary: #46b39b;
+    --nf-primary-hover: #66c9b2;
+    --nf-primary-soft: #10312b;
+    --nf-accent: #e0a35f;
+    --nf-accent-hover: #eab678;
+    --nf-accent-active: #f2c48c;
+    --nf-accent-soft: #34271a;
 
-    --nf-success: #4fa578;
-    --nf-success-soft: #162b21;
-    --nf-danger: #d2685f;
-    --nf-danger-soft: #33201e;
-    --nf-warning: #e0b25c;
-    --nf-warning-soft: #312716;
-    --nf-info: #6ba8c4;
-    --nf-info-soft: #1a2a33;
+    /* No escuro a marca é clara, então a letra que senta em cima dela é escura */
+    --nf-on-brand: #06120f;
 
-    --nf-shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
-    --nf-shadow-md: 0 8px 22px -8px rgba(0, 0, 0, .6), 0 2px 8px rgba(0, 0, 0, .35);
-    --nf-shadow-lg: 0 26px 54px -22px rgba(0, 0, 0, .72), 0 8px 20px rgba(0, 0, 0, .45);
+    --nf-success: #57b383;
+    --nf-success-soft: #102c1f;
+    --nf-danger: #dd7069;
+    --nf-danger-soft: #331e1c;
+    --nf-warning: #e8bc6a;
+    --nf-warning-soft: #322815;
+    --nf-info: #74b1cd;
+    --nf-info-soft: #142831;
 
-    --nf-gradient-app: linear-gradient(180deg, #131722 0%, var(--nf-bg) 46%, #0d1016 100%);
-    --nf-gradient-brand: linear-gradient(135deg, #1d5b4f 0%, var(--nf-primary) 58%, #a97234 128%);
+    /* Sobre o preto a sombra não aparece: a elevação é a superfície + o fio de borda */
+    --nf-shadow-sm: 0 0 0 1px rgba(255, 255, 255, .03);
+    --nf-shadow-md: 0 10px 24px -12px rgba(0, 0, 0, .9), 0 0 0 1px rgba(255, 255, 255, .04);
+    --nf-shadow-lg: 0 28px 56px -24px rgba(0, 0, 0, 1), 0 0 0 1px rgba(255, 255, 255, .05);
+
+    --nf-gradient-app: linear-gradient(180deg, #070708 0%, var(--nf-bg) 46%, #000000 100%);
+    --nf-gradient-brand: linear-gradient(135deg, #1d5b4f 0%, var(--nf-primary) 58%, #b8804a 128%);
 
     --bs-body-bg: var(--nf-bg);
     --bs-body-color: var(--nf-text);
-    --bs-emphasis-color: #f2f0ea;
+    --bs-emphasis-color: #f8f7f4;
     --bs-border-color: var(--nf-line);
     --bs-tertiary-bg: var(--nf-surface);
     --bs-secondary-bg: var(--nf-elevated);
     --bs-link-color: var(--nf-primary-hover);
-    --bs-link-hover-color: #7ccdbb;
-    --bs-link-color-rgb: 88, 185, 165;
-    --bs-link-hover-color-rgb: 124, 205, 187;
+    --bs-link-hover-color: #8ad8c4;
+    --bs-link-color-rgb: 102, 201, 178;
+    --bs-link-hover-color-rgb: 138, 216, 196;
     --bs-code-color: var(--nf-accent);
+    --bs-highlight-bg: var(--nf-warning-soft);
 
     --bs-primary: var(--nf-primary);
-    --bs-primary-rgb: 63, 158, 140;
-    --bs-primary-text-emphasis: #7ccdbb;
+    --bs-primary-rgb: 70, 179, 155;
+    --bs-primary-text-emphasis: #8ad8c4;
     --bs-primary-bg-subtle: var(--nf-primary-soft);
-    --bs-primary-border-subtle: #2b6154;
+    --bs-primary-border-subtle: #2c6a5d;
 
     --bs-success: var(--nf-success);
-    --bs-success-rgb: 79, 165, 120;
-    --bs-success-text-emphasis: #86c9a4;
+    --bs-success-rgb: 87, 179, 131;
+    --bs-success-text-emphasis: #8ecba8;
     --bs-success-bg-subtle: var(--nf-success-soft);
-    --bs-success-border-subtle: #2f6149;
+    --bs-success-border-subtle: #33664b;
 
     --bs-danger: var(--nf-danger);
-    --bs-danger-rgb: 210, 104, 95;
-    --bs-danger-text-emphasis: #e59b93;
+    --bs-danger-rgb: 221, 112, 105;
+    --bs-danger-text-emphasis: #e79e98;
     --bs-danger-bg-subtle: var(--nf-danger-soft);
-    --bs-danger-border-subtle: #7d3b36;
+    --bs-danger-border-subtle: #7d3d38;
 
     --bs-warning: var(--nf-warning);
-    --bs-warning-rgb: 224, 178, 92;
-    --bs-warning-text-emphasis: #ecc888;
+    --bs-warning-rgb: 232, 188, 106;
+    --bs-warning-text-emphasis: #eecb8e;
     --bs-warning-bg-subtle: var(--nf-warning-soft);
-    --bs-warning-border-subtle: #7a5f2e;
+    --bs-warning-border-subtle: #7c6134;
 
     --bs-info: var(--nf-info);
-    --bs-info-rgb: 107, 168, 196;
-    --bs-info-text-emphasis: #9bc6da;
+    --bs-info-rgb: 116, 177, 205;
+    --bs-info-text-emphasis: #a2cbde;
     --bs-info-bg-subtle: var(--nf-info-soft);
-    --bs-info-border-subtle: #3c6577;
+    --bs-info-border-subtle: #3f6b7f;
 
-    --bs-secondary: #8b93a1;
-    --bs-secondary-rgb: 139, 147, 161;
-    --bs-secondary-text-emphasis: #b3bac5;
-    --bs-secondary-bg-subtle: #222834;
-    --bs-secondary-border-subtle: #3a4252;
+    --bs-secondary: #a3a29e;
+    --bs-secondary-rgb: 163, 162, 158;
+    --bs-secondary-text-emphasis: #c6c5c1;
+    --bs-secondary-bg-subtle: #1c1c1e;
+    --bs-secondary-border-subtle: #5f5f63;
 
-    --bs-dark: #1b2130;
-    --bs-dark-rgb: 27, 33, 48;
-    --bs-dark-text-emphasis: #cdd5e1;
-    --bs-dark-bg-subtle: #1a1f2b;
-    --bs-dark-border-subtle: #313a4c;
+    --bs-dark: #151516;
+    --bs-dark-rgb: 21, 21, 22;
+    --bs-dark-text-emphasis: #d8d7d3;
+    --bs-dark-bg-subtle: #18181a;
+    --bs-dark-border-subtle: #3a3a3d;
 
     --bs-light: var(--nf-elevated);
-    --bs-light-rgb: 27, 33, 48;
+    --bs-light-rgb: 21, 21, 22;
     --bs-light-border-subtle: var(--nf-line-strong);
 
-    --lte-sidebar-color: #d7d2c9;
-    --lte-sidebar-hover-color: #f4f1ea;
-    --lte-sidebar-hover-bg: rgba(244, 241, 234, .06);
-    --lte-sidebar-menu-active-bg: rgba(63, 158, 140, .18);
-    --lte-sidebar-menu-active-color: #bfe4d9;
+    --lte-sidebar-color: #dcdbe0;
+    --lte-sidebar-hover-color: #ffffff;
+    --lte-sidebar-hover-bg: rgba(255, 255, 255, .06);
+    --lte-sidebar-menu-active-bg: rgba(70, 179, 155, .18);
+    --lte-sidebar-menu-active-color: #a7ded1;
     --lte-sidebar-submenu-bg: transparent;
-    --lte-sidebar-submenu-color: #a7a296;
-    --lte-sidebar-submenu-hover-color: #ece8df;
-    --lte-sidebar-submenu-active-bg: rgba(63, 158, 140, .14);
-    --lte-sidebar-submenu-active-color: #bfe4d9;
-    --lte-sidebar-header-color: #8d887e;
+    --lte-sidebar-submenu-color: #a5a49e;
+    --lte-sidebar-submenu-hover-color: #ebeae6;
+    --lte-sidebar-submenu-active-bg: rgba(70, 179, 155, .14);
+    --lte-sidebar-submenu-active-color: #a7ded1;
+    --lte-sidebar-header-color: #8c8b86;
     --lte-search-field-bg: rgba(255, 255, 255, .05);
-    --lte-search-field-color: #e6e2da;
-    --lte-search-field-border-color: rgba(230, 226, 218, .18);
-    --lte-search-field-placeholder-color: rgba(230, 226, 218, .5);
+    --lte-search-field-color: #eae9e5;
+    --lte-search-field-border-color: rgba(234, 233, 229, .17);
+    --lte-search-field-placeholder-color: rgba(234, 233, 229, .48);
 }
 
 :root {
@@ -265,8 +284,8 @@
 }
 
 /*
- * A sidebar é painel escuro nos dois temas: ela é a moldura fixa da aplicação,
- * e mantê-la escura dá um contraste estável com o conteúdo, que troca de tema.
+ * A sidebar é o painel escuro da aplicação: no claro ela é grafite neutro, no
+ * escuro ela encosta no preto do fundo e só o fio de borda separa as duas áreas.
  *
  * O AdminLTE declara `--lte-sidebar-*` no próprio `.app-sidebar` e ainda por
  * cima com `[data-bs-theme=dark].app-sidebar` (0,2,0), então a sobrescrita
@@ -274,17 +293,17 @@
  * entra depois do CSS oficial na ordem de import, e é isso que decide.
  */
 .app-sidebar[data-bs-theme="dark"] {
-    --lte-sidebar-color: #ccd3de;
-    --lte-sidebar-hover-color: #f4f1ea;
-    --lte-sidebar-hover-bg: rgba(244, 241, 234, .07);
-    --lte-sidebar-active-color: #f4f1ea;
-    --lte-sidebar-menu-active-bg: rgba(63, 158, 140, .2);
-    --lte-sidebar-menu-active-color: #cfeede;
+    --lte-sidebar-color: #d5d4d8;
+    --lte-sidebar-hover-color: #ffffff;
+    --lte-sidebar-hover-bg: rgba(255, 255, 255, .07);
+    --lte-sidebar-active-color: #ffffff;
+    --lte-sidebar-menu-active-bg: rgba(70, 179, 155, .2);
+    --lte-sidebar-menu-active-color: #b4e2d6;
     --lte-sidebar-submenu-bg: transparent;
-    --lte-sidebar-submenu-color: #a7a296;
-    --lte-sidebar-submenu-hover-color: #ece8df;
-    --lte-sidebar-submenu-hover-bg: rgba(244, 241, 234, .06);
-    --lte-sidebar-submenu-active-color: #cfeede;
-    --lte-sidebar-submenu-active-bg: rgba(63, 158, 140, .16);
-    --lte-sidebar-header-color: #8b93a1;
+    --lte-sidebar-submenu-color: #a5a49e;
+    --lte-sidebar-submenu-hover-color: #ebeae6;
+    --lte-sidebar-submenu-hover-bg: rgba(255, 255, 255, .06);
+    --lte-sidebar-submenu-active-color: #b4e2d6;
+    --lte-sidebar-submenu-active-bg: rgba(70, 179, 155, .16);
+    --lte-sidebar-header-color: #8c8b86;
 }

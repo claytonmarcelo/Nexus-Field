@@ -195,6 +195,33 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   prendendo o contrato `[data-nf-theme-toggle]` entre Blade e JavaScript, mais o chip da empresa no
   rodapé. A suíte fecha em 68 testes / 356 asserções.
 
+### Alterado
+
+- Paleta global reescrita nas duas pontas. O escuro larga o grafite azulado
+  (`#101319`/`#151922`/`#1b2130`) e passa a ter **fundo preto puro** (`--nf-bg: #000000`), com a
+  hierarquia vindo da superfície acima dele (`#0c0c0d`, `#151516`) e do fio de borda, não de cor no
+  fundo; a sombra no escuro virou anel de luz, porque sombra sobre preto não aparece. O claro larga
+  a porcelana rosada (`#f3eee6`/`#faf6ef`/`#fdfbf7`) e passa a branco neutro-frio (`#f5f6f8`,
+  `#fafbfc`, `#fdfdfe`) — sem casta rosada e sem `#fff` de fundo. Texto, muted, faint, links,
+  bordas, sombras, gradientes e os `--bs-*`/`--lte-*` derivados foram recalculados nos dois temas, e
+  a sidebar — que é painel escuro nos dois — ganhou grafite neutro preso pelo tema da página, já
+  que o próprio elemento declara `data-bs-theme="dark"`.
+- Tinta sobre a cor de marca virou token (`--nf-on-brand`), porque no escuro a marca clareou e o
+  branco fixo do Bootstrap sumia em cima dela: botão primário, botão accent, pill ativo, paginação,
+  item de lista ativo, avatar, knob da pílula de tema e os botões do diálogo passaram a ler a mesma
+  tinta, clara no claro e escura no escuro. O mesmo vale para `badge.text-bg-*` no escuro, onde o
+  `!important` do utilitário só pôde ser alcançado com `!important` de resposta.
+- Âmbar e aviso escureceram um degrau no claro (`#b96c2c` → `#a45d1f`, `#a9761a` → `#96670f`) para
+  segurar 4,5:1 com a letra por cima, e as bordas de interação subiram para 3:1 — o campo de
+  formulário era o componente que precisava aparecer como limite, não o cartão.
+- Cor da barra do navegador (`meta theme-color`) sincronizada com os novos fundos nos dois lugares
+  que ela existe: `theme.js` e o script pré-pintura `x-script.theme`.
+- `tests/Unit/PaletteTest.php` (5 testes / 185 asserções) prende a paleta como contrato: fundo
+  escuro preto, fundo claro sem casta rosada e sem branco puro, rampas de superfície neutras,
+  contraste AA de texto/fundo e de tinta/marca calculados do hex ao WCAG, e uma lista de hexes da
+  paleta antiga que não pode voltar em nenhum arquivo de CSS, JavaScript ou Blade. A suíte fecha em
+  73 testes / 541 asserções.
+
 ### Corrigido
 
 - Avatar com glifo solto: `User::initials()` montava "A(" a partir de "Administrador (demo)",

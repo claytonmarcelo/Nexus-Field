@@ -23,7 +23,7 @@ chegam nas fases seguintes.
     <td colspan="2"><a href="docs/screenshots/04-painel-claro.png"><img src="docs/screenshots/04-painel-claro.png" alt="Painel em tema claro com doze indicadores, a fila de ordens da semana e a distribuição por estado"></a><br><sub>Painel operacional · tema claro · 1440×1000 — KPIs, fila de ordens e distribuição por estado, todos contados no MySQL desta empresa</sub></td>
   </tr>
   <tr>
-    <td colspan="2"><a href="docs/screenshots/05-painel-escuro.png"><img src="docs/screenshots/05-painel-escuro.png" alt="Painel em tema escuro com os mesmos indicadores, tabelas e distribuição por estado"></a><br><sub>Painel operacional · tema escuro · 1440×1000 — o mesmo painel sobre a noite bonita, sem branco nem preto puros</sub></td>
+    <td colspan="2"><a href="docs/screenshots/05-painel-escuro.png"><img src="docs/screenshots/05-painel-escuro.png" alt="Painel em tema escuro com os mesmos indicadores, tabelas e distribuição por estado"></a><br><sub>Painel operacional · tema escuro · 1440×1000 — o mesmo painel sobre fundo preto; a hierarquia vem da superfície acima do preto, não de cor no fundo</sub></td>
   </tr>
 </table>
 

@@ -154,11 +154,23 @@
     padding-block: .25rem;
 }
 
+/*
+ * A sidebar declara o próprio `data-bs-theme="dark"` para manter o painel escuro nos
+ * dois temas, então o fundo não pode vir dos tokens de tema do `<html>` — dentro dela
+ * eles já estariam resolvidos como escuro. O gradiente é preso pelo tema da página.
+ */
 .app-sidebar {
     background:
-        radial-gradient(120% 60% at 50% 0%, rgba(63, 158, 140, .16) 0%, transparent 62%),
-        linear-gradient(180deg, #171b24 0%, #121620 100%);
-    border-right: 1px solid rgba(255, 255, 255, .06);
+        radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--nf-primary) 16%, transparent) 0%, transparent 62%),
+        linear-gradient(180deg, #1b1b1e 0%, #121213 100%);
+    border-right: 1px solid rgba(255, 255, 255, .07);
+}
+
+[data-bs-theme="dark"] .app-sidebar {
+    background:
+        radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--nf-primary) 12%, transparent) 0%, transparent 62%),
+        linear-gradient(180deg, #0a0a0b 0%, #000000 100%);
+    border-right-color: rgba(255, 255, 255, .1);
 }
 
 .app-sidebar .sidebar-menu > .nav-item > .nav-link {
@@ -523,22 +535,22 @@
     --bs-btn-disabled-bg: var(--nf-primary-soft);
     --bs-btn-disabled-border-color: var(--nf-primary-soft);
     --bs-btn-disabled-color: var(--nf-text-faint);
-    --bs-btn-color: #fdfbf7;
-    --bs-btn-hover-color: #fdfbf7;
-    --bs-btn-active-color: #fdfbf7;
+    --bs-btn-color: var(--nf-on-brand);
+    --bs-btn-hover-color: var(--nf-on-brand);
+    --bs-btn-active-color: var(--nf-on-brand);
     box-shadow: var(--nf-shadow-sm);
 }
 
 .btn-accent {
     --bs-btn-bg: var(--nf-accent);
     --bs-btn-border-color: var(--nf-accent);
-    --bs-btn-color: #fdfbf7;
-    --bs-btn-hover-bg: #a55f25;
-    --bs-btn-hover-border-color: #a55f25;
-    --bs-btn-hover-color: #fdfbf7;
-    --bs-btn-active-bg: #925320;
-    --bs-btn-active-border-color: #925320;
-    --bs-btn-active-color: #fdfbf7;
+    --bs-btn-color: var(--nf-on-brand);
+    --bs-btn-hover-bg: var(--nf-accent-hover);
+    --bs-btn-hover-border-color: var(--nf-accent-hover);
+    --bs-btn-hover-color: var(--nf-on-brand);
+    --bs-btn-active-bg: var(--nf-accent-active);
+    --bs-btn-active-border-color: var(--nf-accent-active);
+    --bs-btn-active-color: var(--nf-on-brand);
     --bs-btn-disabled-bg: var(--nf-accent-soft);
     --bs-btn-disabled-border-color: var(--nf-accent-soft);
     --bs-btn-disabled-color: var(--nf-text-faint);
@@ -806,6 +818,22 @@
     font-size: .74rem;
 }
 
+/*
+ * O utilitário `text-bg-*` do Bootstrap fixa a tinta em branco sobre a cor sólida.
+ * No escuro as cores de estado são claras, então o branco some dentro do próprio
+ * badge: a tinta passa a ser a mesma dos botões de marca. O `!important` só devolve
+ * o `!important` do utilitário — é a única forma de alcançá-lo sem reescrever o CSS
+ * oficial.
+ */
+[data-bs-theme="dark"] .text-bg-primary,
+[data-bs-theme="dark"] .text-bg-secondary,
+[data-bs-theme="dark"] .text-bg-success,
+[data-bs-theme="dark"] .text-bg-danger,
+[data-bs-theme="dark"] .text-bg-warning,
+[data-bs-theme="dark"] .text-bg-info {
+    color: var(--nf-on-brand) !important;
+}
+
 .nf-status {
     display: inline-flex;
     align-items: center;
@@ -844,7 +872,7 @@
 
 .nav-pills .nav-link.active {
     background-color: var(--nf-primary);
-    color: #fdfbf7;
+    color: var(--nf-on-brand);
 }
 
 .page-link {
@@ -861,7 +889,7 @@
 .page-item.active .page-link {
     background-color: var(--nf-primary);
     border-color: var(--nf-primary);
-    color: #fdfbf7;
+    color: var(--nf-on-brand);
 }
 
 .page-item.disabled .page-link {
@@ -909,7 +937,7 @@
 .list-group-item.active {
     background-color: var(--nf-primary);
     border-color: var(--nf-primary);
-    color: #fdfbf7;
+    color: var(--nf-on-brand);
 }
 
 /* ------------------------------------------------------------------ *
@@ -1145,7 +1173,7 @@
     font-weight: 700;
     letter-spacing: .02em;
     background: var(--nf-gradient-brand);
-    color: #fdfbf7;
+    color: var(--nf-on-brand);
     flex: none;
     user-select: none;
 }
@@ -1233,7 +1261,7 @@
     place-items: center;
     border-radius: 50%;
     background: var(--nf-gradient-brand);
-    color: #fdfbf7;
+    color: var(--nf-on-brand);
     box-shadow: var(--nf-shadow-sm);
     transition: transform 260ms var(--nf-ease);
 }
@@ -1308,7 +1336,7 @@
  * SweetAlert2 — confirmações
  * ------------------------------------------------------------------ */
 .swal2-container.swal2-backdrop-show {
-    background: color-mix(in srgb, #17130c 62%, transparent);
+    background: color-mix(in srgb, #050506 68%, transparent);
     backdrop-filter: blur(3px);
 }
 
@@ -1318,10 +1346,10 @@
     --swal2-border: 1px solid var(--nf-line);
     --swal2-border-radius: var(--bs-border-radius-lg);
     --swal2-confirm-button-background-color: var(--nf-primary);
-    --swal2-confirm-button-color: #fdfbf7;
+    --swal2-confirm-button-color: var(--nf-on-brand);
     --swal2-confirm-button-border-radius: var(--bs-border-radius);
     --swal2-deny-button-background-color: var(--nf-danger);
-    --swal2-deny-button-color: #fdfbf7;
+    --swal2-deny-button-color: var(--nf-on-brand);
     --swal2-deny-button-border-radius: var(--bs-border-radius);
     --swal2-cancel-button-background-color: transparent;
     --swal2-cancel-button-color: var(--nf-text-muted);

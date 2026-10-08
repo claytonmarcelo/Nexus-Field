@@ -1,5 +1,5 @@
 /*
- * Tema global: "um dia bonito" (claro) e "uma noite bonita" (escuro).
+ * Tema global: branco neutro (claro) e fundo preto (escuro), ambos sem casta de cor.
  *
  * A preferência vai para cookie (o Blade entrega o HTML já com o tema, sem
  * flash) e para localStorage (leitura instantânea no cliente). O atributo
@@ -11,8 +11,8 @@ const COOKIE_NAME = 'nf_theme';
 const COOKIE_DAYS = 365;
 const MODES = new Set(['light', 'dark']);
 const BROWSER_BAR_COLOR = {
-    light: '#f3eee6',
-    dark: '#101319',
+    light: '#f5f6f8',
+    dark: '#000000',
 };
 
 function readCookie() {
