@@ -1159,8 +1159,17 @@
     white-space: nowrap;
 }
 
-.nf-wordmark-accent {
-    color: var(--nf-accent);
+/*
+ * O wordmark segue o desenho da logo: "NEXUS" é o verde cromado do medalhão e
+ * "-FIELD" entra na tinta neutra, mais aberta de entreletra.
+ */
+.nf-wordmark-lead {
+    color: var(--nf-primary);
+}
+
+.nf-wordmark-tail {
+    color: var(--nf-text-muted);
+    letter-spacing: .08em;
 }
 
 .nf-avatar {

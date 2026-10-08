@@ -7,7 +7,7 @@
             <a class="nf-brand" href="{{ route('welcome') }}" aria-label="NEXUS-FIELD, página inicial">
                 <x-ui.brand-mark />
                 <span class="nf-wordmark">
-                    NEXUS<span class="nf-wordmark-accent">-FIELD</span>
+                    <span class="nf-wordmark-lead">NEXUS</span><span class="nf-wordmark-tail">-FIELD</span>
                 </span>
             </a>
 

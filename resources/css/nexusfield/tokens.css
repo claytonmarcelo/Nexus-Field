@@ -1,6 +1,12 @@
 /*
  * Tokens do NEXUS-FIELD — identidade "PREMIUM GOURMET + TECNOLOGIA".
  *
+ * A marca é o verde cromado do medalhão `public/img/marca-nexus.png`. A rampa não
+ * é palpite: os quatro tons abaixo saíram medidos do próprio arquivo (2% / 35% /
+ * 70% / 95% da luminância dos pixels verdes reais), e é ela que veste a interface.
+ * O contra-ponto "gourmet" é o latão, que continua no acento — verde-emerald e
+ * ouro são a dupla clássica do requinte e é ela que segura o preto e o branco.
+ *
  * Duas rampas neutras, sem casta de cor no fundo:
  *   claro = "um dia bonito"  (branco neutro-frio, sem tom rosado e sem #fff puro)
  *   escuro = "uma noite de preto" (fundo #000 global, elevação por superfície
@@ -30,14 +36,19 @@
     --nf-text-muted: #5b626a;
     --nf-text-faint: #676e79;
 
-    /* Marca */
-    --nf-primary: #1b6a5b;
-    --nf-primary-hover: #145548;
-    --nf-primary-soft: #d9e9e4;
-    --nf-accent: #a45d1f;
-    --nf-accent-hover: #91521b;
-    --nf-accent-active: #834a18;
-    --nf-accent-soft: #f3e5d3;
+    /* Marca — verde do medalhão, do mais escuro ao brilho */
+    --nf-brand-deep: #08410d;
+    --nf-brand-core: #1f7328;
+    --nf-brand-vivid: #62bc60;
+    --nf-brand-mint: #c9f9b6;
+
+    --nf-primary: #1c6b28;
+    --nf-primary-hover: #155222;
+    --nf-primary-soft: #dfeadd;
+    --nf-accent: #8a6212;
+    --nf-accent-hover: #76540f;
+    --nf-accent-active: #694b0d;
+    --nf-accent-soft: #f0e6cd;
 
     /* Letra que senta em cima da cor de marca (botão verde, pill ativo, knob) */
     --nf-on-brand: #fbfdfc;
@@ -47,8 +58,8 @@
     --nf-success-soft: #d8eade;
     --nf-danger: #a83b34;
     --nf-danger-soft: #f2dedb;
-    --nf-warning: #96670f;
-    --nf-warning-soft: #f3e8cd;
+    --nf-warning: #95551a;
+    --nf-warning-soft: #f1e2d2;
     --nf-info: #2e6a86;
     --nf-info-soft: #dbe8f0;
 
@@ -59,7 +70,7 @@
 
     /* Malha: gradiente que sustenta o "premium" sem virar estampa */
     --nf-gradient-app: linear-gradient(180deg, #fbfcfd 0%, var(--nf-bg) 42%, #ebedf1 100%);
-    --nf-gradient-brand: linear-gradient(135deg, var(--nf-primary) 0%, #22836f 55%, var(--nf-accent) 130%);
+    --nf-gradient-brand: linear-gradient(135deg, var(--nf-brand-deep) 0%, var(--nf-primary) 48%, var(--nf-accent) 130%);
 
 
     --bs-body-bg: var(--nf-bg);
@@ -70,16 +81,16 @@
     --bs-secondary-bg: var(--nf-elevated);
     --bs-link-color: var(--nf-primary);
     --bs-link-hover-color: var(--nf-primary-hover);
-    --bs-link-color-rgb: 27, 106, 91;
-    --bs-link-hover-color-rgb: 20, 85, 72;
+    --bs-link-color-rgb: 28, 107, 40;
+    --bs-link-hover-color-rgb: 21, 82, 34;
     --bs-code-color: var(--nf-accent);
     --bs-highlight-bg: var(--nf-warning-soft);
 
     --bs-primary: var(--nf-primary);
-    --bs-primary-rgb: 27, 106, 91;
-    --bs-primary-text-emphasis: #145548;
+    --bs-primary-rgb: 28, 107, 40;
+    --bs-primary-text-emphasis: #155222;
     --bs-primary-bg-subtle: var(--nf-primary-soft);
-    --bs-primary-border-subtle: #a4c9c1;
+    --bs-primary-border-subtle: #a8ccab;
 
     --bs-success: var(--nf-success);
     --bs-success-rgb: 44, 122, 80;
@@ -94,10 +105,10 @@
     --bs-danger-border-subtle: #dfa8a3;
 
     --bs-warning: var(--nf-warning);
-    --bs-warning-rgb: 150, 103, 15;
-    --bs-warning-text-emphasis: #775213;
+    --bs-warning-rgb: 149, 85, 26;
+    --bs-warning-text-emphasis: #7a4515;
     --bs-warning-bg-subtle: var(--nf-warning-soft);
-    --bs-warning-border-subtle: #e0cb94;
+    --bs-warning-border-subtle: #ddb894;
 
     --bs-info: var(--nf-info);
     --bs-info-rgb: 46, 106, 134;
@@ -153,23 +164,23 @@
     --nf-text-muted: #a8a7a3;
     --nf-text-faint: #8c8b87;
 
-    --nf-primary: #46b39b;
-    --nf-primary-hover: #66c9b2;
-    --nf-primary-soft: #10312b;
-    --nf-accent: #e0a35f;
-    --nf-accent-hover: #eab678;
-    --nf-accent-active: #f2c48c;
-    --nf-accent-soft: #34271a;
+    --nf-primary: #5eb85e;
+    --nf-primary-hover: #7cc97a;
+    --nf-primary-soft: #10290f;
+    --nf-accent: #d9b25c;
+    --nf-accent-hover: #e3c176;
+    --nf-accent-active: #ecce8d;
+    --nf-accent-soft: #2e2614;
 
     /* No escuro a marca é clara, então a letra que senta em cima dela é escura */
-    --nf-on-brand: #06120f;
+    --nf-on-brand: #04140a;
 
     --nf-success: #57b383;
     --nf-success-soft: #102c1f;
     --nf-danger: #dd7069;
     --nf-danger-soft: #331e1c;
-    --nf-warning: #e8bc6a;
-    --nf-warning-soft: #322815;
+    --nf-warning: #e0a05a;
+    --nf-warning-soft: #322314;
     --nf-info: #74b1cd;
     --nf-info-soft: #142831;
 
@@ -179,7 +190,7 @@
     --nf-shadow-lg: 0 28px 56px -24px rgba(0, 0, 0, 1), 0 0 0 1px rgba(255, 255, 255, .05);
 
     --nf-gradient-app: linear-gradient(180deg, #070708 0%, var(--nf-bg) 46%, #000000 100%);
-    --nf-gradient-brand: linear-gradient(135deg, #1d5b4f 0%, var(--nf-primary) 58%, #b8804a 128%);
+    --nf-gradient-brand: linear-gradient(135deg, #14551d 0%, var(--nf-primary) 58%, #c79a4a 128%);
 
     --bs-body-bg: var(--nf-bg);
     --bs-body-color: var(--nf-text);
@@ -188,17 +199,17 @@
     --bs-tertiary-bg: var(--nf-surface);
     --bs-secondary-bg: var(--nf-elevated);
     --bs-link-color: var(--nf-primary-hover);
-    --bs-link-hover-color: #8ad8c4;
-    --bs-link-color-rgb: 102, 201, 178;
-    --bs-link-hover-color-rgb: 138, 216, 196;
+    --bs-link-hover-color: #98d893;
+    --bs-link-color-rgb: 124, 201, 122;
+    --bs-link-hover-color-rgb: 152, 216, 147;
     --bs-code-color: var(--nf-accent);
     --bs-highlight-bg: var(--nf-warning-soft);
 
     --bs-primary: var(--nf-primary);
-    --bs-primary-rgb: 70, 179, 155;
-    --bs-primary-text-emphasis: #8ad8c4;
+    --bs-primary-rgb: 94, 184, 94;
+    --bs-primary-text-emphasis: #98d893;
     --bs-primary-bg-subtle: var(--nf-primary-soft);
-    --bs-primary-border-subtle: #2c6a5d;
+    --bs-primary-border-subtle: #2c6a2f;
 
     --bs-success: var(--nf-success);
     --bs-success-rgb: 87, 179, 131;
@@ -213,10 +224,10 @@
     --bs-danger-border-subtle: #7d3d38;
 
     --bs-warning: var(--nf-warning);
-    --bs-warning-rgb: 232, 188, 106;
-    --bs-warning-text-emphasis: #eecb8e;
+    --bs-warning-rgb: 224, 160, 90;
+    --bs-warning-text-emphasis: #eab97f;
     --bs-warning-bg-subtle: var(--nf-warning-soft);
-    --bs-warning-border-subtle: #7c6134;
+    --bs-warning-border-subtle: #7c5a34;
 
     --bs-info: var(--nf-info);
     --bs-info-rgb: 116, 177, 205;
@@ -243,13 +254,13 @@
     --lte-sidebar-color: #dcdbe0;
     --lte-sidebar-hover-color: #ffffff;
     --lte-sidebar-hover-bg: rgba(255, 255, 255, .06);
-    --lte-sidebar-menu-active-bg: rgba(70, 179, 155, .18);
-    --lte-sidebar-menu-active-color: #a7ded1;
+    --lte-sidebar-menu-active-bg: rgba(94, 184, 94, .18);
+    --lte-sidebar-menu-active-color: #a9dd9f;
     --lte-sidebar-submenu-bg: transparent;
     --lte-sidebar-submenu-color: #a5a49e;
     --lte-sidebar-submenu-hover-color: #ebeae6;
-    --lte-sidebar-submenu-active-bg: rgba(70, 179, 155, .14);
-    --lte-sidebar-submenu-active-color: #a7ded1;
+    --lte-sidebar-submenu-active-bg: rgba(94, 184, 94, .14);
+    --lte-sidebar-submenu-active-color: #a9dd9f;
     --lte-sidebar-header-color: #8c8b86;
     --lte-search-field-bg: rgba(255, 255, 255, .05);
     --lte-search-field-color: #eae9e5;
@@ -297,13 +308,13 @@
     --lte-sidebar-hover-color: #ffffff;
     --lte-sidebar-hover-bg: rgba(255, 255, 255, .07);
     --lte-sidebar-active-color: #ffffff;
-    --lte-sidebar-menu-active-bg: rgba(70, 179, 155, .2);
-    --lte-sidebar-menu-active-color: #b4e2d6;
+    --lte-sidebar-menu-active-bg: rgba(94, 184, 94, .2);
+    --lte-sidebar-menu-active-color: #b6e3ac;
     --lte-sidebar-submenu-bg: transparent;
     --lte-sidebar-submenu-color: #a5a49e;
     --lte-sidebar-submenu-hover-color: #ebeae6;
     --lte-sidebar-submenu-hover-bg: rgba(255, 255, 255, .06);
-    --lte-sidebar-submenu-active-color: #b4e2d6;
-    --lte-sidebar-submenu-active-bg: rgba(70, 179, 155, .16);
+    --lte-sidebar-submenu-active-color: #b6e3ac;
+    --lte-sidebar-submenu-active-bg: rgba(94, 184, 94, .16);
     --lte-sidebar-header-color: #8c8b86;
 }

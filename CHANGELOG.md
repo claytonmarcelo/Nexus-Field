@@ -199,8 +199,35 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   cheio, todas medem 1440×900 lidos do cabeçalho IHDR do PNG, e a descrição de cada uma diz o tema
   que a imagem realmente mostra. Uma tela que sai do ar sem trocar a captura agora quebra a suíte.
   A suíte fecha em 77 testes / 575 asserções.
+- Marca oficial do produto no repositório: `public/img/marca-nexus-64.png` (o medalhão recortado do
+  círculo, servido no cabeçalho público, na faixa da sidebar, no rodapé e no favicon PNG) e
+  `docs/branding/` com o medalhão em 512px e a arte completa aparada. O recorte não é redesenho: o
+  círculo foi achado pela maior corrida contínua de pixels opacos na faixa do medalhão, e os quatro
+  tons da rampa (`--nf-brand-deep` `#08410d`, `--nf-brand-core` `#1f7328`, `--nf-brand-vivid`
+  `#62bc60`, `--nf-brand-mint` `#c9f9b6`) são os percentis 2% / 35% / 70% / 95% da luminância dos
+  pixels verdes medidos no arquivo original.
+- `public/favicon.ico` de verdade, com 16, 32 e 48 pixels do mesmo medalhão embutidos em PNG, e o
+  `<link rel="icon">` correspondente em `x-site-head` — antes o arquivo existia zerado e o navegador
+  não desenhava nada na aba.
+- `test_a_marca_e_verde_como_o_medalhao_e_nao_a_teal_anterior` em `tests/Unit/PaletteTest.php`:
+  mais 29 hexes na lista de veto (a marca teal e o bronze antigos, com todos os derivados) e a
+  exigência de que o canal verde da marca vença vermelho e azul nos dois temas. A suíte fecha em
+  78 testes / 621 asserções.
 
 ### Alterado
+
+- A paleta "Premium Gourmet + Technology" foi harmonizada com a nova logo: a marca saiu do teal
+  `#1b6a5b` / `#46b39b` e entrou no verde cromado do medalhão (`#1c6b28` no claro, `#5eb85e` no
+  escuro), com o latão (`#8a6212` / `#d9b25c`) mantido como contra-ponto gourmet. O aviso mudou para
+  `#95551a` / `#e0a05a` para não se confundir com o latão, e foram recalculados de uma vez os
+  `--bs-*-rgb`, os sutis, as bordas, os links, o gradiente da marca e as tintas de item ativo da
+  sidebar. Fundo preto no escuro e branco neutro no claro continuam intocados, e o contraste da letra
+  sobre as seis cores de marca segue acima de 4.5:1 nos dois temas.
+- O wordmark `NEXUS-FIELD` passou a repetir o desenho da logo: `NEXUS` na cor da marca e `-FIELD` na
+  tinta neutra, com entreletra mais aberta — antes o sufixo era acento bronze, que não existe no
+  arquivo novo.
+- `x-ui-brand-mark` troca o SVG do "N" desenhado em tokens pelo medalhão da logo oficial, e as seis
+  capturas do README foram refeitas contra o aplicativo já com a marca e a paleta novas.
 
 - As seis capturas do README passam a medir exatamente **1440×900**. Os dois painéis e o celular
   foram recapturados logados na empresa de demonstração, porque o painel da empresa raiz sem dados é

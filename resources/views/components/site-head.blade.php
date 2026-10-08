@@ -10,6 +10,9 @@
 
 <title>{{ $title }}</title>
 
+<link rel="icon" href="{{ asset('favicon.ico') }}">
+<link rel="icon" type="image/png" sizes="64x64" href="{{ asset('img/marca-nexus-64.png') }}">
+
 @fonts
 <x-script.theme />
 @vite(['resources/css/app.css', 'resources/js/app.js'])

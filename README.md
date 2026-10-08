@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/branding/nexusfield-marca.svg" alt="NEXUS-FIELD" width="96">
+  <img src="docs/branding/marca-nexus.png" alt="NEXUS-FIELD" width="96">
 </p>
 
 <h1 align="center">NEXUS-FIELD</h1>
@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-77%20testes%20%2F%20575%20asser%C3%A7%C3%B5es-brightgreen" alt="77 testes, 575 asserções">
+  <img src="https://img.shields.io/badge/testes-78%20testes%20%2F%20621%20asser%C3%A7%C3%B5es-brightgreen" alt="78 testes, 621 asserções">
 </p>
 
 <p align="center">
@@ -128,7 +128,8 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 ### Interface
 
 - AdminLTE 4 na estrutura oficial, Bootstrap 5.3 nos componentes e camada de tokens própria
-- Paleta "Premium Gourmet + Technology": fundo preto no escuro e branco neutro no claro, sem casta de cor
+- Paleta "Premium Gourmet + Technology": o verde cromado medido do próprio medalhão como marca,
+  latão como contra-ponto, fundo preto no escuro e branco neutro no claro, sem casta de cor
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura
 - Diálogos e avisos só por SweetAlert2 e Toastr — `alert()`, `confirm()` e `prompt()` nativos são
   vetados no projeto e cobertos por teste
@@ -219,10 +220,10 @@ nexusfield/
 │   ├── migrations/          → 16 migrations do schema nexusfield
 │   └── seeders/             → DatabaseSeeder (plano, empresa, RBAC, conta raiz) e DemoSeeder
 ├── docs/
-│   ├── branding/            → marca exportada usada neste README
+│   ├── branding/            → o medalhão e a arte completa da marca oficial
 │   └── screenshots/         → as seis capturas das telas
 ├── lang/pt_BR/              → validação e mensagens de senha em português
-├── public/                  → index.php e assets compilados
+├── public/                  → index.php, favicon, img/ com a marca e assets compilados
 ├── resources/
 │   ├── css/nexusfield/      → tokens.css, base.css, components.css
 │   ├── js/nexusfield/       → theme, notify, dialog, forms, flash, passwords
@@ -419,12 +420,12 @@ Depois:
 php artisan test
 ```
 
-Hoje são **77 testes / 575 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **78 testes / 621 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com
 token válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato
-do seletor de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG,
-o contrato das seis capturas deste README (existem, estão linkadas e medem 1440×900) e a proibição
-dos diálogos nativos do navegador.
+do seletor de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG
+e a marca verde medida do medalhão, o contrato das seis capturas deste README (existem, estão
+linkadas e medem 1440×900) e a proibição dos diálogos nativos do navegador.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo

@@ -20,7 +20,7 @@
                 <x-ui.brand-mark />
                 <div class="nf-public-footer-id">
                     <p class="nf-wordmark">
-                        NEXUS<span class="nf-wordmark-accent">-FIELD</span>
+                        <span class="nf-wordmark-lead">NEXUS</span><span class="nf-wordmark-tail">-FIELD</span>
                     </p>
                     <p class="nf-public-footer-tagline">
                         Gestão de operações em campo: ordem, agenda, check-in e custo no mesmo registro.

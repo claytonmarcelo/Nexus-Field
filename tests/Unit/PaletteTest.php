@@ -6,8 +6,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * A paleta é contrato, não gosto pessoal: estes testes prendem o fundo preto do
- * tema escuro, o branco sem casta do claro e o contraste mínimo do texto, lendo o
- * `tokens.css` que o navegador vai aplicar.
+ * tema escuro, o branco sem casta do claro, o contraste mínimo do texto e a marca
+ * verde medida do medalhão, lendo o `tokens.css` que o navegador vai aplicar.
  */
 class PaletteTest extends TestCase
 {
@@ -116,6 +116,35 @@ class PaletteTest extends TestCase
                 strtolower($this->cssInteiro),
                 "a paleta azulado/rosada anterior trouxe {$hex} de volta"
             );
+        }
+    }
+
+    public function test_a_marca_e_verde_como_o_medalhao_e_nao_a_teal_anterior(): void
+    {
+        $vetadas = [
+            '#1b6a5b', '#46b39b', '#22836f', '#66c9b2', '#8ad8c4', '#10312b', '#145548',
+            '#a4c9c1', '#2c6a5d', '#d9e9e4', '#a7ded1', '#b4e2d6', '#1d5b4f', '#06120f',
+            '#a45d1f', '#e0a35f', '#91521b', '#834a18', '#34271a', '#f3e5d3', '#b8804a',
+            '#96670f', '#e8bc6a', '#775213', '#eecb8e', '#f3e8cd', '#e0cb94', '#322815', '#7c6134',
+        ];
+
+        foreach ($vetadas as $hex) {
+            $this->assertStringNotContainsString(
+                $hex,
+                strtolower($this->cssInteiro),
+                "a marca teal/bronze de antes trouxe {$hex} de volta"
+            );
+        }
+
+        foreach ([
+            'claro' => $this->tokens($this->bloco(':root,'."\n".'[data-bs-theme="light"]')),
+            'escuro' => $this->tokens($this->bloco('[data-bs-theme="dark"]')),
+        ] as $tema => $tokens) {
+            foreach (['--nf-primary', '--nf-primary-hover'] as $token) {
+                [$r, $g, $b] = $this->rgb($tokens[$token]);
+                $this->assertGreaterThan($r, $g, "marca {$token} do tema {$tema} saiu do verde do medalhão");
+                $this->assertGreaterThan($b, $g, "marca {$token} do tema {$tema} puxou para o ciano");
+            }
         }
     }
 
