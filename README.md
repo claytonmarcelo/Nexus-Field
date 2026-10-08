@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-73%20testes%20%2F%20541%20asser%C3%A7%C3%B5es-brightgreen" alt="73 testes, 541 asserções">
+  <img src="https://img.shields.io/badge/testes-77%20testes%20%2F%20575%20asser%C3%A7%C3%B5es-brightgreen" alt="77 testes, 575 asserções">
 </p>
 
 <p align="center">
@@ -31,23 +31,25 @@
 
 ## Telas
 
-Capturas do aplicativo rodando (Laravel + AdminLTE 4 sobre MySQL), nos dois temas e em celular, duas
-por linha e na mesma escala. Cada imagem é um link: o clique abre o arquivo no tamanho capturado.
-Os painéis mostram a empresa de demonstração criada pelo `DemoSeeder` — é ela que tem ordens,
-chamados, financeiro e estoque para os indicadores calcularem; na empresa real sem dados, os mesmos
-blocos aparecem nos estados vazios.
+Capturas do aplicativo rodando (Laravel + AdminLTE 4 sobre MySQL), nos dois temas e em celular, todas
+no mesmo quadro de **1440×900**, duas por linha e na mesma escala de exibição. Cada imagem é um link:
+o clique abre o arquivo no tamanho capturado. O painel de celular é fotografado no viewport real dele
+(390×844) e montado sobre o mesmo quadro de 1440×900 — é o único quadro diferente da série, e a
+legenda diz isso. Os painéis mostram a empresa de demonstração criada pelo `DemoSeeder` — é ela que
+tem ordens, chamados, financeiro e estoque para os indicadores calcularem; na empresa real sem dados,
+os mesmos blocos aparecem nos estados vazios.
 
 <div align="center">
 
-| Apresentação pública · tema claro · 1440×900 | Entrada · tema escuro · 1440×900 |
+| Apresentação pública · tema claro | Entrada · tema escuro |
 | :--: | :--: |
 | <a href="docs/screenshots/01-boas-vindas.png"><img src="docs/screenshots/01-boas-vindas.png" alt="Página de apresentação pública do NEXUS-FIELD em tema claro, com o ciclo de um serviço ao lado do título" width="360"></a> | <a href="docs/screenshots/02-entrada.png"><img src="docs/screenshots/02-entrada.png" alt="Tela de entrada com e-mail, senha com botão de revelar, manter conectado e recuperação de acesso em tema escuro" width="360"></a> |
 
-| Recuperação de acesso · tema claro · 1440×900 | Painel no celular · tema escuro · 390×844 |
+| Recuperação de acesso · tema claro | Painel no celular · tema escuro |
 | :--: | :--: |
-| <a href="docs/screenshots/03-recuperar-acesso.png"><img src="docs/screenshots/03-recuperar-acesso.png" alt="Tela de recuperação de acesso pedindo o e-mail da conta em tema claro" width="360"></a> | <a href="docs/screenshots/06-painel-celular.png"><img src="docs/screenshots/06-painel-celular.png" alt="Painel com os indicadores empilhados em uma coluna num celular de 390px em tema escuro" width="166"></a> |
+| <a href="docs/screenshots/03-recuperar-acesso.png"><img src="docs/screenshots/03-recuperar-acesso.png" alt="Tela de recuperação de acesso pedindo o e-mail da conta em tema claro" width="360"></a> | <a href="docs/screenshots/06-painel-celular.png"><img src="docs/screenshots/06-painel-celular.png" alt="Painel com os indicadores empilhados em uma coluna, capturado num celular de 390px e montado sobre quadro 1440×900 em tema escuro" width="360"></a> |
 
-| Painel operacional · tema claro · 1440×1000 | Painel operacional · tema escuro · 1440×1000 |
+| Painel operacional · tema claro | Painel operacional · tema escuro |
 | :--: | :--: |
 | <a href="docs/screenshots/04-painel-claro.png"><img src="docs/screenshots/04-painel-claro.png" alt="Painel em tema claro com doze indicadores, a fila de ordens da semana e a distribuição por estado" width="360"></a> | <a href="docs/screenshots/05-painel-escuro.png"><img src="docs/screenshots/05-painel-escuro.png" alt="Painel em tema escuro com os mesmos indicadores, tabelas e distribuição por estado" width="360"></a> |
 
@@ -417,11 +419,12 @@ Depois:
 php artisan test
 ```
 
-Hoje são **73 testes / 541 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **77 testes / 575 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com
 token válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato
-do seletor de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG e
-a proibição dos diálogos nativos do navegador.
+do seletor de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG,
+o contrato das seis capturas deste README (existem, estão linkadas e medem 1440×900) e a proibição
+dos diálogos nativos do navegador.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo

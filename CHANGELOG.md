@@ -194,9 +194,20 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 - `tests/Unit/UserInitialsTest.php` (6 testes) e uma asserção nova no `AuthenticatedLayoutTest`
   prendendo o contrato `[data-nf-theme-toggle]` entre Blade e JavaScript, mais o chip da empresa no
   rodapé. A suíte fecha em 68 testes / 356 asserções.
+- `tests/Unit/ScreenshotsTest.php` (4 testes / 34 asserções) prende a vitrine do README ao
+  repositório: as seis capturas existem, cada `<img>` tem o próprio arquivo como link de tamanho
+  cheio, todas medem 1440×900 lidos do cabeçalho IHDR do PNG, e a descrição de cada uma diz o tema
+  que a imagem realmente mostra. Uma tela que sai do ar sem trocar a captura agora quebra a suíte.
+  A suíte fecha em 77 testes / 575 asserções.
 
 ### Alterado
 
+- As seis capturas do README passam a medir exatamente **1440×900**. Os dois painéis e o celular
+  foram recapturados logados na empresa de demonstração, porque o painel da empresa raiz sem dados é
+  o estado vazio — que tem lugar no README, mas não é a vitrine. Os painéis, que vinham em
+  1440×1000, entraram no quadro da série; o celular continua fotografado no viewport real do
+  aparelho (390×844) e montado sobre um quadro 1440×900 na cor de superfície do próprio tema, porque
+  um celular não tem 1440×900 de viewport — e a legenda diz isso em vez de esconder.
 - README reescrito no formato de referência que o dono do projeto apontou: cabeçalho centralizado
   com a marca, fileira de selos de versão/stack, separadores horizontais, telas em tabela Markdown
   centralizada de duas por linha, e as seções Sobre o projeto, Funcionalidades no ar, Módulos,
