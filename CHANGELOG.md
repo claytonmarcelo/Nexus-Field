@@ -29,8 +29,32 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   válido/forgiado/fraco e isolamento entre tenants.
 - `tests/CreatesFixtures.php`, que monta empresa, plano, permissões, papel e usuário para os
   testes de feature rodarem contra o MySQL real (`nexusfield_test`), sem mock de banco.
+- Design system "Premium Gourmet + Technology" sobre AdminLTE 4: tokens de tema em
+  `resources/css/nexusfield/tokens.css` (dia bonito / noite bonita, sem branco puro e sem preto
+  puro), base em `base.css` e componentes em `components.css`, com cartões, botões (inclusive
+  `.btn-accent`, `.btn-ghost`, `.btn-soft-primary` e estado `data-loading`), formulários, tabelas,
+  badges de estado, KPIs, esqueletos e estados de interface (loading/empty/sem resultado/erro/sem
+  permissão).
+- Identidade tipográfica e de cor aplicada por variáveis, sem `!important`: Bootstrap 5.3 e
+  AdminLTE 4 lidos dos pacotes npm e revestidos por `--bs-*`/`--lte-*`; Inter para a interface e
+  Fraunces para o display, servidos localmente pelo Vite (`@fonts`), com `fontaine` gerando o
+  fallback métrico das fontes.
+- Componentes Blade do design system: `x-ui.button`, `x-ui.card`, `x-ui.input`, `x-ui.state`,
+  `x-ui.theme-toggle` e o script pré-pintura `x-script.theme`, que aplica o tema salvo antes do
+  primeiro frame.
+- Chave global de tema claro/escuro com preferência persistida em `localStorage` e cookie
+  (`nf_theme`, SameSite=Lax), cor da barra do celular sincronizada e respeito a
+  `prefers-color-scheme` quando nada foi escolhido.
+- Camada de interação compartilhada: `toast` (Toastr com `escapeHtml: true`, para que mensagem
+  vinda do banco não vire HTML), `confirm`/`prompt`/`alert` via SweetAlert2 no lugar dos diálogos
+  nativos — que ficam proibidos no projeto — e guarda de envio em `form[data-nf-guard]`, que
+  desabilita o botão e mostra o spinner enquanto o request não volta.
 
 ### Corrigido
+
+- `.card-title` dentro de `.card-body` volta a ser bloco: o AdminLTE define `float: left` nesse
+  elemento para o título dividir a linha com as ferramentas do cabeçalho, e isso fazia o título
+  invadir o parágrafo seguinte.
 
 - `BelongsToCompany` passa a impor o `company_id` do contexto no `create`; antes, um
   `company_id` enviado pelo request escrevia o registro em outra empresa — vazamento entre
@@ -49,8 +73,15 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Conhecido
 
-- As telas de boas-vindas, login, recuperação de senha e o layout AdminLTE chegam nas fases 4 a 7;
-  por enquanto `/` renderiza a view padrão do skeleton do Laravel.
+- As telas de login, recuperação de senha e o layout AdminLTE autenticado chegam nas fases 6 e 7;
+  os links de acesso da página de entrada apontam para rotas cuja view ainda não existe.
+- Servida de um subdiretório (`http://localhost/nexusfield/public/`), a aplicação fica sem as
+  fontes próprias e sem os ícones: o Vite gera as URLs de `@font-face` a partir da raiz do host.
+  O caminho esperado é servir na raiz — `php artisan serve` ou um vhost apontando o
+  `DocumentRoot` para `public/`.
+- O `php` do `PATH` desta máquina é o 8.4.23 de `C:\Program Files\PHP`, sem `mbstring`; os
+  comandos de artisan e de teste precisam usar o build do WAMP (`php8.3.28`), o mesmo que o
+  Apache carrega.
 - No Windows deste posto, `php artisan test` executa o `vendor/bin/phpunit` (`.bat`) através do
   `cmd.exe`, que não tem permissão de escrita em `C:\wamp64`; isso derruba a compilação de views
   durante os testes. Rodar `php vendor/phpunit/phpunit/phpunit` diretamente contorna o problema,

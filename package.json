@@ -7,13 +7,21 @@
         "dev": "vite"
     },
     "devDependencies": {
-        "@tailwindcss/vite": "^4.0.0",
         "concurrently": "^10.0.3",
+        "fontaine": "^0.8.0",
         "laravel-vite-plugin": "^3.1",
-        "tailwindcss": "^4.0.0",
         "vite": "^8.0.0"
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1"
+    },
+    "dependencies": {
+        "@fortawesome/fontawesome-free": "^6.7.2",
+        "admin-lte": "^4.10.0",
+        "bootstrap": "5.3",
+        "jquery": "^3.7.1",
+        "summernote": "^0.9.1",
+        "sweetalert2": "^11.26.25",
+        "toastr": "^2.1.4"
     }
 }

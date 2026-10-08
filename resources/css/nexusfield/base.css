@@ -1,0 +1,85 @@
+/*
+ * Base: como a página se comporta antes de qualquer componente existir.
+ */
+
+html {
+    background-color: var(--nf-bg);
+}
+
+body {
+    min-height: 100vh;
+    background: var(--nf-gradient-app) fixed;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+.h1,
+.h2,
+.h3 {
+    letter-spacing: -.015em;
+    font-weight: 600;
+}
+
+/* O display serifado aparece só onde há espaço para ele respirar. */
+.nf-display {
+    font-family: var(--nf-font-display);
+    font-weight: 600;
+    letter-spacing: -.02em;
+    line-height: 1.12;
+}
+
+a {
+    text-decoration-thickness: from-font;
+}
+
+:focus-visible {
+    outline: 2px solid var(--nf-primary);
+    outline-offset: 2px;
+    border-radius: var(--bs-border-radius-sm);
+}
+
+::selection {
+    background: var(--nf-primary-soft);
+    color: var(--nf-text);
+}
+
+/* Barras de rolagem discretas nos dois temas. */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--nf-line-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--nf-line-strong);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--nf-text-faint);
+    background-clip: padding-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

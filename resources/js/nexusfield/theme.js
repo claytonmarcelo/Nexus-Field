@@ -1,0 +1,80 @@
+/*
+ * Tema global: "um dia bonito" (claro) e "uma noite bonita" (escuro).
+ *
+ * A preferência vai para cookie (o Blade entrega o HTML já com o tema, sem
+ * flash) e para localStorage (leitura instantânea no cliente). O atributo
+ * `data-bs-theme` inicial é aplicado por um script inline no <head>; aqui só
+ * mantemos a chave, a cor da barra do celular e o sistema operacional.
+ */
+const STORAGE_KEY = 'nexusfield:tema';
+const COOKIE_NAME = 'nf_theme';
+const COOKIE_DAYS = 365;
+const MODES = new Set(['light', 'dark']);
+const BROWSER_BAR_COLOR = {
+    light: '#f3eee6',
+    dark: '#101319',
+};
+
+function readCookie() {
+    const match = document.cookie.match(new RegExp('(?:^|; )' + COOKIE_NAME + '=([^;]*)'));
+    const value = match ? decodeURIComponent(match[1]) : null;
+
+    return MODES.has(value) ? value : null;
+}
+
+function writeCookie(mode) {
+    const expires = new Date(Date.now() + COOKIE_DAYS * 864e5).toUTCString();
+    document.cookie = `${COOKIE_NAME}=${mode}; Expires=${expires}; Path=/; SameSite=Lax`;
+}
+
+export function current() {
+    return document.documentElement.dataset.bsTheme === 'dark' ? 'dark' : 'light';
+}
+
+function syncBrowserBar(mode) {
+    const meta = document.querySelector('meta[name="theme-color"]');
+
+    if (meta) {
+        meta.setAttribute('content', BROWSER_BAR_COLOR[mode]);
+    }
+}
+
+export function apply(mode, { remember = true } = {}) {
+    if (!MODES.has(mode)) {
+        return;
+    }
+
+    document.documentElement.dataset.bsTheme = mode;
+    syncBrowserBar(mode);
+
+    if (remember) {
+        window.localStorage?.setItem(STORAGE_KEY, mode);
+        writeCookie(mode);
+    }
+
+    document.dispatchEvent(new CustomEvent('nf:tema', { detail: { modo: mode } }));
+}
+
+export function toggle() {
+    apply(current() === 'dark' ? 'light' : 'dark');
+}
+
+export function init() {
+    syncBrowserBar(current());
+
+    document.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-nf-theme-toggle]');
+
+        if (trigger) {
+            event.preventDefault();
+            toggle();
+        }
+    });
+
+    // Quem nunca escolheu acompanha o sistema; quem escolheu mantém a escolha.
+    window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+        if (!window.localStorage?.getItem(STORAGE_KEY) && !readCookie()) {
+            apply(event.matches ? 'dark' : 'light', { remember: false });
+        }
+    });
+}

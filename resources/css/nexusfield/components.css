@@ -1,0 +1,885 @@
+/*
+ * Componentes do design system do NEXUS-FIELD.
+ *
+ * Nenhum bloco aqui reescreve a lógica do AdminLTE: só troca a matéria-prima
+ * (cor, raio, sombra, ritmo) e acrescenta as peças que o projeto precisa e o
+ * template não traz (estado vazio/erro, skeleton, KPI, dot de status).
+ */
+
+/* ------------------------------------------------------------------ *
+ * Estrutura (AdminLTE 4)
+ * ------------------------------------------------------------------ */
+.app-wrapper {
+    min-height: 100vh;
+}
+
+.app-header {
+    background-color: color-mix(in srgb, var(--nf-surface) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--nf-line);
+    box-shadow: var(--nf-shadow-sm);
+}
+
+.brand-link {
+    font-family: var(--nf-font-display);
+    font-weight: 600;
+    letter-spacing: .01em;
+}
+
+.app-sidebar,
+.app-sidebar[data-bs-theme="light"] {
+    background:
+        radial-gradient(120% 60% at 50% 0%, rgba(63, 158, 140, .16) 0%, transparent 62%),
+        linear-gradient(180deg, #171b24 0%, #121620 100%);
+    border-right: 1px solid rgba(255, 255, 255, .06);
+}
+
+.app-sidebar .nav-sidebar > .nav-item > .nav-link {
+    border-radius: var(--bs-border-radius-sm);
+    margin-inline: .5rem;
+    padding-block: .5rem;
+    transition: background-color var(--nf-duration) var(--nf-ease),
+        color var(--nf-duration) var(--nf-ease);
+}
+
+.app-sidebar .nav-sidebar .nav-link.active {
+    box-shadow: inset 2px 0 0 var(--nf-accent);
+}
+
+.app-content-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--nf-line);
+}
+
+.app-content {
+    padding-block: 1.25rem 2rem;
+}
+
+.app-footer {
+    border-top: 1px solid var(--nf-line);
+    color: var(--nf-text-muted);
+}
+
+/* ------------------------------------------------------------------ *
+ * Cartões
+ * ------------------------------------------------------------------ */
+.card {
+    background-color: var(--nf-elevated);
+    border: 1px solid var(--nf-line);
+    border-radius: var(--bs-border-radius-lg);
+    box-shadow: var(--nf-shadow-sm);
+    transition: box-shadow var(--nf-duration) var(--nf-ease),
+        border-color var(--nf-duration) var(--nf-ease);
+}
+
+.card:hover {
+    box-shadow: var(--nf-shadow-md);
+}
+
+.card-header,
+.card-footer {
+    background-color: transparent;
+    border-color: var(--nf-line);
+    padding-block: .85rem;
+}
+
+.card-header {
+    border-bottom-width: 1px;
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+}
+
+/*
+ * O AdminLTE flutua .card-title para o título dividir linha com as ferramentas
+ * do cabeçalho. Dentro do corpo do cartão isso faria o título invadir o texto.
+ */
+.card-body > .card-title {
+    float: none;
+    margin-bottom: var(--bs-card-title-spacer-y);
+}
+
+.card-subtitle {
+    font-size: .82rem;
+    color: var(--nf-text-muted);
+    margin-top: .1rem;
+}
+
+.card-body {
+    padding: 1.15rem 1.25rem;
+}
+
+.card-primary,
+.card-success,
+.card-danger,
+.card-warning,
+.card-info,
+.card-secondary {
+    --lte-card-variant-bg: transparent;
+    --lte-card-variant-color: var(--nf-text);
+    border-top: 2px solid var(--bs-card-border-color, var(--nf-line));
+}
+
+.card-primary {
+    --bs-card-border-color: var(--nf-primary);
+}
+
+.card-success {
+    --bs-card-border-color: var(--nf-success);
+}
+
+.card-danger {
+    --bs-card-border-color: var(--nf-danger);
+}
+
+.card-warning {
+    --bs-card-border-color: var(--nf-warning);
+}
+
+.card-info {
+    --bs-card-border-color: var(--nf-info);
+}
+
+/* ------------------------------------------------------------------ *
+ * Botões
+ * ------------------------------------------------------------------ */
+.btn {
+    font-weight: 600;
+    letter-spacing: .005em;
+    padding-block: .5rem;
+    padding-inline: 1rem;
+    transition: background-color var(--nf-duration) var(--nf-ease),
+        border-color var(--nf-duration) var(--nf-ease),
+        color var(--nf-duration) var(--nf-ease),
+        box-shadow var(--nf-duration) var(--nf-ease),
+        transform var(--nf-duration) var(--nf-ease);
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--nf-primary);
+    --bs-btn-border-color: var(--nf-primary);
+    --bs-btn-hover-bg: var(--nf-primary-hover);
+    --bs-btn-hover-border-color: var(--nf-primary-hover);
+    --bs-btn-active-bg: var(--nf-primary-hover);
+    --bs-btn-active-border-color: var(--nf-primary-hover);
+    --bs-btn-disabled-bg: var(--nf-primary-soft);
+    --bs-btn-disabled-border-color: var(--nf-primary-soft);
+    --bs-btn-disabled-color: var(--nf-text-faint);
+    --bs-btn-color: #fdfbf7;
+    --bs-btn-hover-color: #fdfbf7;
+    --bs-btn-active-color: #fdfbf7;
+    box-shadow: var(--nf-shadow-sm);
+}
+
+.btn-accent {
+    --bs-btn-bg: var(--nf-accent);
+    --bs-btn-border-color: var(--nf-accent);
+    --bs-btn-color: #fdfbf7;
+    --bs-btn-hover-bg: #a55f25;
+    --bs-btn-hover-border-color: #a55f25;
+    --bs-btn-hover-color: #fdfbf7;
+    --bs-btn-active-bg: #925320;
+    --bs-btn-active-border-color: #925320;
+    --bs-btn-active-color: #fdfbf7;
+    --bs-btn-disabled-bg: var(--nf-accent-soft);
+    --bs-btn-disabled-border-color: var(--nf-accent-soft);
+    --bs-btn-disabled-color: var(--nf-text-faint);
+}
+
+.btn-ghost {
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: transparent;
+    --bs-btn-color: var(--nf-text-muted);
+    --bs-btn-hover-bg: var(--nf-primary-soft);
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-hover-color: var(--nf-primary-hover);
+    --bs-btn-active-bg: var(--nf-primary-soft);
+    --bs-btn-active-color: var(--nf-primary-hover);
+    --bs-btn-disabled-color: var(--nf-text-faint);
+}
+
+.btn-soft-primary {
+    --bs-btn-bg: var(--nf-primary-soft);
+    --bs-btn-border-color: transparent;
+    --bs-btn-color: var(--nf-primary);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--nf-primary) 22%, var(--nf-elevated));
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-hover-color: var(--nf-primary-hover);
+    --bs-btn-active-bg: var(--nf-primary-soft);
+    --bs-btn-active-color: var(--nf-primary);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--nf-text-muted);
+    --bs-btn-border-color: var(--nf-line-strong);
+    --bs-btn-hover-bg: var(--nf-surface);
+    --bs-btn-hover-border-color: var(--nf-text-faint);
+    --bs-btn-hover-color: var(--nf-text);
+    --bs-btn-active-bg: var(--nf-primary-soft);
+    --bs-btn-active-border-color: var(--nf-primary);
+    --bs-btn-active-color: var(--nf-primary-hover);
+}
+
+/* Estado "carregando" controlado por data attribute, sem spinner de terceiro. */
+.btn[data-loading="true"] {
+    pointer-events: none;
+    opacity: .72;
+}
+
+.btn[data-loading="true"] .nf-btn-label {
+    opacity: .65;
+}
+
+.nf-btn-spinner {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+}
+
+.nf-btn-spinner::before {
+    content: "";
+    width: .85em;
+    height: .85em;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    animation: nf-spin .7s linear infinite;
+}
+
+@keyframes nf-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ------------------------------------------------------------------ *
+ * Formulários
+ * ------------------------------------------------------------------ */
+.form-label {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--nf-text-muted);
+    letter-spacing: .01em;
+    margin-bottom: .35rem;
+}
+
+.form-control,
+.form-select {
+    background-color: var(--nf-elevated);
+    border-color: var(--nf-line-strong);
+    border-radius: var(--bs-border-radius);
+    padding-block: .55rem;
+    box-shadow: none;
+    transition: border-color var(--nf-duration) var(--nf-ease),
+        box-shadow var(--nf-duration) var(--nf-ease);
+}
+
+.form-control::placeholder {
+    color: var(--nf-text-faint);
+    opacity: 1;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--nf-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--nf-primary) 22%, transparent);
+}
+
+.form-control[readonly],
+.form-control:disabled,
+.form-select:disabled {
+    background-color: var(--nf-surface);
+    color: var(--nf-text-muted);
+}
+
+.form-text {
+    font-size: .78rem;
+    color: var(--nf-text-muted);
+}
+
+.invalid-feedback,
+.form-text.nf-error {
+    font-size: .78rem;
+    color: var(--nf-danger);
+    font-weight: 500;
+}
+
+.input-group-text {
+    background-color: var(--nf-surface);
+    border-color: var(--nf-line-strong);
+    color: var(--nf-text-muted);
+}
+
+.form-check-input {
+    border-color: var(--nf-line-strong);
+    background-color: var(--nf-elevated);
+}
+
+.form-check-input:checked {
+    background-color: var(--nf-primary);
+    border-color: var(--nf-primary);
+}
+
+.form-switch .form-check-input {
+    width: 2.4em;
+}
+
+.search-highlight {
+    background-color: var(--nf-warning-soft);
+    color: inherit;
+    border-radius: .25rem;
+    padding: 0 .15em;
+}
+
+/* ------------------------------------------------------------------ *
+ * Tabelas
+ * ------------------------------------------------------------------ */
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--nf-text);
+    --bs-table-border-color: var(--nf-line);
+    --bs-table-hover-bg: var(--nf-primary-soft);
+    --bs-table-hover-color: var(--nf-text);
+    --bs-table-striped-bg: var(--nf-surface);
+    margin-bottom: 0;
+}
+
+.table > thead th,
+.table > thead td {
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+    border-bottom: 1px solid var(--nf-line-strong);
+    white-space: nowrap;
+}
+
+.table > tbody > tr > td {
+    vertical-align: middle;
+}
+
+.table-responsive > .table > tbody > tr > th,
+.table-responsive > .table > tbody > tr > td {
+    white-space: nowrap;
+}
+
+.nf-table-actions {
+    display: inline-flex;
+    gap: .35rem;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* ------------------------------------------------------------------ *
+ * Selos e estados
+ * ------------------------------------------------------------------ */
+.badge {
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    padding-inline: .65em;
+    padding-block: .38em;
+    font-size: .74rem;
+}
+
+.nf-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    font-weight: 600;
+    font-size: .8rem;
+    color: var(--nf-text);
+    white-space: nowrap;
+}
+
+.nf-status::before {
+    content: "";
+    width: .55rem;
+    height: .55rem;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 20%, transparent);
+    flex: none;
+}
+
+.nf-status-draft { color: var(--nf-text-muted); }
+.nf-status-open { color: var(--nf-info); }
+.nf-status-progress { color: var(--nf-warning); }
+.nf-status-waiting { color: var(--nf-accent); }
+.nf-status-done { color: var(--nf-success); }
+.nf-status-canceled { color: var(--nf-danger); }
+
+[data-bs-theme="dark"] .nf-status { color: var(--nf-text); }
+
+/* ------------------------------------------------------------------ *
+ * Navegação auxiliar
+ * ------------------------------------------------------------------ */
+.nav-pills .nav-link {
+    border-radius: var(--bs-border-radius);
+    color: var(--nf-text-muted);
+    font-weight: 600;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--nf-primary);
+    color: #fdfbf7;
+}
+
+.page-link {
+    border-radius: var(--bs-border-radius-sm);
+    margin-inline: .15rem;
+    min-width: 2.15rem;
+    text-align: center;
+    border-color: var(--nf-line);
+    background-color: var(--nf-elevated);
+    color: var(--nf-text);
+    font-weight: 500;
+}
+
+.page-item.active .page-link {
+    background-color: var(--nf-primary);
+    border-color: var(--nf-primary);
+    color: #fdfbf7;
+}
+
+.page-item.disabled .page-link {
+    background-color: transparent;
+    color: var(--nf-text-faint);
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: var(--nf-text-faint);
+}
+
+.breadcrumb-item.active {
+    color: var(--nf-text-muted);
+}
+
+.dropdown-menu {
+    background-color: var(--nf-elevated);
+    border: 1px solid var(--nf-line);
+    border-radius: var(--bs-border-radius);
+    box-shadow: var(--nf-shadow-lg);
+    padding: .35rem;
+}
+
+.dropdown-item {
+    border-radius: var(--bs-border-radius-sm);
+    color: var(--nf-text);
+    font-weight: 500;
+}
+
+.dropdown-item:focus,
+.dropdown-item:hover {
+    background-color: var(--nf-primary-soft);
+    color: var(--nf-primary-hover);
+}
+
+.dropdown-divider {
+    border-color: var(--nf-line);
+}
+
+.list-group-item {
+    background-color: var(--nf-elevated);
+    border-color: var(--nf-line);
+}
+
+.list-group-item.active {
+    background-color: var(--nf-primary);
+    border-color: var(--nf-primary);
+    color: #fdfbf7;
+}
+
+/* ------------------------------------------------------------------ *
+ * Camadas: modal, offcanvas, alerta, tooltip
+ * ------------------------------------------------------------------ */
+.modal-content {
+    background-color: var(--nf-elevated);
+    border: 1px solid var(--nf-line);
+    border-radius: var(--bs-border-radius-lg);
+    box-shadow: var(--nf-shadow-lg);
+}
+
+.modal-header,
+.modal-footer {
+    border-color: var(--nf-line);
+}
+
+.offcanvas {
+    background-color: var(--nf-elevated);
+    border-color: var(--nf-line);
+}
+
+.alert {
+    border-radius: var(--bs-border-radius);
+    border-width: 1px;
+    font-size: .875rem;
+}
+
+.callout {
+    border-radius: var(--bs-border-radius);
+    border-left-width: 3px;
+    box-shadow: var(--nf-shadow-sm);
+    color: var(--nf-text);
+}
+
+.popover {
+    background-color: var(--nf-elevated);
+    border-color: var(--nf-line);
+    --bs-popover-max-width: 26rem;
+}
+
+.popover-header {
+    background-color: transparent;
+    border-color: var(--nf-line);
+    color: var(--nf-text);
+}
+
+.tooltip .tooltip-arrow::before {
+    border-color: var(--nf-line-strong);
+}
+
+/* ------------------------------------------------------------------ *
+ * KPI (dashboard)
+ * ------------------------------------------------------------------ */
+.nf-kpi {
+    position: relative;
+    overflow: hidden;
+}
+
+.nf-kpi::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 2px;
+    background: var(--nf-gradient-brand);
+    opacity: .75;
+}
+
+.nf-kpi-value {
+    font-family: var(--nf-font-display);
+    font-size: clamp(1.65rem, 1.1rem + 1.6vw, 2.4rem);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.nf-kpi-label {
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+}
+
+.nf-kpi-delta {
+    font-size: .8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+}
+
+.nf-kpi-delta.is-up { color: var(--nf-success); }
+.nf-kpi-delta.is-down { color: var(--nf-danger); }
+.nf-kpi-delta.is-flat { color: var(--nf-text-muted); }
+
+.nf-icon-tile {
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: var(--bs-border-radius);
+    background: var(--nf-primary-soft);
+    color: var(--nf-primary);
+    font-size: 1.05rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Estados de interface: carregando, vazio, erro, sem resultado, sem acesso
+ * ------------------------------------------------------------------ */
+.nf-state {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: .35rem;
+    text-align: center;
+    padding: 2.5rem 1.25rem;
+    color: var(--nf-text-muted);
+}
+
+.nf-state-icon {
+    display: grid;
+    place-items: center;
+    width: 3.1rem;
+    height: 3.1rem;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    margin-bottom: .5rem;
+    background: var(--nf-surface);
+    border: 1px solid var(--nf-line);
+    color: var(--nf-text-faint);
+}
+
+.nf-state-title {
+    font-family: var(--nf-font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--nf-text);
+}
+
+.nf-state-text {
+    max-width: 42ch;
+    font-size: .875rem;
+}
+
+.nf-state[data-tone="error"] .nf-state-icon {
+    background: var(--nf-danger-soft);
+    border-color: color-mix(in srgb, var(--nf-danger) 35%, transparent);
+    color: var(--nf-danger);
+}
+
+.nf-state[data-tone="denied"] .nf-state-icon {
+    background: var(--nf-warning-soft);
+    border-color: color-mix(in srgb, var(--nf-warning) 35%, transparent);
+    color: var(--nf-warning);
+}
+
+.nf-state[data-tone="loading"] .nf-state-icon {
+    background: var(--nf-primary-soft);
+    border-color: transparent;
+    color: var(--nf-primary);
+}
+
+/* Spinner próprio: não depende de webfont para aparecer. */
+.nf-state[data-tone="loading"] .nf-state-icon::before {
+    content: "";
+    width: 1.15rem;
+    height: 1.15rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: nf-spin .75s linear infinite;
+}
+
+.nf-skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--nf-surface);
+    border-radius: var(--bs-border-radius-sm);
+    color: transparent;
+    pointer-events: none;
+    user-select: none;
+}
+
+.nf-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--nf-elevated) 80%, transparent), transparent);
+    transform: translateX(-100%);
+    animation: nf-shimmer 1.35s var(--nf-ease) infinite;
+}
+
+@keyframes nf-shimmer {
+    to {
+        transform: translateX(100%);
+    }
+}
+
+/* ------------------------------------------------------------------ *
+ * Marca, avatar e utilitários
+ * ------------------------------------------------------------------ */
+.nf-wordmark {
+    font-family: var(--nf-font-display);
+    font-weight: 600;
+    letter-spacing: .02em;
+    white-space: nowrap;
+}
+
+.nf-wordmark-accent {
+    color: var(--nf-accent);
+}
+
+.nf-avatar {
+    display: grid;
+    place-items: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 50%;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    background: var(--nf-gradient-brand);
+    color: #fdfbf7;
+    flex: none;
+    user-select: none;
+}
+
+.nf-avatar-sm {
+    width: 1.7rem;
+    height: 1.7rem;
+    font-size: .66rem;
+}
+
+.nf-avatar-lg {
+    width: 3.4rem;
+    height: 3.4rem;
+    font-size: 1rem;
+}
+
+.nf-divider {
+    border: 0;
+    border-top: 1px solid var(--nf-line);
+    opacity: 1;
+    margin-block: 1rem;
+}
+
+.nf-label {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+}
+
+.nf-surface {
+    background-color: var(--nf-elevated);
+    border: 1px solid var(--nf-line);
+    border-radius: var(--bs-border-radius-lg);
+    box-shadow: var(--nf-shadow-sm);
+}
+
+.nf-mono {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .01em;
+}
+
+.nf-text-muted-2 {
+    color: var(--nf-text-muted);
+}
+
+/* ------------------------------------------------------------------ *
+ * Chave de tema
+ * ------------------------------------------------------------------ */
+.nf-theme-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    border: 1px solid var(--nf-line);
+    background: var(--nf-elevated);
+    color: var(--nf-text-muted);
+    transition: background-color var(--nf-duration) var(--nf-ease),
+        color var(--nf-duration) var(--nf-ease),
+        border-color var(--nf-duration) var(--nf-ease);
+}
+
+.nf-theme-toggle:hover {
+    color: var(--nf-accent);
+    border-color: var(--nf-line-strong);
+    background: var(--nf-surface);
+}
+
+[data-bs-theme="light"] .nf-theme-toggle .nf-icon-moon,
+[data-bs-theme="dark"] .nf-theme-toggle .nf-icon-sun {
+    display: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * Toastr — notificações do canto
+ * ------------------------------------------------------------------ */
+#toast-container > div {
+    opacity: 1;
+    border-radius: var(--bs-border-radius);
+    box-shadow: var(--nf-shadow-md);
+    padding: .85rem 2.2rem .85rem 1rem;
+    background-color: var(--nf-elevated);
+    color: var(--nf-text);
+    border: 1px solid var(--nf-line);
+    width: 22rem;
+}
+
+#toast-container > .toast-success { border-left: 3px solid var(--nf-success); }
+#toast-container > .toast-error { border-left: 3px solid var(--nf-danger); }
+#toast-container > .toast-warning { border-left: 3px solid var(--nf-warning); }
+#toast-container > .toast-info { border-left: 3px solid var(--nf-info); }
+
+#toast-container > div > .toast-title {
+    font-weight: 700;
+    font-size: .875rem;
+}
+
+#toast-container > div > .toast-message {
+    font-size: .82rem;
+    color: var(--nf-text-muted);
+}
+
+#toast-container > div .toast-close-button {
+    color: var(--nf-text-faint);
+    text-shadow: none;
+    font-size: 1.15rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * SweetAlert2 — confirmações
+ * ------------------------------------------------------------------ */
+.swal2-container.swal2-backdrop-show {
+    background: color-mix(in srgb, #17130c 62%, transparent);
+    backdrop-filter: blur(3px);
+}
+
+.swal2-popup.nf-dialog {
+    --swal2-background: var(--nf-elevated);
+    --swal2-color: var(--nf-text);
+    --swal2-border: 1px solid var(--nf-line);
+    --swal2-border-radius: var(--bs-border-radius-lg);
+    --swal2-confirm-button-background-color: var(--nf-primary);
+    --swal2-confirm-button-color: #fdfbf7;
+    --swal2-confirm-button-border-radius: var(--bs-border-radius);
+    --swal2-deny-button-background-color: var(--nf-danger);
+    --swal2-deny-button-color: #fdfbf7;
+    --swal2-deny-button-border-radius: var(--bs-border-radius);
+    --swal2-cancel-button-background-color: transparent;
+    --swal2-cancel-button-color: var(--nf-text-muted);
+    --swal2-cancel-button-border-radius: var(--bs-border-radius);
+    --swal2-close-button-color: var(--nf-text-faint);
+    box-shadow: var(--nf-shadow-lg);
+    padding: 1.6rem 1.5rem 1.25rem;
+}
+
+.nf-dialog .swal2-title {
+    font-family: var(--nf-font-display);
+    font-weight: 600;
+    font-size: 1.28rem;
+}
+
+.nf-dialog .swal2-html-container,
+.nf-dialog .swal2-content {
+    font-size: .9rem;
+    color: var(--nf-text-muted);
+}
+
+.nf-dialog .swal2-actions .swal2-styled {
+    padding: .55rem 1.15rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.nf-dialog .swal2-cancel {
+    border-color: var(--nf-line-strong);
+}
+
+.nf-dialog .nf-dialog-danger {
+    --swal2-confirm-button-background-color: var(--nf-danger);
+}

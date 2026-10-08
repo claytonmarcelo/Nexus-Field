@@ -1,9 +1,17 @@
-@import 'tailwindcss';
-
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
-}
+/*
+ * Entrada de estilo do NEXUS-FIELD.
+ *
+ * Ordem importa: Bootstrap 5.3 → AdminLTE 4 (estrutura oficial) → tokens e
+ * componentes próprios por cima. Nada do template é reescrito, só vestimos.
+ */
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "admin-lte/dist/css/adminlte.min.css";
+@import "@fortawesome/fontawesome-free/css/fontawesome.min.css";
+@import "@fortawesome/fontawesome-free/css/solid.min.css";
+@import "@fortawesome/fontawesome-free/css/regular.min.css";
+@import "@fortawesome/fontawesome-free/css/brands.min.css";
+@import "toastr/build/toastr.min.css";
+@import "./nexusfield/tokens.css";
+@import "./nexusfield/base.css";
+@import "./nexusfield/components.css";
+@import "./nexusfield/public.css";

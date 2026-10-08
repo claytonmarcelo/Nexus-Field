@@ -1,0 +1,259 @@
+/*
+ * Tokens do NEXUS-FIELD — identidade "PREMIUM GOURMET + TECNOLOGIA".
+ *
+ * Duas paletas, nenhuma com branco puro dominante:
+ *   claro = "um dia bonito"  (porcelana quente, nada de #fff de fundo)
+ *   escuro = "uma noite bonita" (grafite azulado, nada de #000)
+ *
+ * Tudo é escrito por cima das variáveis do Bootstrap 5.3 e do AdminLTE 4, então os
+ * componentes oficiais continuam funcionando — só trocam de matéria-prima.
+ */
+
+:root,
+[data-bs-theme="light"] {
+    color-scheme: light;
+
+    /* Superfícies */
+    --nf-bg: #f3eee6;
+    --nf-surface: #faf6ef;
+    --nf-elevated: #fdfbf7;
+    --nf-line: #e5dbca;
+    --nf-line-strong: #d2c4ac;
+
+    /* Texto */
+    --nf-text: #221e19;
+    --nf-text-muted: #6c6156;
+    --nf-text-faint: #93877a;
+
+    /* Marca */
+    --nf-primary: #1b6a5b;
+    --nf-primary-hover: #145548;
+    --nf-primary-soft: #dcebe5;
+    --nf-accent: #b96c2c;
+    --nf-accent-soft: #f5e6d5;
+
+    /* Semânticos */
+    --nf-success: #2c7a50;
+    --nf-success-soft: #dcece2;
+    --nf-danger: #a83b34;
+    --nf-danger-soft: #f4e0dd;
+    --nf-warning: #b5811b;
+    --nf-warning-soft: #f6eacf;
+    --nf-info: #2e6a86;
+    --nf-info-soft: #dcebf2;
+
+    /* Profundidade */
+    --nf-shadow-sm: 0 1px 2px rgba(60, 44, 24, .07), 0 1px 1px rgba(60, 44, 24, .04);
+    --nf-shadow-md: 0 6px 18px -6px rgba(60, 44, 24, .16), 0 2px 6px rgba(60, 44, 24, .06);
+    --nf-shadow-lg: 0 22px 48px -20px rgba(60, 44, 24, .28), 0 6px 16px rgba(60, 44, 24, .08);
+
+    /* Malha: gradiente sutil que sustenta o "gourmet" sem virar estampa */
+    --nf-gradient-app: linear-gradient(180deg, #f7f2ea 0%, var(--nf-bg) 42%, #efe8dd 100%);
+    --nf-gradient-brand: linear-gradient(135deg, var(--nf-primary) 0%, #22836f 55%, var(--nf-accent) 130%);
+
+    --bs-body-bg: var(--nf-bg);
+    --bs-body-color: var(--nf-text);
+    --bs-emphasis-color: var(--nf-text);
+    --bs-border-color: var(--nf-line);
+    --bs-tertiary-bg: var(--nf-surface);
+    --bs-secondary-bg: var(--nf-elevated);
+    --bs-link-color: var(--nf-primary);
+    --bs-link-hover-color: var(--nf-primary-hover);
+    --bs-link-color-rgb: 27, 106, 91;
+    --bs-link-hover-color-rgb: 20, 85, 72;
+    --bs-code-color: var(--nf-accent);
+    --bs-highlight-bg: var(--nf-warning-soft);
+
+    --bs-primary: var(--nf-primary);
+    --bs-primary-rgb: 27, 106, 91;
+    --bs-primary-text-emphasis: #145548;
+    --bs-primary-bg-subtle: var(--nf-primary-soft);
+    --bs-primary-border-subtle: #a8ccc0;
+
+    --bs-success: var(--nf-success);
+    --bs-success-rgb: 44, 122, 80;
+    --bs-success-text-emphasis: #1f5a3a;
+    --bs-success-bg-subtle: var(--nf-success-soft);
+    --bs-success-border-subtle: #a8cfba;
+
+    --bs-danger: var(--nf-danger);
+    --bs-danger-rgb: 168, 59, 52;
+    --bs-danger-text-emphasis: #862f29;
+    --bs-danger-bg-subtle: var(--nf-danger-soft);
+    --bs-danger-border-subtle: #e0aba6;
+
+    --bs-warning: var(--nf-warning);
+    --bs-warning-rgb: 181, 129, 27;
+    --bs-warning-text-emphasis: #7a5813;
+    --bs-warning-bg-subtle: var(--nf-warning-soft);
+    --bs-warning-border-subtle: #e6cf9b;
+
+    --bs-info: var(--nf-info);
+    --bs-info-rgb: 46, 106, 134;
+    --bs-info-text-emphasis: #22505f;
+    --bs-info-bg-subtle: var(--nf-info-soft);
+    --bs-info-border-subtle: #a7c9d7;
+
+    --bs-secondary: #6c6156;
+    --bs-secondary-rgb: 108, 97, 86;
+    --bs-secondary-text-emphasis: #4c443c;
+    --bs-secondary-bg-subtle: #ece4d8;
+    --bs-secondary-border-subtle: #d2c4ac;
+
+    --bs-dark: #2b2620;
+    --bs-dark-rgb: 43, 38, 32;
+    --bs-dark-text-emphasis: #221e19;
+    --bs-dark-bg-subtle: #e7dfd3;
+    --bs-dark-border-subtle: #cbc0ae;
+
+    --bs-light: var(--nf-elevated);
+    --bs-light-rgb: 253, 251, 247;
+    --bs-light-border-subtle: var(--nf-line);
+
+    /* AdminLTE 4: sidebar e campos de busca na mesma matéria-prima */
+    --lte-sidebar-color: #f0e9df;
+    --lte-sidebar-hover-color: #fffaf1;
+    --lte-sidebar-hover-bg: rgba(255, 250, 241, .07);
+    --lte-sidebar-menu-active-bg: rgba(255, 250, 241, .13);
+    --lte-sidebar-menu-active-color: #fffaf1;
+    --lte-sidebar-submenu-bg: transparent;
+    --lte-sidebar-submenu-color: #d9cfc0;
+    --lte-sidebar-submenu-hover-color: #fffaf1;
+    --lte-sidebar-submenu-active-bg: rgba(255, 250, 241, .11);
+    --lte-sidebar-submenu-active-color: #fffaf1;
+    --lte-sidebar-header-color: #cbbfae;
+    --lte-search-field-bg: rgba(255, 255, 255, .06);
+    --lte-search-field-color: #f3ede3;
+    --lte-search-field-border-color: rgba(243, 237, 227, .22);
+    --lte-search-field-placeholder-color: rgba(243, 237, 227, .55);
+}
+
+[data-bs-theme="dark"] {
+    color-scheme: dark;
+
+    --nf-bg: #101319;
+    --nf-surface: #151922;
+    --nf-elevated: #1b2130;
+    --nf-line: #272e3c;
+    --nf-line-strong: #364052;
+
+    --nf-text: #e8e6e1;
+    --nf-text-muted: #99a2b0;
+    --nf-text-faint: #6f7a89;
+
+    --nf-primary: #3f9e8c;
+    --nf-primary-hover: #58b9a5;
+    --nf-primary-soft: #16302c;
+    --nf-accent: #d9954f;
+    --nf-accent-soft: #31241a;
+
+    --nf-success: #4fa578;
+    --nf-success-soft: #162b21;
+    --nf-danger: #d2685f;
+    --nf-danger-soft: #33201e;
+    --nf-warning: #e0b25c;
+    --nf-warning-soft: #312716;
+    --nf-info: #6ba8c4;
+    --nf-info-soft: #1a2a33;
+
+    --nf-shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+    --nf-shadow-md: 0 8px 22px -8px rgba(0, 0, 0, .6), 0 2px 8px rgba(0, 0, 0, .35);
+    --nf-shadow-lg: 0 26px 54px -22px rgba(0, 0, 0, .72), 0 8px 20px rgba(0, 0, 0, .45);
+
+    --nf-gradient-app: linear-gradient(180deg, #131722 0%, var(--nf-bg) 46%, #0d1016 100%);
+    --nf-gradient-brand: linear-gradient(135deg, #1d5b4f 0%, var(--nf-primary) 58%, #a97234 128%);
+
+    --bs-body-bg: var(--nf-bg);
+    --bs-body-color: var(--nf-text);
+    --bs-emphasis-color: #f2f0ea;
+    --bs-border-color: var(--nf-line);
+    --bs-tertiary-bg: var(--nf-surface);
+    --bs-secondary-bg: var(--nf-elevated);
+    --bs-link-color: var(--nf-primary-hover);
+    --bs-link-hover-color: #7ccdbb;
+    --bs-link-color-rgb: 88, 185, 165;
+    --bs-link-hover-color-rgb: 124, 205, 187;
+    --bs-code-color: var(--nf-accent);
+
+    --bs-primary: var(--nf-primary);
+    --bs-primary-rgb: 63, 158, 140;
+    --bs-primary-text-emphasis: #7ccdbb;
+    --bs-primary-bg-subtle: var(--nf-primary-soft);
+    --bs-primary-border-subtle: #2b6154;
+
+    --bs-success: var(--nf-success);
+    --bs-success-rgb: 79, 165, 120;
+    --bs-success-text-emphasis: #86c9a4;
+    --bs-success-bg-subtle: var(--nf-success-soft);
+    --bs-success-border-subtle: #2f6149;
+
+    --bs-danger: var(--nf-danger);
+    --bs-danger-rgb: 210, 104, 95;
+    --bs-danger-text-emphasis: #e59b93;
+    --bs-danger-bg-subtle: var(--nf-danger-soft);
+    --bs-danger-border-subtle: #7d3b36;
+
+    --bs-warning: var(--nf-warning);
+    --bs-warning-rgb: 224, 178, 92;
+    --bs-warning-text-emphasis: #ecc888;
+    --bs-warning-bg-subtle: var(--nf-warning-soft);
+    --bs-warning-border-subtle: #7a5f2e;
+
+    --bs-info: var(--nf-info);
+    --bs-info-rgb: 107, 168, 196;
+    --bs-info-text-emphasis: #9bc6da;
+    --bs-info-bg-subtle: var(--nf-info-soft);
+    --bs-info-border-subtle: #3c6577;
+
+    --bs-secondary: #8b93a1;
+    --bs-secondary-rgb: 139, 147, 161;
+    --bs-secondary-text-emphasis: #b3bac5;
+    --bs-secondary-bg-subtle: #222834;
+    --bs-secondary-border-subtle: #3a4252;
+
+    --bs-dark: #1b2130;
+    --bs-dark-rgb: 27, 33, 48;
+    --bs-dark-text-emphasis: #cdd5e1;
+    --bs-dark-bg-subtle: #1a1f2b;
+    --bs-dark-border-subtle: #313a4c;
+
+    --bs-light: var(--nf-elevated);
+    --bs-light-rgb: 27, 33, 48;
+    --bs-light-border-subtle: var(--nf-line-strong);
+
+    --lte-sidebar-color: #d7d2c9;
+    --lte-sidebar-hover-color: #f4f1ea;
+    --lte-sidebar-hover-bg: rgba(244, 241, 234, .06);
+    --lte-sidebar-menu-active-bg: rgba(63, 158, 140, .18);
+    --lte-sidebar-menu-active-color: #bfe4d9;
+    --lte-sidebar-submenu-bg: transparent;
+    --lte-sidebar-submenu-color: #a7a296;
+    --lte-sidebar-submenu-hover-color: #ece8df;
+    --lte-sidebar-submenu-active-bg: rgba(63, 158, 140, .14);
+    --lte-sidebar-submenu-active-color: #bfe4d9;
+    --lte-sidebar-header-color: #8d887e;
+    --lte-search-field-bg: rgba(255, 255, 255, .05);
+    --lte-search-field-color: #e6e2da;
+    --lte-search-field-border-color: rgba(230, 226, 218, .18);
+    --lte-search-field-placeholder-color: rgba(230, 226, 218, .5);
+}
+
+:root {
+    /* Raio e tipografia — vale para os dois temas */
+    --bs-border-radius-sm: .45rem;
+    --bs-border-radius: .75rem;
+    --bs-border-radius-lg: 1.05rem;
+    --bs-border-radius-xl: 1.4rem;
+
+    --bs-font-sans-serif: var(--font-family-nexusfield-ui, "Inter"), ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+    --nf-font-display: var(--font-family-nexusfield-display, "Fraunces"), ui-serif, Georgia, serif;
+
+    --bs-body-font-size: .925rem;
+    --bs-body-line-height: 1.6;
+
+    --nf-sidebar-width: 264px;
+    --lte-sidebar-width: var(--nf-sidebar-width);
+
+    --nf-duration: 180ms;
+    --nf-ease: cubic-bezier(.22, .61, .36, 1);
+}
