@@ -1,58 +1,123 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# NEXUS-FIELD
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Plataforma de Field Service Management (FSM) para gestão de operações de serviço em campo.
 
-## About Laravel
+## Requisitos
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.3 com as extensões `mbstring`, `openssl`, `pdo_mysql`, `fileinfo`, `curl`, `zip`, `gd`
+  e `intl`
+- Composer 2
+- Node.js 20+ e npm
+- MySQL 8.x escutando em `127.0.0.1:3306`
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+No WAMP, use o PHP que o Apache carrega (`C:\wamp64\bin\php\php8.3.28\php.exe`). O `php` do
+`PATH` pode ser um build reduzido, sem `mbstring` nem `openssl`, e faz Composer e Artisan
+falharem com erros desconectados do problema real.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Instalação
 
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+O atalho abaixo executa, nesta ordem, `composer install`, cópia de `.env.example` para `.env`,
+`key:generate`, `migrate`, `npm install` e `npm run build`:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer run setup
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Para fazer passo a passo:
 
-## Contributing
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Crie o banco e ajuste em `.env` as credenciais do seu MySQL:
 
-## Code of Conduct
+```sql
+CREATE DATABASE nexusfield CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=nexusfield
+DB_USERNAME=root
+DB_PASSWORD=
+DB_ENGINE=InnoDB
+```
 
-## Security Vulnerabilities
+`DB_ENGINE=InnoDB` não é opcional aqui: o projeto precisa de chave estrangeira e transação, e
+há servidores MySQL com MyISAM como engine padrão.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan migrate
+npm install
+npm run build
+php artisan serve
+```
 
-## License
+A aplicação sobe em `http://localhost:8000`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Executando em ambiente de desenvolvimento
+
+```bash
+composer run dev
+```
+
+Sobe servidor, filas e Vite juntos. Para apenas o servidor HTTP:
+
+```bash
+php artisan serve
+```
+
+## Testes
+
+```bash
+php artisan test
+```
+
+## Estrutura
+
+```
+app/            código da aplicação (controllers, models, services, policies)
+bootstrap/      inicialização e registro de rotas
+config/         configuração (banco, sessão, filesystem)
+database/       migrations, seeders e factories
+public/         point de entrada (index.php) e assets compilados
+resources/      views Blade, CSS e JS antes do build
+routes/         rotas web e de API
+storage/        logs, cache e arquivos enviados
+tests/          testes unitários e de feature
+```
+
+## Variáveis de ambiente
+
+| Variável | Uso |
+| --- | --- |
+| `APP_NAME`, `APP_URL`, `APP_ENV`, `APP_DEBUG` | Identidade e modo de execução |
+| `APP_LOCALE` | Idioma da aplicação (`pt_BR`) |
+| `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Conexão MySQL |
+| `DB_ENGINE` | Engine das tabelas; deve ser `InnoDB` |
+| `SESSION_DRIVER`, `SESSION_LIFETIME` | Persistência e expiração de sessão |
+| `CACHE_STORE`, `QUEUE_CONNECTION` | Cache e filas |
+| `FILESYSTEM_DISK` | Disco padrão de upload |
+| `MAIL_*` | Envio de e-mail (recuperação de acesso, notificações) |
+
+`.env` contém segredos e **não** é versionado. Só `.env.example` entra no Git.
+
+## Segurança
+
+- Senhas com hash (bcrypt, custo definido em `BCRYPT_ROUNDS`); nunca em texto claro.
+- Sessão em banco, com regeneração de identificador no login.
+- CSRF habilitado em todo formulário POST.
+- Autorização por permissão verificada no backend, não apenas escondendo controles no front.
+- Uploads validados por tipo e tamanho, gravados fora da raiz pública.
+
+## Git
+
+Commits humanizados em português brasileiro, um por etapa funcional validada.
+
+## Autor
+
+Clayton Marcelo — 2026.
