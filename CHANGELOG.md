@@ -301,6 +301,67 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   `estoque=abaixo`, a exclusão vetada quando o registro já cobrou ou já foi movimentado, a restauração
   e a matriz de permissões: técnico e cliente levam 403 em tudo do catálogo, o funcionário lê mas não
   escreve, e o supervisor escreve sem poder excluir. A suíte fecha em 117 testes / 944 asserções.
+- Fase 12 — a operação no ar. `OrderController` (`/ordens`) lista com busca (número, título, descrição
+  e endereço), estado, prioridade, técnico, cliente e janela de agendamento, ordenação presa em
+  `ORDENAVEIS` (`number`, `title`, `priority`, `status`, `scheduled_starts_at`, `scheduled_ends_at`,
+  `created_at`), paginação própria e exportação CSV pela mesma `consulta()` da tela — inclusive os
+  filtros, porque `export` chama o mesmo método com o mesmo `Request`. O número não é digitado:
+  `ServiceOrder::proximoNumero()` acha a sequência do ano dentro da empresa num `DB::transaction` com
+  `lockForUpdate` sobre o `max` da própria tabela, então `OS-2026-0007` é seguido por `OS-2026-0008` e a
+  empresa ao lado tem a sequência dela.
+- A ordem é documento, não vista do cadastro: ao criar, o endereço do cliente é copiado para as colunas
+  da ordem (rua, número, complemento, bairro, cidade, UF, CEP e as coordenadas) e o fim previsto sai do
+  `estimated_minutes` do serviço quando ninguém o digitou. Mudar o cadastro do cliente depois não
+  reescreve ordem nenhuma — é o que estava combinado naquele dia que vale.
+- Estado é máquina: `ServiceOrder::FLUXO` decide o caminho (`rascunho → aberta → em execução →
+  concluída`, com `em espera` e `cancelada` nos pontos que fazem sentido), `podeMudarPara()` recusa o
+  salto na tela e no servidor, e `mudarStatus()` grava a passagem em
+  `service_order_status_history` com origem, destino, autor e nota. Cancelar sem motivo é recusado —
+  "Cancelar uma ordem sem registrar o motivo não é cancelamento." A tela de edição não oferece seletor
+  de estado, e o servidor ignora quem enviar um pelo formulário: carimbo é pelo botão, que registra quem
+  fez e quando.
+- `orders.approve` separa quem tira um rascunho do papel e quem cancela ordem de quem só executa;
+  `orders.execute` e `orders.update` convivem no middleware (`permission:orders.update,orders.execute`),
+  porque o técnico que mexe na própria fila não tem a permissão de edição do escritório. A matriz está
+  em `PermissionCatalog`: supervisor aprova e exporta sem poder executar nem excluir; funcionário cria,
+  edita e executa sem aprovar; técnico só vê, executa e edita a dele; cliente lê.
+- Linha cobrada é foto do preço. `OrderItemController` (`POST/PUT/DELETE /ordens/{ordem}/itens`)
+  congela descrição, quantidade, valor unitário e desconto na linha, e o `CHECK` de
+  `service_order_items` (serviço **ou** produto, nunca os dois, nunca nenhum) é respondido por validação
+  antes de virar erro de SQL. O desconto da linha tem teto dinâmico (`quantidade × unitário`) e o da
+  ordem tem teto no líquido dos itens; alterar um item não muda o total já cobrado de outra ordem.
+  Ordem concluída ou cancelada não aceita linha nova — a tela some com o formulário e o servidor repete
+  a recusa.
+- Total, bruto e descontos são contas do MySQL: `scopeWithTotals()` soma os itens por subconsulta
+  correlacionada (`somaBrutaQuery`/`somaLiquidaQuery`) em vez de `join`+`groupBy`, que quebraria a
+  paginação da listagem. `totais()` lê os aliases quando a linha veio da listagem e refaz a soma quando a
+  ficha carrega a relação — duas origens, um número, e a tela de lista, a ficha e o CSV concordam.
+- Quadro de comissão: `OrderAssignmentController` amarra técnico à ordem com data, autor e nota; sair
+  do quadro marca `left_at` e preserva a passagem (o `pivot` com `withPivot(['joined_at','left_at'])`
+  continua na tabela); o técnico que estava no quadro pode assumi-lo e a linha antiga é reaberta em vez
+  de duplicada. Liberar o responsável da ordem só muda o `technician_id` quando não sobra ninguém ativo, e
+  um aviso ("já está no quadro") impede a segunda linha sem apagar a primeira.
+- Alcance é consulta, não filtro de UI: `ServiceOrder::scopeVisiveisPara()` dá ao técnico a própria fila
+  (pela coluna **e** pelo quadro de comissão), à conta de cliente a carteira dela (por
+  `users.client_id`, migration `2026_10_08_000002_add_client_id_to_users_table`) e ao escritório a
+  empresa. `alcanceRestrito()` troca a legenda da tela e esconde os seletores de técnico e cliente de
+  quem não pode usá-los. A prova do alcance é o número na tela: no mesmo painel, o técnico conta 1
+  ordem aberta e o escritório conta 2, porque a KPI sai do mesmo `visiveisPara` da listagem.
+- Ficha (`orders/show`) com o que a ordem é: identificação e local, conta com as linhas e os três
+  totais, seletor dos estados disponíveis, cronologia das passagens, quadro de comissão, check-ins do
+  campo (somente leitura — quem escreve é a fase 15) e o "O que esta tela não pergunta" que explica de
+  onde vêm número, linhas e estado. `x-ui.action-form` em cada remoção, sem diálogo nativo nenhum.
+- `tests/Feature/OrdersTest.php` (16 testes / 270 asserções) cobre isolamento de tenant na lista, na
+  ficha, no estado e nos itens; o técnico e a conta de cliente vendo só o que é deles (inclusive 404 na
+  ordem da carteira ao lado); a sequência anual por empresa; a edição sem seletor de estado e o `status`
+  enviado por fora ignorado; a cópia do endereço e o fim previsto de 90 minutos; carimbo com passagem
+  registrada; o salto recusado e o cancelamento sem motivo; `orders.approve` barrando rascunho e
+  cancelamento; a linha que congela R$ 1.200,00 depois de o catálogo mudar o preço para R$ 999, e a soma
+  `2.400 + 54 = 2.454 bruto`, `2.448 líquido`, `2.000 a cobrar` depois do desconto da ordem; a origem da
+  linha não trocável; ordem encerrada recusando linha e quadro; o quadro preservando passagem e
+  repassando responsabilidade; exclusão só do rascunho; filtros, ordenação, paginação e o CSV sendo a
+  mesma contagem da tela; o painel do técnico não contando a fila alheia; e a matriz de permissões. A
+  suíte fecha em 133 testes / 1201 asserções.
 
 ### Alterado
 
@@ -496,6 +557,31 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   `situacoes` para uma ficha que não desenha seletor de situação — herança do esquema da fase 10 que
   não servia a nada. Saíram os três, e `pint --test app resources/views` fecha em `PASS` nos
   64 arquivos.
+- `OrderItemController` caía em `ErrorException: Undefined array key "item_descricao"` sempre que a
+  linha era adicionada sem descrição própria — o campo é `nullable` e, não vindo no request, não entra
+  em `validated()`. `?? null` dentro de `filled()` nos dois pontos (`store` e `update`), com o nome do
+  catálogo como descrição quando ninguém escreve outra. Pego no primeiro `assertSessionHasNoErrors` da
+  linha de serviço em `OrdersTest`.
+- `orders/index` lia `$ordem->service` na coluna de serviço sem ter feito eager load daquilo: cada
+  linha da página pagava uma query. Entrou `service:id,name` no `with()` — e o `export` continua sem
+  ele, porque o CSV não imprime a coluna.
+- `ServiceOrder::scopeVisiveisPara()` e `alcanceRestrito()` resolviam a ficha do técnico antes de olhar
+  `users.client_id`, então todo painel — inclusive o de quem é conta de cliente, que não tem ficha
+  nenhuma — ia ao MySQL buscar um técnico. Invertida a ordem, o ramo barato (a coluna que já veio com o
+  usuário) decide primeiro e a relação só é lida quando pode existir. `DashboardTest` recuperou a
+  garantia de que a conta de cliente não toca a tabela `technicians`.
+- O filtro de equipe em `consulta()` (`?equipe=`) era query sem tela: a listagem nunca desenhou o
+  seletor e `FILTROS` nunca o listou. Saiu o `relacionado`, para a consulta responder exatamente pela
+  interface que existe.
+- `DashboardTest` tinha uma proibição larga demais depois do alcance de ordens: a lista de tabelas
+  vetadas tratava `technicians` como se só o bloco de equipe a lesse. A prova foi afunilada — a ficha do
+  próprio usuário (um `select *` com `limit 1`) é o escopo de `orders.view`, permissão que a conta tem; o
+  que segue proibido é qualquer contagem sobre o quadro sem `technicians.view`, que é o bloco respondendo
+  pela operação inteira na tela de quem não o viu.
+- `pint --test app resources/views tests` fechou em `PASS` nos 88 arquivos. Saíram do controlador de
+  ordens um `@return Closure` que só repetia a assinatura e um `!` colado na variável, e de fases
+  anteriores três nits: `(new DemoSeeder())` com parênteses, concatenações com espaço ao redor do `.` e
+  um nome de método de teste em camelCase no meio da frase em português.
 
 ### Removido
 
@@ -507,15 +593,20 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Conhecido
 
-- O painel lê o banco e nada mais: os blocos operacionais existem, mas as telas que produzem esses
-  dados (ordens, chamados, agenda, estoque, financeiro) chegam das fases 12 em diante. Clientes,
-  técnicos, equipes e especialidades já estão no `Navigation` e alimentam os indicadores que dependem
-  de cadastro; o que ainda não tem rota não tem link no menu, por decisão e não por descuido.
-- A ficha da equipe lista as ordens em aberto de quem está no quadro, mas o botão de abrir uma ordem
-  só é desenhado quando a rota `orders.show` existir (fase 12). Até lá a linha mostra o número, o
-  título e o técnico, e a legenda diz "tela de ordens na fase 12" — a tela não promete um link que o
-  aplicativo ainda não desenha. O mesmo critério vale para o serviço (suas últimas ordens) e para o
-  botão "Movimentações" da listagem de produtos, que espera a rota `movements.index` da fase 16.
+- O painel lê o banco e nada mais: os blocos operacionais existem, e a tela que produz os de ordem já
+  está no ar. Faltam as telas que alimentam os blocos de chamado, agenda, estoque e financeiro, que
+  chegam das fases 13 em diante. Clientes, técnicos, equipes, especialidades, catálogo e ordens já estão
+  no `Navigation` e alimentam os indicadores que dependem de cadastro; o que ainda não tem rota não tem
+  link no menu, por decisão e não por descuido.
+- A ficha da equipe e a do serviço já abrem a ordem pelo botão, porque `orders.show` existe desde a fase
+  12. O que continua condicionado é o botão "Movimentações" da listagem de produtos e a nota de estoque
+  da ficha de ordem: ambos só são desenhados quando a rota `movements.index` existir (fase 16). A tela
+  não promete um link que o aplicativo ainda não desenha.
+- O card de check-in da ficha de ordem é somente leitura, e a legenda diz isso: quem escreve entrada,
+  saída e coordenada é a aplicação de campo da fase 15. As colunas de endereço e coordenada da ordem já
+  são gravadas hoje — é a elas que o check-in vai se comparar.
+- A conta de cliente já tem alcance (`users.client_id`), mas quem amarra o login à carteira hoje é o
+  seeder e a mão do escritório no banco; a tela que escolhe a carteira é da fase 20 (usuários e papéis).
 - O saldo central do produto é calculado sobre `stock_movements`, e a empresa de demonstração já tem
   movimentações semeadas; a tela que registra movimentação ainda não existe (fase 16). Hoje o número
   é leitura fiel do banco, não edição.
@@ -539,10 +630,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   compilação de views cai em `tempnam()` e o teste devolve 500 no lugar da falha real. É restrição
   da máquina, não do projeto — `php vendor/phpunit/phpunit/phpunit` chamado do PowerShell grava as
   views compiladas e passa.
-- `pint` roda em `app/` e passa limpo; em `tests/` ele pede camelCase nos nomes de método, e aqui o
-  nome de teste é frase em português (`test_saida_de_membro_registra_data_e_preserva_a_passagem`) por
-  decisão de leitura. Trocar um pelo outro é escolha a fazer antes da próxima suíte grande, não no
-  meio de uma fase.
+- `pint --test app resources/views tests` passa limpo nos 88 arquivos. O preset do Pint quer snake_case
+  nos nomes de método de teste, e aqui o nome é frase em português — os dois convivem, e o único
+  verdadeiro desvio (`test_anyCompany_...` no meio das frases) foi corrigido em vez de o padrão ser
+  abandonado.
 
 ## [0.1.0] — 2026-10-07
 

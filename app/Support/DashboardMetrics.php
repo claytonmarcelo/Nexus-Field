@@ -15,6 +15,7 @@ use App\Models\ServiceOrderCheckin;
 use App\Models\Technician;
 use App\Models\Ticket;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -94,20 +95,20 @@ class DashboardMetrics
             return [];
         }
 
-        $abertas = ServiceOrder::query()->open()->count();
-        $execucao = ServiceOrder::query()->inProgress()->count();
-        $atrasadas = ServiceOrder::query()->overdue()->count();
+        $abertas = $this->ordensDoUsuario()->open()->count();
+        $execucao = $this->ordensDoUsuario()->inProgress()->count();
+        $atrasadas = $this->ordensDoUsuario()->overdue()->count();
 
-        $concluidasSete = ServiceOrder::query()
+        $concluidasSete = $this->ordensDoUsuario()
             ->completed()
             ->whereBetween('completed_at', [now()->subDays(7), now()])
             ->count();
-        $concluidasAnteriores = ServiceOrder::query()
+        $concluidasAnteriores = $this->ordensDoUsuario()
             ->completed()
             ->whereBetween('completed_at', [now()->subDays(14), now()->subDays(7)])
             ->count();
 
-        $distribuicao = ServiceOrder::query()
+        $distribuicao = $this->ordensDoUsuario()
             ->selectRaw('status, count(*) total')
             ->groupBy('status')
             ->pluck('total', 'status')
@@ -140,14 +141,14 @@ class DashboardMetrics
             ],
             'dados' => [
                 'distribuicao' => $this->distribuicao($distribuicao, $totalDistribuido),
-                'proximas' => ServiceOrder::query()
+                'proximas' => $this->ordensDoUsuario()
                     ->with(['client', 'technician'])
                     ->open()
                     ->scheduledBetween(now()->startOfDay(), now()->addDays(7)->endOfDay())
                     ->orderBy('scheduled_starts_at')
                     ->limit(6)
                     ->get(),
-                'fila_atrasada' => ServiceOrder::query()
+                'fila_atrasada' => $this->ordensDoUsuario()
                     ->with(['client'])
                     ->overdue()
                     ->orderBy('scheduled_ends_at')
@@ -155,6 +156,17 @@ class DashboardMetrics
                     ->get(),
             ],
         ];
+    }
+
+    /**
+     * O painel conta ordem por ordem o que o usuário alcança: o técnico vê a
+     * própria fila, a conta de cliente vê a carteira dela, e o escritório vê a
+     * empresa. Sem este filtro, o KPI de quem está no campo responderia pela
+     * operação inteira.
+     */
+    private function ordensDoUsuario(): Builder
+    {
+        return ServiceOrder::query()->visiveisPara($this->usuario);
     }
 
     /** @return array{kpis: array<int, array<string, mixed>>, dados: array<string, mixed>}|[] */

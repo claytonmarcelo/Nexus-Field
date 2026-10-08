@@ -289,6 +289,11 @@ class DemoSeeder extends Seeder
 
             $this->clientes[] = $cliente;
         }
+
+        // A conta "Cliente (demo)" precisa de uma carteira, senão o papel de
+        // cliente não teria o que abrir e a listagem de ordens sairia vazia para
+        // ele. Ela entra ligada ao primeiro cliente semeado aqui.
+        $this->usuarios['client']->update(['client_id' => $this->clientes[0]->id]);
     }
 
     private function catalogo(): void

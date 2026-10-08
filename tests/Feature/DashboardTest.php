@@ -200,12 +200,26 @@ class DashboardTest extends TestCase
 
         $this->assertNotEmpty($consultas, 'Sem nenhuma consulta registrada o teste acima não provaria nada.');
 
-        foreach (['financial_records', 'payments', 'stock_movements', 'technicians', 'appointments'] as $tabela) {
+        foreach (['financial_records', 'payments', 'stock_movements', 'appointments'] as $tabela) {
             foreach ($consultas as $sql) {
                 $this->assertStringNotContainsString(
                     $tabela,
                     $sql,
                     "Sem permissão, a consulta em [{$tabela}] não deveria nem ter sido montada."
+                );
+            }
+        }
+
+        // A ficha do próprio usuário é lida pelo escopo de ordens — permissão que esta conta
+        // tem, e é um `select *` com `limit 1`. O que não pode existir é consulta que conta
+        // ou agrupa o quadro sem `technicians.view`: aí já é o bloco de equipe respondendo
+        // pela operação inteira na tela de quem não o viu.
+        foreach ($consultas as $sql) {
+            if (str_contains($sql, 'technicians')) {
+                $this->assertStringNotContainsString(
+                    'count(',
+                    mb_strtolower($sql),
+                    'O bloco de equipe montou uma contagem sobre `technicians` para uma conta sem a permissão.'
                 );
             }
         }

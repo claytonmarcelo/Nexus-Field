@@ -14,7 +14,7 @@ class User extends Authenticatable
     use Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'company_id', 'name', 'email', 'password', 'phone', 'status', 'last_login_at',
+        'company_id', 'name', 'email', 'password', 'phone', 'status', 'last_login_at', 'client_id',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -76,6 +76,17 @@ class User extends Authenticatable
     public function technician(): HasOne
     {
         return $this->hasOne(Technician::class);
+    }
+
+    /**
+     * A ponte do cliente final é `users.client_id`: a conta abre a própria
+     * carteira e nada mais. Sem vínculo, a conta é do escritório e enxerga a
+     * operação da empresa inteira — é isso que separa o papel de campo e de
+     * cliente do papel administrativo.
+     */
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
     }
 
     public function isRoot(): bool

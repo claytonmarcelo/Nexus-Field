@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-117%20testes%20%2F%20944%20asser%C3%A7%C3%B5es-brightgreen" alt="117 testes, 944 asserções">
+  <img src="https://img.shields.io/badge/testes-133%20testes%20%2F%201201%20asser%C3%A7%C3%B5es-brightgreen" alt="133 testes, 1201 asserções">
 </p>
 
 <p align="center">
@@ -159,6 +159,28 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - Serviço e produto com histórico não somem: inativar tira da escolha e preserva o preço praticado;
   excluir só é permitido quando a contagem do banco dá zero
 
+### Operação
+
+- **Ordens de serviço**: numeração anual sequencial por empresa (`OS-2026-0007`), gerada no banco — ninguém
+  digita número, e a empresa ao lado tem a sequência dela
+- Criar ordem copia o endereço do cliente para a ficha e o fim previsto vem da duração estimada do serviço;
+  depois disso a ordem é o documento daquele dia, e mudar o cadastro do cliente não reescreve ordem antiga
+- Estado só muda pelo botão da ficha, que grava origem, destino, quem fez e quando em
+  `service_order_status_history`; o fluxo (`FLUXO`) é o que vale — pular de rascunho para concluída não passa,
+  e cancelar sem motivo registrado é recusado
+- Abrir ordem do rascunho e cancelar pedem `orders.approve`; executar é de quem está em campo; exportar é do
+  escritório. O servidor responde 403 antes de qualquer botão escondido
+- Linhas cobradas são congeladas: descrição, quantidade, valor unitário e desconto ficam na ordem, então o
+  catálogo pode mudar de preço depois sem reescrever a conta. A linha é serviço **ou** produto, nunca os dois
+- Total, bruto e descontos saem de subconsultas do MySQL (`withTotals`), não de soma em PHP — a listagem, a
+  ficha e o CSV mostram o mesmo número porque é a mesma consulta
+- Quadro de comissão registra quem apoiou a ordem com data e nota; a saída libera o vínculo preservando a
+  passagem, e assumir a responsabilidade troca o técnico da ordem sem perder o histórico
+- O painel e a listagem respeitam o alcance: o técnico conta a própria fila, a conta de cliente conta a
+  carteira dela (por `users.client_id`), e só o escritório responde pela empresa inteira
+- Ordem encerrada é conta fechada: linha, quadro e estado não aceitam mudança, e a única exclusão permitida é
+  a do rascunho que nunca virou trabalho
+
 ### Interface
 
 - AdminLTE 4 na estrutura oficial, Bootstrap 5.3 nos componentes e camada de tokens própria
@@ -184,7 +206,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vêm uma fase por vez.
 | Clientes e contatos | ✅ | ✅ | ✅ |
 | Técnicos, equipes e especialidades | ✅ | ✅ | ✅ |
 | Catálogo de serviços e produtos | ✅ | ✅ | ✅ |
-| Ordens de serviço | ✅ | ✅ | 🚧 fase 12 |
+| Ordens de serviço | ✅ | ✅ | ✅ |
 | Chamados | ✅ | ✅ | 🚧 fase 13 |
 | Agenda e compromissos | ✅ | ✅ | 🚧 fase 14 |
 | Check-in / check-out com geolocalização | ✅ | ✅ | 🚧 fase 15 |
@@ -249,15 +271,17 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 nexusfield/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians, Catalog e os Concerns compartilhados
+│   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians, Catalog, Orders
+│   │   │                      e os Concerns compartilhados
 │   │   └── Middleware/      → ResolveCompany (tenancy) e EnsurePermission (autorização)
 │   ├── Models/              → Company, Plan, User, Role, Permission, Client, Contact, Address,
-│   │                          Technician, Team, Specialty, Service, ServiceCategory, Product…
+│   │                          Technician, Team, Specialty, Service, ServiceCategory, Product,
+│   │                          ServiceOrder, ServiceOrderItem, ServiceOrderAssignment…
 │   └── Support/             → PermissionCatalog, Navigation, StatusCatalog, Formatters, TenantContext
 ├── bootstrap/               → inicialização e registro de rotas
 ├── config/                  → banco, sessão, filesystem, temas
 ├── database/
-│   ├── migrations/          → 16 migrations do schema nexusfield
+│   ├── migrations/          → 17 migrations do schema nexusfield
 │   └── seeders/             → DatabaseSeeder (plano, empresa, RBAC, conta raiz) e DemoSeeder
 ├── docs/
 │   ├── branding/            → o medalhão e a arte completa da marca oficial
@@ -269,13 +293,13 @@ nexusfield/
 │   ├── js/nexusfield/       → theme, notify, dialog, confirm, forms, flash, passwords, listas, jquery
 │   └── views/               → Blade: componentes ui/ e layouts, páginas públicas, de entrada,
 │                              de clientes, de técnicos, de equipes, de especialidades, de serviços,
-│                              de produtos e de categorias
+│                              de produtos, de categorias e de ordens de serviço
 ├── routes/                  → web.php
 ├── storage/                 → logs, cache e uploads (fora da raiz pública)
 ├── tests/
 │   ├── Feature/             → entrada e recuperação, autorização por papel, tenancy, layout
-│   │                          autenticado, painel, demonstração, conta raiz, clientes, técnicos
-│   │                          e catálogo
+│   │                          autenticado, painel, demonstração, conta raiz, clientes, técnicos,
+│   │                          catálogo e ordens de serviço
 │   └── Unit/                → paleta dos dois temas, contrato das capturas, iniciais do usuário
 └── CHANGELOG.md             → histórico por fase
 ```
@@ -466,15 +490,18 @@ Depois:
 php artisan test
 ```
 
-Hoje são **117 testes / 944 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **133 testes / 1201 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com
 token válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato
 do seletor de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG
 e a marca verde medida do medalhão, o contrato das seis capturas deste README (existem, estão
 linkadas e medem 1440×900), a proibição dos diálogos nativos do navegador, o CRUD de clientes com
-contatos e endereços, o de técnicos, equipes e especialidades, e o do catálogo — inclusive o saldo
+contatos e endereços, o de técnicos, equipes e especialidades, o do catálogo — inclusive o saldo
 central somado das movimentações, a unidade fora do catálogo recusada e a exclusão vetada quando já
-existe histórico.
+existe histórico — e o de ordens de serviço: sequência anual por empresa, estado que só anda pelo fluxo
+com carimbo e aprovação, linha que congela o preço, total somado no SQL, quadro de comissão com
+passagem preservada, alcance do técnico e da conta de cliente no painel e na listagem, e o CSV sendo a
+mesma consulta da tela.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -523,14 +550,14 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 - [x] **Fase 9** — Clientes: CRUD, filtros, paginação própria, ficha com contatos e endereços
 - [x] **Fase 10** — Técnicos, equipes e especialidades: escala, quadro com histórico de passagem e base de trabalho
 - [x] **Fase 11** — Catálogo de serviços, produtos e categorias: preço, duração, SKU e saldo lido das movimentações
+- [x] **Fase 12** — Ordens de serviço: sequência anual por empresa, fluxo de estado com carimbo, linhas que congelam o preço, quadro de comissão e total somado no SQL
 
 ### Em curso
 
-- [ ] Fase 12 — Ordens de serviço
+- [ ] Fase 13 — Chamados
 
 ### Planejado
 
-- [ ] Fase 13 — Chamados
 - [ ] Fase 14 — Agenda (FullCalendar 6)
 - [ ] Fase 15 — Check-in e check-out com geolocalização
 - [ ] Fase 16 — Estoque e movimentações

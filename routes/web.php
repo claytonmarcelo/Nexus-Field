@@ -9,6 +9,9 @@ use App\Http\Controllers\Clients\AddressController;
 use App\Http\Controllers\Clients\ClientContactController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Orders\OrderAssignmentController;
+use App\Http\Controllers\Orders\OrderController;
+use App\Http\Controllers\Orders\OrderItemController;
 use App\Http\Controllers\Technicians\SpecialtyController;
 use App\Http\Controllers\Technicians\TeamController;
 use App\Http\Controllers\Technicians\TechnicianAddressController;
@@ -34,6 +37,47 @@ Route::middleware(['auth', 'company'])->group(function () {
     Route::get('dashboard', DashboardController::class)
         ->middleware('permission:dashboard.view')
         ->name('dashboard');
+
+    Route::prefix('ordens')->name('orders.')->group(function () {
+        // Literal antes de parametrizado: `ordens/nova` é a tela de cadastro, não
+        // a ficha da ordem de código "nova".
+        Route::middleware('permission:orders.view')->group(function () {
+            Route::get('/', [OrderController::class, 'index'])->name('index');
+
+            Route::get('exportar', [OrderController::class, 'export'])
+                ->middleware('permission:orders.export')
+                ->name('export');
+        });
+
+        Route::middleware('permission:orders.create')->group(function () {
+            Route::get('nova', [OrderController::class, 'create'])->name('create');
+            Route::post('/', [OrderController::class, 'store'])->name('store');
+        });
+
+        // Quem move a ordem no campo (execute) também ajusta os dados dela
+        // (update); aprovar e cancelar, porém, é decisão de outro nível e fica
+        // dentro do controlador, não na rota.
+        Route::middleware('permission:orders.update,orders.execute')->group(function () {
+            Route::get('{ordem}/editar', [OrderController::class, 'edit'])->name('edit');
+            Route::put('{ordem}', [OrderController::class, 'update'])->name('update');
+            Route::put('{ordem}/estado', [OrderController::class, 'mudarStatus'])->name('status');
+
+            Route::post('{ordem}/itens', [OrderItemController::class, 'store'])->name('items.store');
+            Route::put('{ordem}/itens/{item}', [OrderItemController::class, 'update'])->name('items.update');
+            Route::delete('{ordem}/itens/{item}', [OrderItemController::class, 'destroy'])->name('items.destroy');
+
+            Route::post('{ordem}/tecnicos', [OrderAssignmentController::class, 'store'])->name('assignments.store');
+            Route::delete('{ordem}/tecnicos/{tecnico}', [OrderAssignmentController::class, 'destroy'])->name('assignments.destroy');
+        });
+
+        Route::delete('{ordem}', [OrderController::class, 'destroy'])
+            ->middleware('permission:orders.delete')
+            ->name('destroy');
+
+        Route::get('{ordem}', [OrderController::class, 'show'])
+            ->middleware('permission:orders.view')
+            ->name('show');
+    });
 
     Route::prefix('clientes')->name('clients.')->group(function () {
         // Literal antes de parametrizado: `clientes/novo` precisa ser lido como

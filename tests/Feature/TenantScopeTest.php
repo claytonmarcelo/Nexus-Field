@@ -49,7 +49,7 @@ class TenantScopeTest extends TestCase
         $this->assertSame($company->id, $client->company_id);
     }
 
-    public function test_anyCompany_permite_a_consulta_transversal_de_uso_interno(): void
+    public function test_any_company_permite_a_consulta_transversal_de_uso_interno(): void
     {
         $alfa = $this->makeCompany('alfa');
         $bravo = $this->makeCompany('bravo');

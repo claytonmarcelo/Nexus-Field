@@ -29,14 +29,14 @@ class PasswordFieldTest extends TestCase
     private function controlesDeSenha(TestResponse $response): array
     {
         $dom = new DOMDocument;
-        @$dom->loadHTML('<?xml encoding="utf-8" ?>' . $response->getContent());
+        @$dom->loadHTML('<?xml encoding="utf-8" ?>'.$response->getContent());
         $xpath = new DOMXPath($dom);
 
         $controles = [];
 
         foreach ($xpath->query('//button[@data-nf-password-toggle]') as $botao) {
             $alvo = $botao->getAttribute('aria-controls');
-            $campo = $alvo === '' ? null : $xpath->query('//input[@id="' . $alvo . '"]')->item(0);
+            $campo = $alvo === '' ? null : $xpath->query('//input[@id="'.$alvo.'"]')->item(0);
 
             $controles[] = [
                 'button' => $botao->getAttribute('type'),

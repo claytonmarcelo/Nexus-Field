@@ -28,6 +28,12 @@ class Navigation
                         'permission' => 'dashboard.view',
                         'icon' => 'fa-solid fa-gauge-high',
                     ],
+                    [
+                        'label' => 'Ordens de serviço',
+                        'route' => 'orders.index',
+                        'permission' => 'orders.view',
+                        'icon' => 'fa-solid fa-clipboard-list',
+                    ],
                 ],
             ],
             [

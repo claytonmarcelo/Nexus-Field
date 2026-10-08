@@ -37,4 +37,21 @@ class ServiceOrderItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function subtotal(): float
+    {
+        return round((float) $this->quantity * (float) $this->unit_price, 2);
+    }
+
+    /** O que entra na conta do cliente por esta linha, já com o desconto dela. */
+    public function total(): float
+    {
+        return round($this->subtotal() - (float) $this->discount, 2);
+    }
+
+    /** Uma linha é serviço ou produto; o CHECK do banco não aceita outra mistura. */
+    public function isService(): bool
+    {
+        return $this->service_id !== null;
+    }
 }

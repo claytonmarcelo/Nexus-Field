@@ -29,6 +29,7 @@ class DemoSeederTest extends TestCase
 
     /**
      * Tabelas-filhas que não têm company_id de propósito: a empresa vem do pai.
+     *
      * @var array<string, array{string, string}> tabela => [tabela do pai, FK]
      */
     private const FILHAS = [
@@ -49,7 +50,7 @@ class DemoSeederTest extends TestCase
         // Chamado direto, não via artisan: em produção o `db:seed` já pede
         // confirmação antes de qualquer seeder, e a prova seria do prompt do
         // framework, não da nossa regra.
-        (new DemoSeeder())->run();
+        (new DemoSeeder)->run();
     }
 
     public function test_exige_o_catalogo_de_permissoes_antes_dele(): void
