@@ -184,8 +184,10 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 ### Interface
 
 - AdminLTE 4 na estrutura oficial, Bootstrap 5.3 nos componentes e camada de tokens própria
-- Paleta "Premium Gourmet + Technology": o verde cromado medido do próprio medalhão como marca,
-  latão como contra-ponto, fundo preto no escuro e branco neutro no claro, sem casta de cor
+- Paleta "Premium Gourmet + Technology": só os verdes do medalhão como marca, medidos da própria logo,
+  fundo preto no escuro e branco neutro no claro, sem casta de cor e sem latão
+- Topo e pé enxutos: 44px de altura no cabeçalho (a mesma nos dois lados da aplicação) e uma linha no
+  rodapé das telas abertas
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura
 - Marca nos navegadores: `favicon.ico` com 16 e 32 embutidos, PNGs de 32 e 192 e `apple-touch-icon`
   achatado sobre preto, todos gerados do medalhão oficial

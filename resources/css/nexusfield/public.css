@@ -18,14 +18,14 @@
     backdrop-filter: blur(10px);
 }
 
-/* Mesma altura do topo autenticado: `--nf-header-height` é a fonte única. */
+/* Mesma altura e o mesmo forro do topo autenticado: `--nf-header-height` é a fonte única. */
 .nf-public-header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: .75rem;
     min-height: var(--nf-header-height);
-    padding-block: .35rem;
+    padding-block: .25rem;
 }
 
 .nf-public-header-actions {
@@ -239,103 +239,47 @@
 }
 
 /*
- * Rodapé em três tempos: identidade, capacidades e navegação — e uma fita de
- * crédito embaixo. Fundo um tom acima do corpo para não virar bloco branco.
+ * Rodapé de uma linha: a marca em cima do fio de borda, o crédito no mesmo eixo.
+ * A altura é a da própria marca mais o forro do pé autenticado (.55rem), para as
+ * duas pontas da aplicação fecharem no mesmo corte.
  */
 .nf-public-footer {
     border-top: 1px solid var(--nf-line);
-    background:
-        radial-gradient(90% 140% at 50% 0%, color-mix(in srgb, var(--nf-primary) 6%, transparent) 0%, transparent 70%),
-        var(--nf-surface);
-    padding-block: 1.6rem 1.1rem;
-    font-size: .85rem;
+    background: var(--nf-surface);
+    padding-block: .55rem;
+    font-size: .78rem;
 }
 
-.nf-public-footer-top {
-    display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-    gap: 1.25rem 2rem;
-    align-items: start;
-}
-
-.nf-public-footer-brand {
-    display: flex;
-    align-items: flex-start;
-    gap: .75rem;
-}
-
-.nf-public-footer-id .nf-wordmark {
-    margin-bottom: .2rem;
-    font-size: 1rem;
-    letter-spacing: .03em;
-    color: var(--nf-text);
-}
-
-.nf-public-footer-tagline {
-    max-width: 46ch;
-    margin-bottom: 0;
-    color: var(--nf-text-muted);
-    line-height: 1.6;
-}
-
-.nf-public-footer-capacities {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .4rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-/* Coluna direita: capacidades em cima, navegação embaixo, no mesmo ritmo. */
-.nf-public-footer-side {
-    display: grid;
-    align-content: start;
-    gap: .9rem;
-}
-
-.nf-public-footer-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .35rem 1rem;
-    font-size: .82rem;
-}
-
-.nf-public-footer-links a {
-    color: var(--nf-text-muted);
-    text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition: color var(--nf-duration) var(--nf-ease),
-        border-color var(--nf-duration) var(--nf-ease);
-}
-
-.nf-public-footer-links a:hover,
-.nf-public-footer-links a:focus-visible {
-    color: var(--nf-primary);
-    border-bottom-color: color-mix(in srgb, var(--nf-primary) 45%, transparent);
-}
-
-.nf-public-footer-bottom {
+.nf-public-footer-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: .5rem 1rem;
-    margin-top: 1.35rem;
-    padding-top: .8rem;
-    border-top: 1px dashed var(--nf-line-strong);
+    gap: .3rem 1rem;
+}
+
+.nf-public-footer .nf-brand-mark {
+    width: 22px;
+    height: 22px;
+}
+
+.nf-public-footer .nf-wordmark {
+    font-size: .85rem;
+    letter-spacing: .03em;
+}
+
+.nf-public-footer-credit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .3rem .9rem;
+    margin: 0;
     color: var(--nf-text-muted);
 }
 
 @media (max-width: 767.98px) {
-    .nf-public-footer-top {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 1rem;
-    }
-
-    .nf-public-footer-links {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    .nf-public-footer-row {
+        justify-content: center;
     }
 }
 

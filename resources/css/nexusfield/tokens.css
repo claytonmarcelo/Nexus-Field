@@ -45,10 +45,10 @@
     --nf-primary: #1c6b28;
     --nf-primary-hover: #155222;
     --nf-primary-soft: #dfeadd;
-    --nf-accent: #8a6212;
-    --nf-accent-hover: #76540f;
-    --nf-accent-active: #694b0d;
-    --nf-accent-soft: #f0e6cd;
+
+    /* Tom categorical de "em espera": verde novo, o lado ainda não maduro da rampa
+       da logo. Era latão, e latão não é cor desta marca. */
+    --nf-waiting: #4e7112;
 
     /* Letra que senta em cima da cor de marca (botão verde, pill ativo, knob) */
     --nf-on-brand: #fbfdfc;
@@ -70,7 +70,7 @@
 
     /* Malha: gradiente que sustenta o "premium" sem virar estampa */
     --nf-gradient-app: linear-gradient(180deg, #fbfcfd 0%, var(--nf-bg) 42%, #ebedf1 100%);
-    --nf-gradient-brand: linear-gradient(135deg, var(--nf-brand-deep) 0%, var(--nf-primary) 48%, var(--nf-accent) 130%);
+    --nf-gradient-brand: linear-gradient(135deg, var(--nf-brand-deep) 0%, var(--nf-primary) 48%, var(--nf-brand-vivid) 130%);
 
 
     --bs-body-bg: var(--nf-bg);
@@ -83,7 +83,7 @@
     --bs-link-hover-color: var(--nf-primary-hover);
     --bs-link-color-rgb: 28, 107, 40;
     --bs-link-hover-color-rgb: 21, 82, 34;
-    --bs-code-color: var(--nf-accent);
+    --bs-code-color: var(--nf-brand-core);
     --bs-highlight-bg: var(--nf-warning-soft);
 
     --bs-primary: var(--nf-primary);
@@ -167,10 +167,9 @@
     --nf-primary: #5eb85e;
     --nf-primary-hover: #7cc97a;
     --nf-primary-soft: #10290f;
-    --nf-accent: #d9b25c;
-    --nf-accent-hover: #e3c176;
-    --nf-accent-active: #ecce8d;
-    --nf-accent-soft: #2e2614;
+
+    /* No escuro o verde novo de "em espera" sobe de brilho para ler sobre o preto */
+    --nf-waiting: #a8cf52;
 
     /* No escuro a marca é clara, então a letra que senta em cima dela é escura */
     --nf-on-brand: #04140a;
@@ -190,7 +189,7 @@
     --nf-shadow-lg: 0 28px 56px -24px rgba(0, 0, 0, 1), 0 0 0 1px rgba(255, 255, 255, .05);
 
     --nf-gradient-app: linear-gradient(180deg, #070708 0%, var(--nf-bg) 46%, #000000 100%);
-    --nf-gradient-brand: linear-gradient(135deg, #14551d 0%, var(--nf-primary) 58%, #c79a4a 128%);
+    --nf-gradient-brand: linear-gradient(135deg, #14551d 0%, var(--nf-primary) 58%, var(--nf-brand-mint) 128%);
 
     --bs-body-bg: var(--nf-bg);
     --bs-body-color: var(--nf-text);
@@ -202,7 +201,7 @@
     --bs-link-hover-color: #98d893;
     --bs-link-color-rgb: 124, 201, 122;
     --bs-link-hover-color-rgb: 152, 216, 147;
-    --bs-code-color: var(--nf-accent);
+    --bs-code-color: var(--nf-brand-vivid);
     --bs-highlight-bg: var(--nf-warning-soft);
 
     --bs-primary: var(--nf-primary);
@@ -285,10 +284,11 @@
     --lte-sidebar-width: var(--nf-sidebar-width);
 
     /*
-     * Altura única do topo: a barra de navegação e a faixa da marca na sidebar
-     * precisam fechar no mesmo corte, senão a moldura fica torta.
+     * Altura única do topo: a barra de navegação, a faixa da marca na sidebar e o
+     * cabeçalho público precisam fechar no mesmo corte, senão a moldura fica torta.
+     * 44px é o menor alvo de toque que ainda se acerta no dedo.
      */
-    --nf-header-height: 3.25rem;
+    --nf-header-height: 2.75rem;
 
     --nf-duration: 180ms;
     --nf-ease: cubic-bezier(.22, .61, .36, 1);

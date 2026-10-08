@@ -1,63 +1,20 @@
 {{--
-    Rodapé compartilhado das telas abertas. Três camadas: identidade, capacidades
-    reais da plataforma (o que o banco e o RBAC já entregam hoje, nada de
-    promessa) e o crédito. Os selos saem de uma lista única para o pé autenticado
-    não reinventar fato.
+    Rodapé das telas abertas: uma linha só, com a marca de um lado e o crédito do
+    outro. Sem lista de capacidades nem atalho de navegação — quem está numa tela
+    aberta já tem o cabeçalho para andar pela casa.
 --}}
-@php
-    $capacidades = [
-        'Isolamento por empresa',
-        'Permissões por papel',
-        'Trilha de auditoria',
-        'Fuso ' . config('app.timezone'),
-    ];
-@endphp
-
 <footer class="nf-public-footer">
-    <div class="container">
-        <div class="nf-public-footer-top">
-            <div class="nf-public-footer-brand">
-                <x-ui.brand-mark />
-                <div class="nf-public-footer-id">
-                    <p class="nf-wordmark">
-                        <span class="nf-wordmark-lead">NEXUS</span><span class="nf-wordmark-tail">-FIELD</span>
-                    </p>
-                    <p class="nf-public-footer-tagline">
-                        Gestão de operações em campo: ordem, agenda, check-in e custo no mesmo registro.
-                    </p>
-                </div>
-            </div>
+    <div class="container nf-public-footer-row">
+        <span class="nf-brand">
+            <x-ui.brand-mark />
+            <span class="nf-wordmark">
+                <span class="nf-wordmark-lead">NEXUS</span><span class="nf-wordmark-tail">-FIELD</span>
+            </span>
+        </span>
 
-            <div class="nf-public-footer-side">
-                <ul class="nf-public-footer-capacities" role="list">
-                    @foreach ($capacidades as $capacidade)
-                        <li class="nf-footer-chip">{{ $capacidade }}</li>
-                    @endforeach
-                </ul>
-
-                <nav class="nf-public-footer-links" aria-label="Navegação do rodapé">
-                    <a href="{{ route('welcome') }}">Início</a>
-
-                    @auth
-                        {{-- Quem já entrou não recebe link para a tela de entrada:
-                             ela jogaria a pessoa de volta para o painel. --}}
-                        <a href="{{ route('dashboard') }}">Painel</a>
-                    @else
-                        @if (Route::has('login'))
-                            <a href="{{ route('login') }}">Entrar</a>
-                        @endif
-
-                        @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}">Recuperar acesso</a>
-                        @endif
-                    @endauth
-                </nav>
-            </div>
-        </div>
-
-        <div class="nf-public-footer-bottom">
+        <p class="nf-public-footer-credit mb-0">
             <x-signature />
-            <p class="nf-footer-note mb-0">Acesso autenticado · dados isolados por empresa</p>
-        </div>
+            <span class="nf-footer-note">Acesso autenticado · dados isolados por empresa</span>
+        </p>
     </div>
 </footer>

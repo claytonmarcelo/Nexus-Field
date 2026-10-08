@@ -446,6 +446,30 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   endereço real e `SEED_ADMIN_PASSWORD` com um valor de exemplo saiu. Quem instala continua
   encontrando os nomes das chaves e o que cada uma faz nos comentários do `.env.example`, e a
   explicação de por que a conta raiz é permanente ficou no lugar.
+- Saiu o latão da paleta. A família `--nf-accent*` era o "contra-ponto" do gourmet anterior e não
+  existe na logo atual, que é verde sobre preto: o botão `Acessar` da chamada, o filete do item ativo
+  da sidebar, a cauda do `--nf-gradient-brand` (que desenhava as linhas de baixo dos cartões de KPI) e
+  o `--bs-code-color` passaram a ler a rampa verde — `--nf-primary` no botão, `--nf-brand-vivid` no
+  filete e no código do escuro, `--nf-brand-vivid`/`--nf-brand-mint` na cauda do gradiente. Onde a cor
+  fazia papel de categoria — o tom `waiting`, que veste "em espera", "aguardando cliente", "sem
+  coordenadas", "sem agendamento", cartão de crédito, ponto comercial, visita técnica e devolução —
+  entrou `--nf-waiting`, verde ainda não maduro (`#4e7112` no claro, `#a8cf52` no escuro), escolhido
+  para não brigar com o `--nf-success` de conclusão nem repetir o âmbar de `--nf-warning`. Os dois
+  valores cumprem 4,5:1 sobre as três superfícies do tema, prova que entrou no `PaletteTest` junto
+  com os nove hexes do latão, agora na lista que não pode voltar.
+- Rodapé das telas abertas virou uma linha: 41px no lugar dos 141px medidos antes, com a marca à
+  esquerda e a assinatura mais o fato da sessão à direita. Saíram os quatro selos de capacidade
+  ("Isolamento por empresa", "Permissões por papel", "Trilha de auditoria", "Fuso …"), a frase de
+  efeito e a navegação repetida (Início, Painel, Entrar, Recuperar acesso) — quem está numa tela
+  aberta já tem o cabeçalho para andar pela casa, e o rodapé não precisa dizer duas vezes o que a
+  página acabou de mostrar. Os selos continuam no pé autenticado, onde o nome da empresa é fato lido
+  do banco e não anúncio.
+- Altura do topo cortada na fonte única: `--nf-header-height` desceu de 3.25rem para 2.75rem, o piso
+  de 44px que ainda se acerta com o polegar, e o forro vertical dos dois cabeçalhos se unificou em
+  `.25rem`. Medido no navegador com o DevTools Protocol: 53px → 48px no público e 53px → 49px no
+  autenticado, com o mesmo corte de moldura dos dois lados da aplicação. As seis telas do README
+  foram recapturadas em 1440×900 depois disso, porque o topo, o filete da sidebar e as linhas dos
+  cartões de indicador mudaram de verdade.
 
 ### Corrigido
 
@@ -610,6 +634,12 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 - `tests/Feature/ExampleTest.php`, também do skeleton e em inglês, que só pedia `GET /` com 200. A
   mesma verificação ganhou nome em português e corpo em `AccessScreenTest`, com o título e o rótulo
   que a página de apresentação realmente desenha.
+- A família de tokens `--nf-accent`, `--nf-accent-hover`, `--nf-accent-active` e `--nf-accent-soft`
+  dos dois temas, o `.btn-accent` que os vestia e a variante `accent` do `x-ui.button` — que não tinha
+  mais nenhum chamado no projeto. Latão não é cor desta marca, e token sem uso é cor emprestada.
+- O CSS órfão do rodapé público que a linha única dispensou: `-top`, `-brand`, `-id`, `-tagline`,
+  `-capacities`, `-side`, `-links` com o estado de hover, `-bottom` e as duas regras de celular que
+  só reorganizavam essas peças. Ficou `-row`, que é o que existe na tela.
 
 ### Conhecido
 

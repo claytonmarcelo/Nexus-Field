@@ -23,8 +23,8 @@
 }
 
 /*
- * Uma só altura para a barra de topo: 52px em vez dos ~64 do AdminLTE. O conteúdo
- * é o que precisa de espaço, não a moldura.
+ * Uma só altura para a barra de topo: os 44px de `--nf-header-height`, contra os
+ * ~64 do AdminLTE. O conteúdo é o que precisa de espaço, não a moldura.
  */
 .app-header {
     min-height: var(--nf-header-height);
@@ -182,7 +182,7 @@
 }
 
 .app-sidebar .sidebar-menu .nav-link.active {
-    box-shadow: inset 2px 0 0 var(--nf-accent);
+    box-shadow: inset 2px 0 0 var(--nf-brand-vivid);
 }
 
 .app-content-header {
@@ -541,21 +541,6 @@
     box-shadow: var(--nf-shadow-sm);
 }
 
-.btn-accent {
-    --bs-btn-bg: var(--nf-accent);
-    --bs-btn-border-color: var(--nf-accent);
-    --bs-btn-color: var(--nf-on-brand);
-    --bs-btn-hover-bg: var(--nf-accent-hover);
-    --bs-btn-hover-border-color: var(--nf-accent-hover);
-    --bs-btn-hover-color: var(--nf-on-brand);
-    --bs-btn-active-bg: var(--nf-accent-active);
-    --bs-btn-active-border-color: var(--nf-accent-active);
-    --bs-btn-active-color: var(--nf-on-brand);
-    --bs-btn-disabled-bg: var(--nf-accent-soft);
-    --bs-btn-disabled-border-color: var(--nf-accent-soft);
-    --bs-btn-disabled-color: var(--nf-text-faint);
-}
-
 .btn-ghost {
     --bs-btn-bg: transparent;
     --bs-btn-border-color: transparent;
@@ -857,7 +842,7 @@
 .nf-status-draft { color: var(--nf-text-muted); }
 .nf-status-open { color: var(--nf-info); }
 .nf-status-progress { color: var(--nf-warning); }
-.nf-status-waiting { color: var(--nf-accent); }
+.nf-status-waiting { color: var(--nf-waiting); }
 .nf-status-done { color: var(--nf-success); }
 .nf-status-canceled { color: var(--nf-danger); }
 
@@ -1410,7 +1395,7 @@
 
 .nf-icon-tile.tone-open { color: var(--nf-info); background: color-mix(in srgb, var(--nf-info) 14%, transparent); }
 .nf-icon-tile.tone-progress { color: var(--nf-warning); background: color-mix(in srgb, var(--nf-warning) 14%, transparent); }
-.nf-icon-tile.tone-waiting { color: var(--nf-accent); background: color-mix(in srgb, var(--nf-accent) 16%, transparent); }
+.nf-icon-tile.tone-waiting { color: var(--nf-waiting); background: color-mix(in srgb, var(--nf-waiting) 16%, transparent); }
 .nf-icon-tile.tone-done { color: var(--nf-success); background: color-mix(in srgb, var(--nf-success) 14%, transparent); }
 .nf-icon-tile.tone-canceled { color: var(--nf-danger); background: color-mix(in srgb, var(--nf-danger) 14%, transparent); }
 .nf-icon-tile.tone-draft { color: var(--nf-text-muted); background: var(--nf-elevated); }
@@ -1471,7 +1456,7 @@
 
 .nf-bar-fill.tone-open { background: var(--nf-info); }
 .nf-bar-fill.tone-progress { background: var(--nf-warning); }
-.nf-bar-fill.tone-waiting { background: var(--nf-accent); }
+.nf-bar-fill.tone-waiting { background: var(--nf-waiting); }
 .nf-bar-fill.tone-done { background: var(--nf-success); }
 .nf-bar-fill.tone-canceled { background: var(--nf-danger); }
 .nf-bar-fill.tone-draft { background: var(--nf-text-muted); }

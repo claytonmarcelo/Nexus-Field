@@ -177,7 +177,7 @@
                                 do primeiro acesso.
                             </p>
                         </div>
-                        <x-ui.button href="{{ route('login') }}" variant="accent" size="lg" icon="fa-solid fa-arrow-right">
+                        <x-ui.button href="{{ route('login') }}" variant="primary" size="lg" icon="fa-solid fa-arrow-right">
                             Acessar
                         </x-ui.button>
                     </div>

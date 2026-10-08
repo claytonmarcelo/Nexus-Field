@@ -62,6 +62,7 @@ class PaletteTest extends TestCase
             '--nf-text',
             '--nf-text-muted',
             '--nf-text-faint',
+            '--nf-waiting',
         ];
 
         foreach ([
@@ -92,7 +93,7 @@ class PaletteTest extends TestCase
         $this->assertFalse($estaClara($escuro['--nf-on-brand']), 'no escuro a marca é clara, então a tinta sobre ela é escura');
 
         foreach (['claro' => $claro, 'escuro' => $escuro] as $tema => $tokens) {
-            foreach (['--nf-primary', '--nf-accent', '--nf-success', '--nf-danger', '--nf-warning', '--nf-info'] as $marca) {
+            foreach (['--nf-primary', '--nf-success', '--nf-danger', '--nf-warning', '--nf-info'] as $marca) {
                 $razao = $this->contraste($tokens['--nf-on-brand'], $tokens[$marca]);
                 $this->assertGreaterThanOrEqual(
                     4.5,
@@ -126,6 +127,7 @@ class PaletteTest extends TestCase
             '#a4c9c1', '#2c6a5d', '#d9e9e4', '#a7ded1', '#b4e2d6', '#1d5b4f', '#06120f',
             '#a45d1f', '#e0a35f', '#91521b', '#834a18', '#34271a', '#f3e5d3', '#b8804a',
             '#96670f', '#e8bc6a', '#775213', '#eecb8e', '#f3e8cd', '#e0cb94', '#322815', '#7c6134',
+            '#8a6212', '#76540f', '#694b0d', '#f0e6cd', '#d9b25c', '#e3c176', '#ecce8d', '#2e2614', '#c79a4a',
         ];
 
         foreach ($vetadas as $hex) {
