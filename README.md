@@ -18,13 +18,14 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-151%20testes%20%2F%201411%20asser%C3%A7%C3%B5es-brightgreen" alt="151 testes, 1411 asserções">
+  <img src="https://img.shields.io/badge/testes-163%20testes%20%2F%201542%20asser%C3%A7%C3%B5es-brightgreen" alt="163 testes, 1542 asserções">
 </p>
 
 <p align="center">
   <sub>Estágio atual: fundação completa (fases 1 a 8), os cadastros e o catálogo no ar
   (fase 9 — clientes, fase 10 — técnicos, equipes e especialidades, fase 11 — serviços, produtos e
-  categorias) e a operação aberta (fase 12 — ordens de serviço, fase 13 — chamados). A tabela
+  categorias) e a operação aberta (fase 12 — ordens de serviço, fase 13 — chamados, fase 14 — agenda
+  em calendário). A tabela
   <a href="#módulos">Módulos</a> diz, um por um, o que já está no ar e
   o que ainda é só schema.</sub>
 </p>
@@ -201,6 +202,27 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   chamado, contagem do painel) volta a contar
 - exportar chamado é `tickets.export` e entrega o mesmo CSV da listagem, com a descrição reduzida ao texto
   que se lê — o rótulo do editor não viaja para a planilha
+- **Agenda**: FullCalendar 6 lendo o MySQL da empresa por janela de tempo, não a tabela inteira — o feed
+  exige `inicio` e `fim` e fecha a varredura em 120 dias, porque um `?fim=` digitado na URL não pode virar
+  varredura de nove anos
+- Duas naturezas no mesmo quadro: o compromisso, que se cria, edita, move e apaga, e a janela marcada na
+  ordem de serviço, desenhada tracejada e somente-leitura — mover a ordem é na ficha dela, onde o motivo
+  do remanejamento fica registrado
+- Arrastar é escrita no banco: a rota confere alcance, permissão, estado e janela antes de gravar hora e,
+  se recusa, o evento volta ao lugar de onde saiu com o motivo no aviso. Calendário que aceita o que o
+  banco não aceitou é a maneira mais rápida de mentir para quem lê a escala
+- Compromisso concluído é fato passado: não se arrasta, não se edita, e o quadro nem oferece o gesto.
+  O estado anda só pelo fluxo `agendado → concluído|cancelado` e `cancelado → agendado` — remarcar é
+  exatamente o que a agenda serve para fazer
+- Dia inteiro tratado nas duas pontas: o FullCalendar lê o fim como exclusivo, o banco guarda o último
+  dia, e o arraste desloca a janela inteira pelos dias de diferença preservando a duração gravada
+- O relógio é de parede, não de fuso: `APP_TIMEZONE` e o MySQL da instalação conversam no mesmo horário,
+  então a janela viaja e volta sem offset — mandar ISO com `Z` faria a visita das 9h chegar às 6h
+- Painel e calendário contam a mesma régua: `Appointment::visiveisPara()` é o mesmo alcance dos dois lados,
+  o filtro `?tecnico=` da URL entra depois dele, e um compromisso sem dono nunca some da escala de ninguém
+- O calendário é o único pacote carregado sob demanda: o chunk do FullCalendar só desce na tela que o
+  desenha, e o resto da aplicação continua do tamanho de antes. Sem JavaScript a tela diz a verdade em vez
+  de deixar um quadro vazio fingindo que carrega
 
 ### Interface
 
@@ -238,7 +260,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vêm uma fase por vez.
 | Catálogo de serviços e produtos | ✅ | ✅ | ✅ |
 | Ordens de serviço | ✅ | ✅ | ✅ |
 | Chamados | ✅ | ✅ | ✅ |
-| Agenda e compromissos | ✅ | ✅ | 🚧 fase 14 |
+| Agenda e compromissos | ✅ | ✅ | ✅ |
 | Check-in / check-out com geolocalização | ✅ | ✅ | 🚧 fase 15 |
 | Estoque e movimentações | ✅ | ✅ | 🚧 fase 16 |
 | Financeiro | ✅ | ✅ | 🚧 fase 17 |
@@ -274,6 +296,7 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 | SweetAlert2 | 11 | Confirmação, informação e entrada de texto no lugar dos diálogos nativos |
 | Toastr | 2.1 | Avisos efêmeros de canto, com HTML escapado |
 | Summernote | 0.9 | Editor de texto rico do relato do chamado e da resposta da conversa |
+| FullCalendar | 6.1 | Calendário da agenda: mês, semana, dia e lista sobre o mesmo feed JSON, carregado só na tela da agenda |
 | Vite | 8 | Build e dev server |
 | Fontaine | 0.8 | Métricas de fonte para evitar troca de layout |
 
@@ -304,13 +327,13 @@ nexusfield/
 ├── app/
 │   ├── Http/
 │   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians, Catalog, Orders,
-│   │   │                      Tickets e os Concerns compartilhados
+│   │   │                      Tickets, Agenda e os Concerns compartilhados
 │   │   └── Middleware/      → ResolveCompany (tenancy) e EnsurePermission (autorização)
 │   ├── Models/              → 29 modelos do domínio: empresa e plano, usuário e RBAC, cliente com
 │   │                          contato e endereço, técnico, equipe e especialidade, catálogo, ordem
 │   │                          com linha/quadro/check-in/histórico, chamado com conversa e histórico,
-│   │                          e as tabelas que ainda só têm schema — agenda, estoque, financeiro,
-│   │                          configuração, notificação, auditoria e anexo
+│   │                          compromisso de agenda, e as tabelas que ainda só têm schema —
+│   │                          estoque, financeiro, configuração, notificação, auditoria e anexo
 │   └── Support/             → PermissionCatalog, Roles, TenantContext, StatusCatalog, Formatters,
 │                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro e
 │                              Navigation — mais Notifier, que espera a fase 19
@@ -325,18 +348,20 @@ nexusfield/
 ├── lang/pt_BR/              → validação e mensagens de senha em português
 ├── public/                  → index.php, favicon, img/ com a marca e assets compilados
 ├── resources/
-│   ├── css/nexusfield/      → tokens.css, base.css, components.css, public.css, listings.css
-│   ├── js/nexusfield/       → theme, notify, dialog, confirm, forms, flash, passwords, listas, editor, jquery
+│   ├── css/nexusfield/      → tokens.css, base.css, components.css, listings.css, agenda.css, public.css
+│   ├── js/nexusfield/       → theme, notify, dialog, confirm, forms, flash, passwords, listas, editor,
+│   │                          agenda, jquery
 │   └── views/               → Blade: componentes ui/ e layouts, páginas públicas, de entrada,
 │                              de clientes, de técnicos, de equipes, de especialidades, de serviços,
-│                              de produtos, de categorias, de ordens de serviço e de chamados
+│                              de produtos, de categorias, de ordens de serviço, de chamados e de agenda
 ├── routes/                  → web.php
 ├── storage/                 → logs, cache e uploads (fora da raiz pública)
 ├── tests/
 │   ├── Feature/             → entrada e recuperação, gate de permissão por papel, tenancy, layout
 │   │                          autenticado, as três telas abertas de acesso, campo de senha, painel,
 │   │                          demonstração, conta raiz e a troca do e-mail dela, clientes, técnicos,
-│   │                          catálogo, ordens de serviço, chamados e a proibição dos diálogos nativos
+│   │                          catálogo, ordens de serviço, chamados, agenda e a proibição dos
+│   │                          diálogos nativos
 │   └── Unit/                → paleta dos dois temas, contrato das capturas, iniciais do usuário
 └── CHANGELOG.md             → histórico por fase
 ```
@@ -534,7 +559,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **151 testes / 1411 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **163 testes / 1542 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
@@ -549,7 +574,9 @@ CSV sendo a mesma consulta da tela — e o de chamados: protocolo que não repet
 prioridade que calcula o prazo, atraso medido pelo banco, nota obrigatória para resolver, passo recusado
 quando o fluxo não existe, nota interna que não aparece para quem não pode ler, HTML malicioso que chega
 inteiro na tela e volta limpo do banco, e o alcance do técnico e da conta de cliente na ficha e na
-conversa.
+conversa — e o de agenda: o JSON que só devolve o que a conta alcança, a janela de leitura com teto, o
+arraste que grava no banco ou volta ao lugar, o dia inteiro deslocado por dias inteiros, o concluído que
+não se move mais, o estado que só anda pelo fluxo e o painel contando o mesmo que o quadro.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -603,7 +630,9 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 
 ### Planejado
 
-- [ ] Fase 14 — Agenda (FullCalendar 6)
+- [x] **Fase 14** — Agenda (FullCalendar 6): feed JSON por janela com alcance e teto de varredura, CRUD de
+  compromisso, estado pelo fluxo, arraste que grava no banco ou volta ao lugar, e a ordem agendada como
+  evento somente-leitura
 - [ ] Fase 15 — Check-in e check-out com geolocalização
 - [ ] Fase 16 — Estoque e movimentações
 - [ ] Fase 17 — Financeiro

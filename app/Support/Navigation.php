@@ -40,6 +40,12 @@ class Navigation
                         'permission' => 'tickets.view',
                         'icon' => 'fa-solid fa-headset',
                     ],
+                    [
+                        'label' => 'Agenda',
+                        'route' => 'agenda.index',
+                        'permission' => 'agenda.view',
+                        'icon' => 'fa-solid fa-calendar-days',
+                    ],
                 ],
             ],
             [

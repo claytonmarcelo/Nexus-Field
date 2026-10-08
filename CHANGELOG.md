@@ -457,6 +457,79 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   `tickets.execute`, a nota interna que não chega a quem não pode ler, o payload malicioso que chega
   inteiro na requisição e volta limpo do banco, o alcance do técnico e da conta de cliente, e a matriz de
   permissões do módulo. A suíte fecha em 150 testes / 1386 asserções.
+- Fase 14 — a escala da empresa num quadro só. `AgendaController` (`/agenda`) abre dez rotas e cada
+  uma tem a porta certa: `agenda.view` para o calendário, para o feed JSON e para a ficha;
+  `agenda.create` para `agenda/nova` e o `POST`; `agenda.update` para editar, mudar estado, reagendar
+  e segurar o arraste; `agenda.delete` para riscar a janela. O técnico tem `agenda.view` apenas, e por
+  isso recebe um quadro que não aceita dedo — a tela diz em português que ela lê a agenda e que
+  remarcar é de quem conduz a escala, e o cursor combina com a verdade.
+- Duas naturezas chegam num pedido só, porque o dia de um técnico é feito das duas. O **compromisso**
+  é o que esta tela escreve. A **ordem de serviço agendada** (`open`, `in_progress`, `on_hold`,
+  `completed`) é lida de `scheduled_starts_at`/`scheduled_ends_at` da própria ordem, desenhada
+  hachurada, com a ficha como destino e `editable: false` — esconder a ordem deixaria o calendário
+  bonito e inútil, e movê-la daqui tiraria o motivo da trilha da ordem, que é onde ela se move.
+- O feed filtra antes de montar qualquer evento, então não existe lista escondida por CSS:
+  `Appointment::visiveisPara()` decide o que sai do banco, e o `CompanyScope` já nem deixa a empresa
+  ao lado aparecer. A janela pedida tem teto (`JANELA_MAXIMA_DIAS = 120`): `?fim=+10 anos` digitado na
+  URL é recusado em vez de virar varredura na tabela, e início/fim são obrigatórios — o calendário não
+  pergunta "tudo".
+- Alcance é o mesmo da casa, aplicado em três camadas que se concordam: `alcanceRestrito()` decide se
+  o filtro de técnico existe na tela, `visiveisPara()` decide a query, e `garantirVisivel()` responde
+  403 quando a URL pede a ficha de uma janela que não é do usuário. O compromisso também alcança pelo
+  que ele prende — se a ordem agendada é do técnico, a janela da ordem é dele mesmo sem
+  `technician_id` preenchido, e a conta de cliente lê apenas o que é da carteira dela.
+- Arrastar é a única escrita no quadro, e ela passa pelo servidor (`PATCH /agenda/{id}/janela`): o
+  controlador confere permissão, alcance, estado e janela antes de gravar, a tela reabre o feed depois
+  da resposta e mostra o que está no banco, não o que o dedo soltou. Se o servidor recusa,
+  `info.revert()` devolve o evento ao lugar de origem com o motivo no toast. O arraste simples manda
+  só o novo início, e a duração que estava gravada é recalculada do banco; o resize manda os dois
+  lados.
+- Concluído é fato passado. `Appointment::FLUXO` (agendado → concluído/cancelado, cancelado volta a
+  agendado, concluído sem saída) é a única maneira de o estado andar, `estaTravado()` fecha a ficha e
+  o feed nem oferece o arraste que a regra recusaria. `PUT /{id}/estado` exige o destino em `FLUXO`
+  **e** na lista de quem conduz, com o rótulo dos dois lados na mensagem.
+- Dia inteiro nas duas pontas: o banco grava `dura_o_dia_todo`, o FullCalendar trata o fim como
+  exclusivo, então a leitura empresta um dia e a escrita devolve os 864e5 ms antes de gravar. Mover um
+  compromisso de dia inteiro desloca dias inteiros e preserva a hora gravada; mudar a hora de um
+  compromisso com horas é exatamente isso, e a validação continua aceitando início e fim no mesmo dia
+  quando o dia é inteiro.
+- O relógio é de parede, não de fuso: `APP_TIMEZONE` é `America/Sao_Paulo` e o MySQL atende no mesmo
+  sistema, então a janela viaja em `Y-m-d\TH:i:s` sem offset, dos dois lados. Se o JavaScript mandasse
+  ISO com `Z`, a escala de um técnico de São Paulo chegaria três horas mais cedo no servidor.
+- `DELETE` risca a janela e não encosta no trabalho: a ordem e o chamado continuam donos do que
+  acontece e do que se cobra, e apagar um compromisso do calendário não move nem fecha nada lá.
+- Filtro que não é permitido não é aplicado: `opcaoPermitida()` descarta o `?tecnico=` de outra
+  empresa, de um técnico inativo e o `?tipo=` fora do catálogo, em vez de fechar a query com o valor
+  digitado — e a regra de validação do `technician_id` exclui o inativo pela mesma lista que o select
+  mostra, para a tela não oferecer o que o servidor recusa. `data-filtro` chega ao JavaScript sempre
+  como objeto (`{}` quando não há filtro), que é o contrato que `lerFiltros()` assina.
+- Marcar a janela de uma ordem ou de um chamado herda o cliente daquele documento
+  (`normaliza()`), e a conta de cliente tem o `client_id` imposto da sessão: o payload que trouxer uma
+  carteira alheia recebe 422 dos vínculos, não uma linha escrita na agenda errada. `company_id` do
+  formulário não existe para o gravador.
+- FullCalendar 6.1 entra como chunk carregado sob demanda — `app.js` só importa
+  `nexusfield/agenda.js` quando a tela tem um `[data-nf-agenda]`, então o calendário não pesa em
+  nenhuma outra página. Locale `pt-br`, `nowIndicator`, madrugada visível mas a faixa aberta às 07:30,
+  mês/semana/dia/lista sobre o mesmo feed, e celular caindo em `listWeek`. Sem JavaScript a casca diz a
+  verdade em vez de desenhar um quadro vazio: os números continuam no banco e o painel mostra a agenda
+  de hoje.
+- `resources/css/nexusfield/agenda.css` (302 linhas) reveste a biblioteca só por variáveis: o `--fc-*`
+  do FullCalendar é alimentado por `var(--nf-*)` e `color-mix()`, sem um hex escrito — é o que o
+  `PaletteTest` vigia. A legenda das cores lê o tom do catálogo de estados, o claro/escuro troca o
+  quadro sem recolorir nada no JavaScript, e os estados de interface (carregando, vazio, erro) ficam
+  do mesmo tecido das outras listagens.
+- Painel e calendário na mesma régua: `DashboardMetrics::compromissosDoUsuario()` passou a contar por
+  `visiveisPara()`, então quem leu "três janelas hoje" no painel abre a agenda e conta as mesmas três.
+  O menu de Operação ganhou a entrada "Agenda" (`agenda.view`, `fa-calendar-days`) e o
+  `Auditable` entrou no `Appointment` — criar, mover janela, mudar estado e riscar ficam na trilha com
+  autor, IP e hora, como no resto do domínio.
+- `tests/Feature/AgendaTest.php` (12 testes / 129 asserções) cobre a tela montada e o escritório lendo
+  a empresa inteira, a agenda do técnico saindo do banco só com as janelas dele, a conta de cliente que
+  não abre a escala da empresa, a ordem agendada que aparece e não se arrasta da tela, o teto e a
+  exigência da janela, o arraste que grava o que o servidor aceita, a janela de um concluído que não se
+  move mais, o compromisso que nasce agendado e herda o cliente do que prende, a recusa de fim depois
+  do início, o estado que só anda pelo fluxo e por quem conduz, a paridade painel/calendário e o apagar
+  que não apaga o trabalho. A suíte fecha em 163 testes / 1542 asserções.
 
 ### Alterado
 

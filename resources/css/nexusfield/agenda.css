@@ -1,0 +1,302 @@
+/*
+ * A agenda vestida com os tokens da casa.
+ *
+ * FullCalendar 6 injeta o próprio CSS e expõe variáveis (`--fc-*`) para tudo. Este
+ * arquivo não reescreve o calendário: ele entrega a matéria-prima do NEXUS-FIELD
+ * naquelas variáveis e corrige os dois ou três pontos onde o template escolhe um
+ * hex fixo. Por isso o quadro troca de tema junto com a página — não há segunda
+ * paleta aqui, e nenhum tom de evento nasce de cor digitada.
+ */
+
+.fc {
+    --fc-border-color: var(--nf-line);
+    --fc-page-bg-color: var(--nf-elevated);
+    --fc-neutral-bg-color: var(--nf-surface);
+    --fc-neutral-text-color: var(--nf-text-muted);
+    --fc-today-bg-color: color-mix(in srgb, var(--nf-primary) 10%, var(--nf-elevated));
+    --fc-highlight-color: color-mix(in srgb, var(--nf-primary) 18%, transparent);
+    --fc-now-indicator-color: var(--nf-danger);
+    --fc-misc-text-color: var(--nf-text);
+    --fc-small-font-size: .78rem;
+
+    /* O evento é tintado pelo tipo e cortado pelo estado; a letra vem do próprio
+       tom, que já foi medido para ler sobre a superfície dos dois temas. */
+    --fc-event-bg-color: var(--nf-elevated);
+    --fc-event-border-color: var(--nf-line-strong);
+    --fc-event-text-color: var(--nf-text);
+
+    font-family: inherit;
+    font-size: .85rem;
+    color: var(--nf-text);
+}
+
+.nf-agenda {
+    min-height: 18rem;
+}
+
+.nf-agenda .fc-toolbar {
+    flex-wrap: wrap;
+    gap: .5rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.nf-agenda .fc-toolbar-chunk {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+.nf-agenda .fc-toolbar-title {
+    font-family: var(--nf-font-display);
+    font-size: 1.18rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    color: var(--nf-text);
+}
+
+.fc-theme-standard .fc-button {
+    --fc-button-bg-color: var(--nf-elevated);
+    --fc-button-border-color: var(--nf-line);
+    --fc-button-text-color: var(--nf-text);
+    --fc-button-hover-bg-color: var(--nf-primary-soft);
+    --fc-button-hover-border-color: var(--nf-primary);
+    --fc-button-hover-text-color: var(--nf-brand-deep);
+    --fc-button-active-bg-color: var(--nf-primary-soft);
+    --fc-button-active-border-color: var(--nf-primary);
+
+    border-radius: var(--bs-border-radius-sm);
+    padding: .3rem .62rem;
+    font-size: .8rem;
+    font-weight: 600;
+    text-transform: none;
+    box-shadow: none;
+}
+
+.fc-theme-standard .fc-button:focus-visible,
+.fc-theme-standard .fc-button:focus {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--nf-primary) 35%, transparent);
+    border-color: var(--nf-primary);
+}
+
+.nf-agenda .fc-col-header-cell {
+    background: var(--nf-surface);
+}
+
+.nf-agenda .fc-col-header-cell-cushion {
+    padding: .45rem .25rem;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+    text-decoration: none;
+}
+
+.nf-agenda .fc-daygrid-day-number,
+.nf-agenda .fc-timegrid-now-indicator-container {
+    color: var(--nf-text-muted);
+    text-decoration: none;
+    font-variant-numeric: tabular-nums;
+}
+
+.nf-agenda .fc-day-other .fc-daygrid-day-number {
+    color: var(--nf-text-faint);
+    opacity: .65;
+}
+
+.nf-agenda .fc-today-button:disabled {
+    /* Domingo de hoje: o botão fica apagado, mas não pode virar cinza de template. */
+    background: var(--nf-surface);
+    border-color: var(--nf-line);
+    color: var(--nf-text-faint);
+    opacity: 1;
+}
+
+.nf-agenda .fc-cell-shaded,
+.nf-agenda .fc-daygrid-day.fc-day-sat,
+.nf-agenda .fc-daygrid-day.fc-day-sun {
+    background: color-mix(in srgb, var(--nf-surface) 60%, var(--nf-elevated));
+}
+
+/*
+ * Os eventos. O fundo vem do tipo (nf-fc-t--*), o filete e a letra do estado
+ * (nf-fc-s--*), e a ordem agendada é desenhada a traço porque não se move daqui.
+ * Os seis tons são os mesmos do catálogo de estados — nenhuma cor aqui é solta.
+ */
+.nf-agenda .nf-fc-event {
+    border: 0;
+    border-left: 3px solid var(--nf-line-strong);
+    border-radius: var(--bs-border-radius-sm);
+    padding: 1px 5px;
+    font-weight: 600;
+    font-size: .78rem;
+    line-height: 1.35;
+    transition: filter var(--nf-duration) var(--nf-ease);
+}
+
+.nf-agenda .nf-fc-event:hover {
+    filter: brightness(1.04);
+}
+
+.nf-agenda .fc-daygrid-event.nf-fc-event {
+    margin-top: 1px;
+}
+
+.nf-agenda .nf-fc-t--open {
+    background: color-mix(in srgb, var(--nf-info) 16%, var(--nf-elevated));
+    color: var(--nf-info);
+}
+
+.nf-agenda .nf-fc-t--progress {
+    background: color-mix(in srgb, var(--nf-warning) 16%, var(--nf-elevated));
+    color: var(--nf-warning);
+}
+
+.nf-agenda .nf-fc-t--waiting {
+    background: color-mix(in srgb, var(--nf-waiting) 18%, var(--nf-elevated));
+    color: var(--nf-waiting);
+}
+
+.nf-agenda .nf-fc-t--draft {
+    background: var(--nf-surface);
+    color: var(--nf-text-muted);
+}
+
+.nf-agenda .nf-fc-t--done {
+    background: color-mix(in srgb, var(--nf-success) 16%, var(--nf-elevated));
+    color: var(--nf-success);
+}
+
+.nf-agenda .nf-fc-t--canceled {
+    background: color-mix(in srgb, var(--nf-danger) 14%, var(--nf-elevated));
+    color: var(--nf-danger);
+}
+
+.nf-agenda .nf-fc-s--open { border-left-color: var(--nf-info); }
+.nf-agenda .nf-fc-s--progress { border-left-color: var(--nf-warning); }
+.nf-agenda .nf-fc-s--waiting { border-left-color: var(--nf-waiting); }
+.nf-agenda .nf-fc-s--draft { border-left-color: var(--nf-line-strong); }
+.nf-agenda .nf-fc-s--done { border-left-color: var(--nf-success); }
+.nf-agenda .nf-fc-s--canceled { border-left-color: var(--nf-danger); }
+
+/* O quadro lê a janela do dia inteiro pela borda dos dois lados, não pela hora. */
+.nf-agenda .nf-fc-event.fc-event-start.fc-event-end.fc-daygrid-block-event {
+    border-radius: var(--bs-border-radius-sm);
+}
+
+.nf-agenda .nf-fc-event--ordem {
+    border: 1px dashed var(--nf-line-strong);
+    border-left-style: solid;
+    background: repeating-linear-gradient(
+        135deg,
+        var(--nf-elevated) 0 6px,
+        color-mix(in srgb, var(--nf-info) 9%, var(--nf-elevated)) 6px 12px
+    );
+    color: var(--nf-text);
+    font-weight: 500;
+}
+
+.nf-agenda .fc-event-dragging,
+.nf-agenda .fc-event-resizing {
+    box-shadow: var(--nf-shadow-md);
+    opacity: .92;
+}
+
+.nf-agenda .fc-event-selected::after {
+    /* FC desenha um ponto de seleção branco sob o evento; aqui ele é o fio de marca. */
+    background: var(--nf-primary);
+}
+
+.nf-agenda .fc-event-mirror {
+    background: var(--nf-primary-soft);
+    border: 1px solid var(--nf-primary);
+    color: var(--nf-brand-deep);
+}
+
+.nf-agenda .fc-list {
+    border-color: var(--nf-line);
+}
+
+.nf-agenda .fc-list-day-cushion,
+.nf-agenda .fc-list-sticky .fc-list-day > * {
+    background: var(--nf-surface);
+}
+
+.nf-agenda .fc-list-day-text,
+.nf-agenda .fc-list-day-side-text {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+    text-decoration: none;
+}
+
+.nf-agenda .fc-list-event-title a {
+    color: var(--nf-text);
+    text-decoration: none;
+}
+
+.nf-agenda .fc-list-event:hover td {
+    background: color-mix(in srgb, var(--nf-primary) 8%, transparent);
+}
+
+.nf-agenda .fc-list-empty {
+    background: var(--nf-surface);
+    color: var(--nf-text-muted);
+    font-size: .85rem;
+}
+
+.nf-agenda .fc-popover,
+.nf-agenda .fc-more-popover .fc-popover-header {
+    background: var(--nf-elevated);
+    color: var(--nf-text);
+}
+
+@media (max-width: 720px) {
+    .nf-agenda .fc-toolbar {
+        justify-content: space-between;
+    }
+
+    .nf-agenda .fc-toolbar-chunk:last-child {
+        /* Os botões de vista viram uma tira do lado da barra de rolagem nativa. */
+        overflow-x: auto;
+        max-width: 100%;
+        flex-wrap: nowrap;
+    }
+}
+
+/*
+ * Legenda da tela. O bloco desenhado aqui é o mesmo que o feed manda como classe
+ * do evento, então a lista embaixo do quadro nunca diverge do calendário.
+ */
+.nf-legenda {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: .4rem;
+}
+
+.nf-legenda li {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    color: var(--nf-text-muted);
+    font-size: .82rem;
+}
+
+.nf-legenda-marca {
+    width: .85rem;
+    height: .85rem;
+    border-radius: .3rem;
+    flex: none;
+    border-left: 3px solid var(--nf-line-strong);
+}
+
+.nf-legenda-marca.nf-fc-t--open { background: color-mix(in srgb, var(--nf-info) 26%, var(--nf-elevated)); border-left-color: var(--nf-info); }
+.nf-legenda-marca.nf-fc-t--progress { background: color-mix(in srgb, var(--nf-warning) 26%, var(--nf-elevated)); border-left-color: var(--nf-warning); }
+.nf-legenda-marca.nf-fc-t--waiting { background: color-mix(in srgb, var(--nf-waiting) 30%, var(--nf-elevated)); border-left-color: var(--nf-waiting); }
+.nf-legenda-marca.nf-fc-t--draft { background: var(--nf-surface); }
+.nf-legenda-marca.nf-fc-t--done { background: color-mix(in srgb, var(--nf-success) 26%, var(--nf-elevated)); border-left-color: var(--nf-success); }
+.nf-legenda-marca.nf-fc-t--canceled { background: color-mix(in srgb, var(--nf-danger) 24%, var(--nf-elevated)); border-left-color: var(--nf-danger); }

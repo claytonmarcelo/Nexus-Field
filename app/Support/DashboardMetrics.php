@@ -178,6 +178,16 @@ class DashboardMetrics
         return Ticket::query()->visiveisPara($this->usuario);
     }
 
+    /**
+     * Mesma regra de alcance da tela de agenda. O painel e o calendário precisam
+     * responder o mesmo número para o mesmo usuário: um técnico que abre a agenda
+     * e vê três janelas não pode ter lido "12" no painel.
+     */
+    private function compromissosDoUsuario(): Builder
+    {
+        return Appointment::query()->visiveisPara($this->usuario);
+    }
+
     /** @return array{kpis: array<int, array<string, mixed>>, dados: array<string, mixed>}|[] */
     private function agenda(): array
     {
@@ -185,13 +195,13 @@ class DashboardMetrics
             return [];
         }
 
-        $hoje = Appointment::query()
+        $hoje = $this->compromissosDoUsuario()
             ->with(['technician', 'client'])
             ->between(now()->startOfDay(), now()->endOfDay())
             ->orderBy('starts_at')
             ->get();
 
-        $proximos = Appointment::query()
+        $proximos = $this->compromissosDoUsuario()
             ->between(now()->startOfDay(), now()->addDays(7)->endOfDay())
             ->count();
 

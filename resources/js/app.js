@@ -36,3 +36,13 @@ passwords.init();
 confirmacao.init();
 listas.init();
 editor.init();
+
+/*
+ * O calendário é o único peso da tela que nenhuma outra página usa. Ele entra sob
+ * demanda, quando existe um quadro montado: o login, o painel e as listagens
+ * continuam baixando o pacote de sempre, e só a agenda paga pelos plugins do
+ * FullCalendar.
+ */
+if (document.querySelector('[data-nf-agenda]')) {
+    import('./nexusfield/agenda').then((modulo) => modulo.init());
+}

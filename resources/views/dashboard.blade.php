@@ -135,11 +135,14 @@
     <div class="row g-3 mt-1">
         @if ($painel['agenda'] !== [])
             <div class="col-12 col-xl">
-                <x-ui.card title="Agenda de hoje" subtitle="Compromissos gravados na agenda desta empresa.">
+                <x-ui.card title="Agenda de hoje" :subtitle="$usuario->technician
+                    ? 'As janelas marcadas para você hoje.'
+                    : 'Compromissos gravados na agenda desta empresa.'">
                     @if ($painel['agenda']['hoje']->isEmpty())
                         <x-ui.state tone="empty" title="Dia sem compromissos">
-                            Nenhum compromisso com início hoje. A agenda completa chega com o
-                            módulo de calendário.
+                            <p class="mb-2">Nenhuma janela começando hoje. O calendário mostra a semana inteira.</p>
+                            <x-ui.button variant="ghost" size="sm" :href="route('agenda.index')"
+                                icon="fa-solid fa-calendar-days">Abrir a agenda</x-ui.button>
                         </x-ui.state>
                     @else
                         <ul class="nf-timeline mb-0">
@@ -147,7 +150,9 @@
                                 <li>
                                     <span class="nf-timeline-time nf-mono">{{ Formatters::time($compromisso->starts_at) }}</span>
                                     <div class="nf-timeline-body">
-                                        <p class="mb-0">{{ $compromisso->title }}</p>
+                                        <p class="mb-0">
+                                            <a href="{{ route('agenda.show', $compromisso) }}">{{ $compromisso->title }}</a>
+                                        </p>
                                         <p class="mb-0 nf-timeline-text">
                                             {{ $compromisso->technician?->name ?? 'Sem técnico' }}
                                             @if ($compromisso->client)
@@ -164,7 +169,9 @@
                     @endif
 
                     <x-slot:tools>
-                        <span class="nf-text-muted-2">{{ $painel['agenda']['proximos'] }} em 7 dias</span>
+                        <a class="nf-text-muted-2" href="{{ route('agenda.index') }}">
+                            {{ $painel['agenda']['proximos'] }} em 7 dias
+                        </a>
                     </x-slot:tools>
                 </x-ui.card>
             </div>

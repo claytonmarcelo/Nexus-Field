@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Agenda\AgendaController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Catalog\ProductController;
@@ -116,6 +117,37 @@ Route::middleware(['auth', 'company'])->group(function () {
 
         Route::get('{chamado}', [TicketController::class, 'show'])
             ->middleware('permission:tickets.view')
+            ->name('show');
+    });
+
+    Route::prefix('agenda')->name('agenda.')->group(function () {
+        // Literal antes de parametrizado: `agenda/nova` é a tela de marcação, não a
+        // ficha do compromisso de código "nova". `eventos` é o JSON do calendário.
+        Route::middleware('permission:agenda.view')->group(function () {
+            Route::get('/', [AgendaController::class, 'index'])->name('index');
+            Route::get('eventos', [AgendaController::class, 'feed'])->name('feed');
+        });
+
+        Route::middleware('permission:agenda.create')->group(function () {
+            Route::get('nova', [AgendaController::class, 'create'])->name('create');
+            Route::post('/', [AgendaController::class, 'store'])->name('store');
+        });
+
+        // Mover a janela no quadro é editar a agenda: `agenda.update` segura o
+        // arraste, o PATCH e a mudança de estado, e a técnica vê sem poder mover.
+        Route::middleware('permission:agenda.update')->group(function () {
+            Route::get('{compromisso}/editar', [AgendaController::class, 'edit'])->name('edit');
+            Route::put('{compromisso}', [AgendaController::class, 'update'])->name('update');
+            Route::put('{compromisso}/estado', [AgendaController::class, 'mudarStatus'])->name('status');
+            Route::patch('{compromisso}/janela', [AgendaController::class, 'reagendar'])->name('reschedule');
+        });
+
+        Route::delete('{compromisso}', [AgendaController::class, 'destroy'])
+            ->middleware('permission:agenda.delete')
+            ->name('destroy');
+
+        Route::get('{compromisso}', [AgendaController::class, 'show'])
+            ->middleware('permission:agenda.view')
             ->name('show');
     });
 
