@@ -24,9 +24,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   reservado para agregações internas e para o console.
 - Models da camada nuclear: `Company`, `Plan`, `Role`, `Permission`, `User`, `Client`,
   `ClientContact`, `Address` e `CompanySetting`.
-- 24 testes (64 asserções) cobrando login válido e inválido, usuário inativo, assinatura vencida,
+- 30 testes (86 asserções) cobrando login válido e inválido, usuário inativo, assinatura vencida,
   throttle, mudança de ID de sessão, logout, gate de permissão por papel, reset de senha com token
-  válido/forgiado/fraco e isolamento entre tenants.
+  válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso e a proibição
+  dos diálogos nativos do navegador.
 - `tests/CreatesFixtures.php`, que monta empresa, plano, permissões, papel e usuário para os
   testes de feature rodarem contra o MySQL real (`nexusfield_test`), sem mock de banco.
 - Design system "Premium Gourmet + Technology" sobre AdminLTE 4: tokens de tema em
@@ -49,9 +50,43 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   vinda do banco não vire HTML), `confirm`/`prompt`/`alert` via SweetAlert2 no lugar dos diálogos
   nativos — que ficam proibidos no projeto — e guarda de envio em `form[data-nf-guard]`, que
   desabilita o botão e mostra o spinner enquanto o request não volta.
+- Página de entrada pública real (`resources/views/welcome.blade.php`) com a casca que as telas
+  abertas compartilham (`public.css`): cabeçalho fixo com marca e chave de tema, apresentação dos
+  módulos integrados, das garantias de autorização, multiempresa, sessão e auditoria, e a chamada
+  de acesso. Nenhum número, cadastro ou gráfico inventado na tela — o que depende de banco chega
+  nas fases seguintes, junto com as telas autenticadas.
+- `x-ui.brand-mark`, a marca da plataforma desenhada em SVG com as próprias variáveis de cor, sem
+  imagem externa e sem depender do tema para trocar de aparência.
+- Casca compartilhada das telas abertas — `x-site-head`, `x-public-header`, `x-public-footer`,
+  reunidos em `x-auth-shell` —, de modo que a página de entrada e as telas de acesso usem o mesmo
+  cabeçalho, o mesmo rodapé e a mesma cabeça de documento, sem cópia de marcação.
+- Telas de acesso reconstruídas sobre essa casca: entrada (`auth/login`), solicitação de link
+  (`auth/forgot-password`) e definição de senha nova (`auth/reset-password`), com os campos do
+  design system, `autocomplete` correto (`username`, `current-password`, `new-password`), rótulo de
+  obrigatoriedade, ajuda de regra de senha e link de volta — nada de formulário que não salva.
+- `x-flash-messages` com `resources/js/nexusfield/flash.js`: o recado que o controlador devolve em
+  `session('status')` chega como toast uma única vez por carregamento de página, e o nó some do
+  DOM depois de lido.
+- `x-skip-links`, o par de links de salto do teclado em português, reutilizado por todas as telas
+  abertas.
+- `lang/pt_BR/validation.php` e `lang/pt_BR/passwords.php`: sem pasta de idioma no projeto, o
+  framework devolvia "The email field is required." e "We have emailed your password reset link."
+  no meio de uma interface em português. Só as regras que o código usa hoje entraram.
+- `SEED_ADMIN_EMAIL` e `SEED_ADMIN_PASSWORD` documentados no `.env.example`: a credencial do
+  administrador semeado vem do ambiente, nunca do código, e o seeder recusa senha gerada
+  automaticamente em produção.
 
 ### Corrigido
 
+- O guarda de envio bloqueava mesmo: com `novalidate` no formulário, o navegador não cancela o
+  request por conta própria, e o listener devolvia sem `preventDefault()` — um clique com campo
+  obrigatório vazio saía para o servidor do mesmo jeito.
+- Campo de senha não volta preenchido para a tela: `x-ui.input` renderizava `old($name)` também em
+  `type="password"`, devolvendo a senha digitada no HTML da reposta.
+- AdminLTE 4 injeta os próprios links de salto, o aviso `(required)` e um segundo balão de erro,
+  tudo em inglês. As três saídas que o pacote oferece para isso foram usadas: `.skip-links` já
+  existe em português, `.required-indicator` é o nosso rótulo escondido, e os campos marcam
+  `disable-adminlte-validations`.
 - `.card-title` dentro de `.card-body` volta a ser bloco: o AdminLTE define `float: left` nesse
   elemento para o título dividir a linha com as ferramentas do cabeçalho, e isso fazia o título
   invadir o parágrafo seguinte.
@@ -73,12 +108,17 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Conhecido
 
-- As telas de login, recuperação de senha e o layout AdminLTE autenticado chegam nas fases 6 e 7;
-  os links de acesso da página de entrada apontam para rotas cuja view ainda não existe.
+- O layout autenticado em AdminLTE 4 (barra lateral, cabeçalho, rodapé) chega na fase 7 e o painel
+  com KPIs consultados no banco na fase 8. Até lá a rota `/dashboard` ainda é uma closure sem view,
+  então o login bem-sucedido cai em "View [dashboard] not found" — o caminho de autenticação em si
+  está funcionando e é coberto por teste.
+- O link de redefinição de senha sai pelo canal `log` (`MAIL_MAILER=log`), porque ainda não há SMTP
+  configurado. Nada de credencial de e-mail no repositório: o servidor de envio entra por variável
+  de ambiente quando for definido.
 - Servida de um subdiretório (`http://localhost/nexusfield/public/`), a aplicação fica sem as
   fontes próprias e sem os ícones: o Vite gera as URLs de `@font-face` a partir da raiz do host.
   O caminho esperado é servir na raiz — `php artisan serve` ou um vhost apontando o
-  `DocumentRoot` para `public/`.
+  `DocumentRoot` para `public/`, que foi como as telas foram verificadas.
 - O `php` do `PATH` desta máquina é o 8.4.23 de `C:\Program Files\PHP`, sem `mbstring`; os
   comandos de artisan e de teste precisam usar o build do WAMP (`php8.3.28`), o mesmo que o
   Apache carrega.

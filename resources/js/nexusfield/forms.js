@@ -21,8 +21,10 @@ export function init() {
             return;
         }
 
-        // O navegador já bloqueia o envio e mostra os erros de validação.
+        // Com `novalidate` o navegador não cancela o envio por conta própria,
+        // então o cancelamento é aqui, depois de mostrar os erros de validação.
         if (!form.reportValidity()) {
+            event.preventDefault();
             return;
         }
 
