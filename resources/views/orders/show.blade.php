@@ -215,6 +215,7 @@
                             : 'Ir para aberta ou cancelada pede a permissão de aprovação, que esta conta não tem.' }}" />
                 @else
                     <form method="POST" action="{{ route('orders.status', $ordem) }}" data-nf-guard novalidate>
+                        @csrf
                         @method('PUT')
 
                         <x-ui.select label="Próximo estado" name="estado" :opcoes="$proximosEstados" required
@@ -370,6 +371,7 @@
                         action="{{ $itemEmEdicao
                             ? route('orders.items.update', [$ordem, $itemEmEdicao])
                             : route('orders.items.store', $ordem) }}" data-nf-guard novalidate>
+                        @csrf
                         @if ($itemEmEdicao)
                             @method('PUT')
                         @endif
@@ -481,6 +483,7 @@
                         <div class="nf-form-secao">
                             <h2>Comissionar técnico</h2>
                             <form method="POST" action="{{ route('orders.assignments.store', $ordem) }}" data-nf-guard novalidate>
+                                @csrf
                                 <div class="nf-form-grade">
                                     <x-ui.select label="Técnico" name="tecnico_id" :opcoes="$tecnicos"
                                         :placeholder="$ordem->assignments->isEmpty() ? 'Escolha quem entra no quadro' : 'Escolha quem volta ao quadro'"

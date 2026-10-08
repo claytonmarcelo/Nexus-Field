@@ -19,6 +19,7 @@
         <form method="POST"
             action="{{ $editando ? route('agenda.update', $compromisso) : route('agenda.store') }}"
             data-nf-guard novalidate>
+            @csrf
             @if ($editando)
                 @method('PUT')
             @endif

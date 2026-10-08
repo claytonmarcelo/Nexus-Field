@@ -167,6 +167,7 @@
                             <h2>Editar {{ $contatoEmEdicao->name }}</h2>
                             <form method="POST" action="{{ route('clients.contacts.update', [$cliente, $contatoEmEdicao]) }}"
                                 data-nf-guard novalidate>
+                                @csrf
                                 @method('PUT')
                                 <x-ui.contact-fields :contato="$contatoEmEdicao" />
                                 <div class="nf-form-acoes">
@@ -182,6 +183,7 @@
                         <div class="nf-form-secao">
                             <h2>Novo contato</h2>
                             <form method="POST" action="{{ route('clients.contacts.store', $cliente) }}" data-nf-guard novalidate>
+                                @csrf
                                 <x-ui.contact-fields :contato="$novoContato" />
                                 <div class="nf-form-acoes">
                                     <x-ui.button type="submit" variant="soft-primary" size="sm" icon="fa-solid fa-plus"
@@ -258,6 +260,7 @@
                             <h2>Editar endereço</h2>
                             <form method="POST" action="{{ route('clients.addresses.update', [$cliente, $enderecoEmEdicao]) }}"
                                 data-nf-guard novalidate>
+                                @csrf
                                 @method('PUT')
                                 <x-ui.address-fields :endereco="$enderecoEmEdicao" :tipos="$tiposDeEndereco" />
                                 <div class="nf-form-acoes">
@@ -273,6 +276,7 @@
                         <div class="nf-form-secao">
                             <h2>Novo endereço</h2>
                             <form method="POST" action="{{ route('clients.addresses.store', $cliente) }}" data-nf-guard novalidate>
+                                @csrf
                                 <x-ui.address-fields :endereco="$novoEndereco" :tipos="$tiposDeEndereco" />
                                 <div class="nf-form-acoes">
                                     <x-ui.button type="submit" variant="soft-primary" size="sm" icon="fa-solid fa-plus"

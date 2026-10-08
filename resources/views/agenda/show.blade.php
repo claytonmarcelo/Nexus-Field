@@ -151,6 +151,7 @@
                             : 'Conduzir o estado da agenda é de quem marca a escala. A sua parte aqui é ler a janela.'" />
                 @else
                     <form method="POST" action="{{ route('agenda.status', $compromisso) }}" data-nf-guard novalidate>
+                        @csrf
                         @method('PUT')
 
                         <x-ui.select label="Próximo estado" name="estado" :opcoes="$proximosEstados" required

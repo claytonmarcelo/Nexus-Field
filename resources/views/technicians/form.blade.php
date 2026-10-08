@@ -15,6 +15,7 @@
     <x-ui.card>
         <form method="POST" action="{{ $editando ? route('technicians.update', $tecnico) : route('technicians.store') }}"
             data-nf-guard novalidate>
+            @csrf
             @if ($editando)
                 @method('PUT')
             @endif

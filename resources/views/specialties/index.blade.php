@@ -82,6 +82,7 @@
                     <form method="POST" action="{{ $emEdicao
                         ? route('specialties.update', $emEdicao)
                         : route('specialties.store') }}" data-nf-guard novalidate>
+                        @csrf
                         @if ($emEdicao)
                             @method('PUT')
                         @endif

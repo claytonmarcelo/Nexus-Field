@@ -565,7 +565,7 @@ com as chaves nomeadas e nenhuma credencial preenchida.
 | --- | --- |
 | Senha | Hash bcrypt com custo em `BCRYPT_ROUNDS`; nunca em texto claro e nunca ecoada em `old()` |
 | Sessão | Guardada em banco, com regeneração do ID no login e `invalidate` + `regenerateToken` no logout |
-| CSRF | Habilitado em todo formulário POST |
+| CSRF | Token em todo formulário de escrita — inclusive os que não usam o componente compartilhado — e no arrasto do calendário, que envia `X-CSRF-TOKEN`; `CsrfTokenTest` varre as views e recusa formulário POST sem `@csrf` |
 | Força bruta | 5 tentativas por e-mail e IP, mais throttle de 10 requests/min na rota de entrada |
 | Autorização | `EnsurePermission` no servidor, por permissão do catálogo; a tela não decide nada |
 | Texto rico | HTML de editor passa por `TextoSeguro` (lista fechada de tags, atributos e esquemas de URL) antes do banco; sem isso seria XSS estocado |

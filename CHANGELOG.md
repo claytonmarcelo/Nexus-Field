@@ -931,6 +931,21 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   demonstração entrou com a senha emprestada do ambiente e o hash original dela voltou ao banco
   byte a byte depois da foto — a troca de credenciais da raiz continua sem efeito nas contas demo até
   alguém rodar `db:seed --class=DemoSeeder`.
+- Vinte e quatro formulários de escrita não emitiam token de CSRF, e nenhum teste perceberia: o
+  `VerifyCsrfToken` do framework se isenta enquanto a suíte roda, então o `post()` do teste passava e o
+  `419` pegava só quem usa navegador. As telas de acesso (`login`, `forgot-password`, `reset-password`),
+  o logout da barra, o componente `x-ui.action-form` e a ficha de check-in já traziam `@csrf`; todo
+  `<form method="POST">` escrito à mão estava sem o campo oculto — os cadastros de cliente, técnico,
+  equipe, serviço, produto, ordem, chamado e compromisso, e as fichas embutidas de endereço, contato,
+  item, comissão, nota e mudança de estado. Na prática nenhuma tela de cadastro gravava nada. A primeira
+  prova estava errada e foi refeita: `Invoke-WebRequest` seguiu o redirecionamento de convidado sem
+  avisar, a página medida era a de login (que tem token) e o `200` do POST era uma recusa disfarçada.
+  Autenticado de verdade, com a URI final conferida, `/servicos/novo` mostrou dois formulários POST e um
+  único token — o do logout — e o POST sem token respondeu `419`. Depois da correção o mesmo POST volta
+  com erro de validação, o que prova que o pedido atravessou a barreira em vez de ser barrado por ela, e
+  nada foi gravado. `CsrfTokenTest` (2 testes, 16 asserções) varre as 30 views de POST e ainda renderiza
+  serviço, cliente e movimentação para conferir o `name="_token"` no HTML servido; a linha de CSRF do
+  `README.md`, que afirmava uma cobertura que não existia, foi reescrita.
 
 ### Removido
 

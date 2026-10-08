@@ -17,6 +17,7 @@
     <x-ui.card>
         <form method="POST" action="{{ $editando ? route('teams.update', $equipe) : route('teams.store') }}"
             data-nf-guard novalidate>
+            @csrf
             @if ($editando)
                 @method('PUT')
             @endif

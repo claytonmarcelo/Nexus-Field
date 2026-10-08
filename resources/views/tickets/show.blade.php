@@ -169,6 +169,7 @@
                                 : 'Resolver e fechar pedem a permissão de encerramento, que esta conta não tem. Peça a quem atende a mover o passo do dia a dia.')" />
                 @else
                     <form method="POST" action="{{ route('tickets.status', $chamado) }}" data-nf-guard novalidate>
+                        @csrf
                         @method('PUT')
 
                         <x-ui.select label="Próximo estado" name="estado" :opcoes="$proximosEstados" required
@@ -291,6 +292,7 @@
                 <h2>Responder</h2>
 
                 <form method="POST" action="{{ route('tickets.comments.store', $chamado) }}" data-nf-guard novalidate>
+                    @csrf
                     <x-ui.editor label="Nota" name="nota" altura="180" required
                         placeholder="O que foi feito, o que falta, o que o cliente pediu..."
                         hint="Texto formatado, limpo no servidor antes de ser gravado." />

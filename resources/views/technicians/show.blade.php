@@ -236,6 +236,7 @@
                             <form method="POST"
                                 action="{{ route('technicians.addresses.update', [$tecnico, $enderecoEmEdicao]) }}"
                                 data-nf-guard novalidate>
+                                @csrf
                                 @method('PUT')
                                 <x-ui.address-fields :endereco="$enderecoEmEdicao" :tipos="$tiposDeEndereco" />
                                 <div class="nf-form-acoes">
@@ -252,6 +253,7 @@
                             <h2>Nova base</h2>
                             <form method="POST" action="{{ route('technicians.addresses.store', $tecnico) }}"
                                 data-nf-guard novalidate>
+                                @csrf
                                 <x-ui.address-fields :endereco="$novaBase" :tipos="$tiposDeEndereco" />
                                 <div class="nf-form-acoes">
                                     <x-ui.button type="submit" variant="soft-primary" size="sm" icon="fa-solid fa-plus"
