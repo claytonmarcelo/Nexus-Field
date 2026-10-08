@@ -634,6 +634,7 @@ dizendo o que mudou e por quê.
       <strong>Clayton Marcelo</strong><br>
       Full stack — Laravel, MySQL, JavaScript<br><br>
       <a href="https://github.com/claytonmarcelo"><img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=flat-square&logo=github" alt="GitHub"></a>
+      <a href="https://www.linkedin.com/in/clayton-marcelo-dev/"><img src="https://img.shields.io/badge/LinkedIn-clayton--marcelo--dev-0A66C2?style=flat-square&logo=linkedin&logoColor=white" alt="LinkedIn"></a>
     </td>
   </tr>
 </table>

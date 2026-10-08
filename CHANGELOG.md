@@ -582,6 +582,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   voltaram com o mesmo layout, os mesmos textos e o mesmo medalhão novo, variando 0,05% a 3% em bytes
   pela fase da animação de auto nível no instante do clique — a série em produção ficou com o quadro
   nivelado, então continua sendo a imagem fiel do que a aplicação desenha hoje.
+- Assinatura do desenvolvedor com a porta de entrada profissional ao lado do GitHub: o quadro de
+  autor do README ganha o selo `LinkedIn` apontando para `linkedin.com/in/clayton-marcelo-dev`, na
+  mesma linha e no mesmo estilo flat-square do selo de GitHub. É link de contato, não promessa de
+  produto — por isso fica na assinatura e não na fileira de selos do topo.
 
 ### Corrigido
 
