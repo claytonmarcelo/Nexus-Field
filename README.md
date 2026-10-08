@@ -2,6 +2,31 @@
 
 Plataforma de Field Service Management (FSM) para gestão de operações de serviço em campo.
 
+## Telas
+
+Capturas do aplicativo rodando (Laravel + AdminLTE 4 sobre MySQL), nos dois temas e em celular.
+Os painéis mostram a empresa de demonstração criada pelo `DemoSeeder` — é ela que tem ordens,
+chamados, financeiro e estoque para os indicadores calcularem; na empresa real sem dados, os
+mesmos blocos aparecem nos estados vazios. As telas de gestão (clientes, ordens, chamados, agenda)
+chegam nas fases seguintes.
+
+<table>
+  <tr>
+    <td width="50%"><a href="docs/screenshots/01-boas-vindas.png"><img src="docs/screenshots/01-boas-vindas.png" alt="Página de apresentação pública do NEXUS-FIELD em tema claro, com o ciclo de um serviço ao lado do título"></a><br><sub>Apresentação pública · tema claro · 1440×900</sub></td>
+    <td width="50%"><a href="docs/screenshots/02-entrada.png"><img src="docs/screenshots/02-entrada.png" alt="Tela de entrada com e-mail, senha, manter conectado e recuperação de acesso em tema escuro"></a><br><sub>Entrada · tema escuro · 1440×900</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="docs/screenshots/03-recuperar-acesso.png"><img src="docs/screenshots/03-recuperar-acesso.png" alt="Tela de recuperação de acesso pedindo o e-mail da conta em tema claro"></a><br><sub>Recuperação de acesso · tema claro · 1440×900</sub></td>
+    <td width="50%"><a href="docs/screenshots/06-painel-celular.png"><img src="docs/screenshots/06-painel-celular.png" alt="Painel com os indicadores empilhados em uma coluna num celular de 390px em tema escuro"></a><br><sub>Painel no celular · tema escuro · 390×844</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><a href="docs/screenshots/04-painel-claro.png"><img src="docs/screenshots/04-painel-claro.png" alt="Painel em tema claro com doze indicadores, a fila de ordens da semana e a distribuição por estado"></a><br><sub>Painel operacional · tema claro · 1440×1000 — KPIs, fila de ordens e distribuição por estado, todos contados no MySQL desta empresa</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><a href="docs/screenshots/05-painel-escuro.png"><img src="docs/screenshots/05-painel-escuro.png" alt="Painel em tema escuro com os mesmos indicadores, tabelas e distribuição por estado"></a><br><sub>Painel operacional · tema escuro · 1440×1000 — o mesmo painel sobre a noite bonita, sem branco nem preto puros</sub></td>
+  </tr>
+</table>
+
 ## Requisitos
 
 - PHP 8.3 com as extensões `mbstring`, `openssl`, `pdo_mysql`, `fileinfo`, `curl`, `zip`, `gd`

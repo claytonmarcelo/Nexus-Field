@@ -156,6 +156,13 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   senha seguida de login real pelo `POST /login`, catálogo completo mesmo sem papel, painel com
   todos os blocos, e as guardas valendo **somente** para a raiz — usuário comum continua editável e
   excluível. A suíte fecha em 56 testes / 326 asserções.
+- Ilustração técnica no `README.md`: seis capturas reais do aplicativo rodando, em
+  `docs/screenshots/` — apresentação pública (claro), entrada (escuro), recuperação de acesso
+  (claro), painel operacional nos dois temas a 1440px e o painel num celular de 390px. Tiradas por
+  Chrome em modo headless contra o servidor de desenvolvimento, entrando pelo formulário de
+  verdade, sem mockup nem tela desenhada à mão. A legenda diz o que é dado de demonstração
+  (`DemoSeeder`) e o que é empresa real, para a galeria não virar promessa de módulo que ainda não
+  existe.
 
 ### Corrigido
 
