@@ -224,7 +224,7 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   relações aninhadas editáveis na própria tela — contatos e endereços, com um único namespace de
   campos por formulário (`contato_*`, `endereco_*`) para que um `old()` não invada o outro, e
   edição inline por `?editar_contato=<id>`, que funciona sem JavaScript.
-- Primícias de UI reutilizadas em todo o módulo: `x-ui.filters` (busca com autossubmit, situação,
+- Primitivas de UI reutilizadas em todo o módulo: `x-ui.filters` (busca com autossubmit, situação,
   cidade e ordenação), paginação com o seletor de itens por página, `x-ui.contact-fields` e
   `x-ui.address-fields` — estes dois prontos para os endereços polimórficos de técnicos (fase 10)
   e do check-in (fase 15) — e o trait `TrataRegistrosAninhados`, que obriga o filho a pertencer ao
@@ -239,6 +239,31 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   paginação, a unicidade de documento por empresa, a posse morfológica dos registros aninhados, a
   matriz de permissões (técnico e cliente papéis reais levam 403 em criar, editar, excluir e
   exportar) e a exclusão recusada. A suíte fecha em 93 testes / 697 asserções.
+- Fase 10 — a escala inteira no ar. `TechnicianController` lista com busca (nome, documento, e-mail,
+  telefone e região), filtro por situação do técnico — disponível, ocupado, folgado, inativo e o
+  painel dos excluídos, de novo com `onlyTrashed()` —, filtro por região e por especialidade lidos do
+  próprio banco, ordenação presa em lista de colunas permitidas e a mesma paginação própria da fase 9.
+  A ficha (`technicians/show.blade.php`) mostra o cadastro, o que o técnico já gerou (ordens, check-ins
+  e compromissos contados no MySQL), as especialidades, as equipes com a data de entrada e de saída do
+  quadro, a base de trabalho com endereços editados em linha e os últimos check-ins medidos em campo.
+- `TeamController` monta o quadro com líder, região e situação. A saída de um membro não apaga a linha
+  de `team_members`: grava `left_at` e deixa `joined_at` de pé, então "quem estava aqui em março"
+  continua respondível; tirar o líder do quadro deixa a equipe sem liderança e preserva a ficha dele.
+  Excluir equipe exige quadro vazio, e a listagem conta no SQL só quem ainda está dentro.
+- `SpecialtyController` é o catálogo curto: o slug nasce do nome (`Str::slug`), a lista mostra quantos
+  técnicos cada especialidade cobre e a exclusão é recusada enquanto houver alguém usando-a.
+- Endereço deixou de ser coisa só de cliente: `TemEnderecos` (relação polimórfica mais o endereço
+  principal) e `CuidaDeEnderecos` (criar, editar, remover e garantir um único principal) agora servem
+  cliente e técnico pelo mesmo caminho, cada controlador com três métodos de uma linha. `EmEdicao`
+  tirou da tela de cliente a cópia do "qual registro está em edição pelo query string".
+- Um técnico pode nascer ligado a uma conta de usuário, e o servidor não deixa ligar dois técnicos à
+  mesma conta nem escolher conta de outra empresa: `Rule::exists` e `Rule::unique` ambos com a cláusula
+  de `company_id`.
+- `tests/Feature/TechniciansTest.php` (13 testes / 82 asserções) cobre o isolamento na lista, na ficha,
+  no endereço e no quadro de equipe, os filtros de situação, região e especialidade, a paginação com a
+  contagem do banco, a exclusão recusada quando há ordem e aceita quando não há, o `left_at` do quadro
+  com a liderança que se desfaz, a especialidade que protege quem a usa e a matriz de permissões dos
+  papéis. A suíte fecha em 106 testes / 790 asserções.
 
 ### Alterado
 
@@ -399,18 +424,47 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   derrubava a validação com `TypeError` antes de dizer que o documento já existia.
 - O seletor de cidade da listagem nascia vazio: a lista de cidades vinha como lista simples e o
   componente de select esperava mapa rótulo→rótulo. Agora `pluck('city', 'city')`.
+- **`GET /equipes` com erro 500 no banco real**: a contagem do quadro usava
+  `withCount(['technicians as membros_count' => fn (Builder $q) => $q->wherePivotNull('left_at')])`,
+  mas dentro do `withCount` quem chega é um `Eloquent\Builder`, não a relação — e o `__call` dinâmico
+  de `where*` converteu o método inexistente em `where('pivot_null', null)`, coluna que o MySQL
+  respondeu com `1054 Unknown column 'pivot_null'`. Agora `whereNull('team_members.left_at')`, escrito
+  contra a tabela intermediária. A falha passou despercebida no teste unitário porque ninguém tinha
+  aberto a listagem autenticado: `test_saida_de_membro_registra_data_e_preserva_a_passagem` agora abre.
+- As ordens "que a equipe tem em aberto" incluíam quem já tinha saído do quadro, ao contrário do que a
+  legenda da tela promete. A consulta passou a filtrar `team_members.left_at`.
+- `User::technician()` era um `belongsTo(Technician::class)` apoiado em `users.technician_id`, coluna
+  que não existe no schema: qualquer leitura dela derrubaria a ficha. Passou a `hasOne`, que é como a
+  relação está desenhada — a ficha do técnico guarda o `user_id`.
+- `Technician`, `Team` e `Specialty` não usavam `Auditable`: mexer na escala, no quadro ou no catálogo
+  não deixava nenhum rastro em `audit_logs`, enquanto cliente já deixava.
+- A matriz de permissões do teste assumia que o Funcionário via equipes. O `PermissionCatalog` não lhe
+  dá `teams.view`, e quem manda é o catálogo: o teste passou a esperar o 403 real.
+- README dizia que `Formatters` formata telefone (ele formata dinheiro, decimal, data e hora), e
+  continuava em 78 testes / 621 asserções quando a fase 9 já tinha fechado em 93 / 697. A contagem e a
+  árvore de pastas foram postas em dia com o que existe no repositório hoje.
+- `pint --test app` fechou em `PASS` nos 61 arquivos: `DashboardMetrics`, `ListFilters` e
+  `TenantContext` carregavam importações sem uso e `!` colado na variável, e os controladores de
+  cliente e técnico importavam classe que não usavam mais depois dos traits compartilhados.
 
 ### Removido
 
 - `tests/Unit/ExampleTest.php` do skeleton, que apenas afirmava `true === true`: teste de
   fachada, sem regra de negócio para proteger.
+- `tests/Feature/ExampleTest.php`, também do skeleton e em inglês, que só pedia `GET /` com 200. A
+  mesma verificação ganhou nome em português e corpo em `AccessScreenTest`, com o título e o rótulo
+  que a página de apresentação realmente desenha.
 
 ### Conhecido
 
 - O painel lê o banco e nada mais: os blocos operacionais existem, mas as telas que produzem esses
-  dados (clientes, ordens, chamados, agenda, estoque, financeiro) chegam das fases 9 em diante. Por
-  isso o painel de hoje se comporta como agregação de tabelas que o `DemoSeeder` preencheu — as
-  rotas de CRUD ainda não estão no `Navigation`, e sem rota não há link no menu.
+  dados (ordens, chamados, agenda, estoque, financeiro) chegam das fases 12 em diante. Clientes,
+  técnicos, equipes e especialidades já estão no `Navigation` e alimentam os indicadores que dependem
+  de cadastro; o que ainda não tem rota não tem link no menu, por decisão e não por descuido.
+- A ficha da equipe lista as ordens em aberto de quem está no quadro, mas o botão de abrir uma ordem
+  só é desenhado quando a rota `orders.show` existir (fase 12). Até lá a linha mostra o número, o
+  título e o técnico, e a legenda diz "tela de ordens na fase 12" — a tela não promete um link que o
+  aplicativo ainda não desenha.
 - A demonstração mora na empresa `nexusfield-demo` e cria quatro usuários, um por papel de sistema
   que o painel distingue (`admin.demo@`, `gestor.demo@`, `campo.demo@`, `cliente.demo@`, todos em
   `nexusfield.local`), com senha vinda de `SEED_DEMO_PASSWORD` — que cai para `SEED_ADMIN_PASSWORD`
@@ -431,6 +485,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   compilação de views cai em `tempnam()` e o teste devolve 500 no lugar da falha real. É restrição
   da máquina, não do projeto — `php vendor/phpunit/phpunit/phpunit` chamado do PowerShell grava as
   views compiladas e passa.
+- `pint` roda em `app/` e passa limpo; em `tests/` ele pede camelCase nos nomes de método, e aqui o
+  nome de teste é frase em português (`test_saida_de_membro_registra_data_e_preserva_a_passagem`) por
+  decisão de leitura. Trocar um pelo outro é escolha a fazer antes da próxima suíte grande, não no
+  meio de uma fase.
 
 ## [0.1.0] — 2026-10-07
 

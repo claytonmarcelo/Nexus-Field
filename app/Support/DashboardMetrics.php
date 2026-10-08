@@ -26,9 +26,7 @@ use Illuminate\Support\Facades\DB;
  */
 class DashboardMetrics
 {
-    public function __construct(private readonly User $usuario)
-    {
-    }
+    public function __construct(private readonly User $usuario) {}
 
     /** @return array<string, mixed> */
     public function toArray(): array

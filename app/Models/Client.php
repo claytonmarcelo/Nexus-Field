@@ -4,11 +4,11 @@ namespace App\Models;
 
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\TemEnderecos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Client extends Model
@@ -16,6 +16,7 @@ class Client extends Model
     use Auditable;
     use BelongsToCompany;
     use SoftDeletes;
+    use TemEnderecos;
 
     protected $fillable = [
         'company_id', 'name', 'trade_name', 'document', 'email', 'phone', 'status', 'notes',
@@ -29,11 +30,6 @@ class Client extends Model
     public function contacts(): HasMany
     {
         return $this->hasMany(ClientContact::class);
-    }
-
-    public function addresses(): MorphMany
-    {
-        return $this->morphMany(Address::class, 'addressable');
     }
 
     public function serviceOrders(): HasMany
@@ -59,11 +55,5 @@ class Client extends Model
     public function scopeAtivos(Builder $query): Builder
     {
         return $query->where('status', 'active');
-    }
-
-    /** Endereço que a operação usa primeiro: o marcado como principal, ou o mais recente. */
-    public function enderecoPrincipal(): ?Address
-    {
-        return $this->addresses->firstWhere('is_primary', true) ?? $this->addresses->sortByDesc('created_at')->first();
     }
 }

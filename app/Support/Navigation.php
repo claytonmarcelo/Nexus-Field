@@ -39,6 +39,24 @@ class Navigation
                         'permission' => 'clients.view',
                         'icon' => 'fa-solid fa-building-user',
                     ],
+                    [
+                        'label' => 'Técnicos',
+                        'route' => 'technicians.index',
+                        'permission' => 'technicians.view',
+                        'icon' => 'fa-solid fa-user-gear',
+                    ],
+                    [
+                        'label' => 'Equipes',
+                        'route' => 'teams.index',
+                        'permission' => 'teams.view',
+                        'icon' => 'fa-solid fa-users-rectangle',
+                    ],
+                    [
+                        'label' => 'Especialidades',
+                        'route' => 'specialties.index',
+                        'permission' => 'technicians.view',
+                        'icon' => 'fa-solid fa-certificate',
+                    ],
                 ],
             ],
         ];

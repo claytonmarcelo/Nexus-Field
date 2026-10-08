@@ -15,6 +15,14 @@ class AccessScreenTest extends TestCase
 {
     use CreatesFixtures, RefreshDatabase;
 
+    public function test_a_pagina_de_apresentacao_abre_para_convidado(): void
+    {
+        $this->get(route('welcome'))
+            ->assertOk()
+            ->assertSee('A operação externa inteira em um só lugar')
+            ->assertSee('Gestão de operações em campo');
+    }
+
     public function test_as_telas_de_acesso_abrem_para_convidado(): void
     {
         $this->get(route('login'))->assertOk()->assertSee('Entrar na plataforma');

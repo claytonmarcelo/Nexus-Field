@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\TemEnderecos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Technician extends Model
 {
-    use BelongsToCompany, SoftDeletes;
+    use Auditable, BelongsToCompany, SoftDeletes, TemEnderecos;
 
     protected $fillable = [
         'company_id', 'user_id', 'name', 'document', 'phone', 'email', 'status', 'region',
@@ -46,7 +48,8 @@ class Technician extends Model
 
     public function teams(): BelongsToMany
     {
-        return $this->belongsToMany(Team::class, 'team_members');
+        return $this->belongsToMany(Team::class, 'team_members')
+            ->withPivot(['joined_at', 'left_at']);
     }
 
     public function serviceOrders(): HasMany
@@ -57,6 +60,11 @@ class Technician extends Model
     public function checkins(): HasMany
     {
         return $this->hasMany(ServiceOrderCheckin::class);
+    }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
     }
 
     public function scopeAvailable(Builder $q): Builder

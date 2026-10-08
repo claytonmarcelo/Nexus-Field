@@ -270,6 +270,25 @@
     white-space: pre-line;
 }
 
+/* Grade de marquees de opção (especialidade de técnico, membro de equipe): duas
+   colunas no desktop, uma no celular, com o mesmo respiro dos campos. */
+.nf-check-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: 0.25rem 1rem;
+}
+
+.nf-check-grade .form-check {
+    margin-bottom: 0.25rem;
+    min-height: 1.75rem;
+}
+
+@media (max-width: 767.98px) {
+    .nf-check-grade {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
 @media (max-width: 767.98px) {
     .nf-item-linha-lado {
         grid-template-columns: minmax(0, 1fr);

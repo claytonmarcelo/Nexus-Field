@@ -7,10 +7,9 @@ use App\Models\Client;
 use App\Models\ClientContact;
 use App\Models\Company;
 use App\Models\ServiceOrder;
-use App\Models\Ticket;
+use App\Models\User;
 use App\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
 use Tests\CreatesFixtures;
 use Tests\TestCase;
 
@@ -298,7 +297,7 @@ class ClientsTest extends TestCase
         $this->actingAs($usuario)->delete(route('clients.destroy', $estranha))->assertNotFound();
     }
 
-    /** @return array{0: Company, 1: \App\Models\User} */
+    /** @return array{0: Company, 1: User} */
     private function empresaComAdmin(): array
     {
         $this->seedPermissions();

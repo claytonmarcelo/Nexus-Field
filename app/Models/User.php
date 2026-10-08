@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -71,9 +72,10 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class);
     }
 
-    public function technician(): BelongsTo
+    /** A ponte é `technicians.user_id`: quem tem ficha de campo tem uma ficha só. */
+    public function technician(): HasOne
     {
-        return $this->belongsTo(Technician::class);
+        return $this->hasOne(Technician::class);
     }
 
     public function isRoot(): bool

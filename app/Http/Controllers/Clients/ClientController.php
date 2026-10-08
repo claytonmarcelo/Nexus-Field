@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Clients;
 
+use App\Http\Controllers\Concerns\EmEdicao;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\Client;
@@ -10,8 +11,6 @@ use App\Support\ListFilters;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -25,6 +24,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class ClientController extends Controller
 {
+    use EmEdicao;
+
     private const ORDENAVEIS = ['name', 'trade_name', 'document', 'status', 'created_at'];
 
     private const FILTROS = ['busca', 'situacao', 'cidade'];
@@ -180,21 +181,6 @@ class ClientController extends Controller
         return $cidade === ''
             ? $query
             : $query->whereHas('addresses', fn (Builder $endereco) => $endereco->where('city', $cidade));
-    }
-
-    /**
-     * Qual contato/endereço a ficha deve abrir em modo de edição. A resposta vem do
-     * `?editar_*=id`, e a peça é procurada dentro da coleção que já está carregada
-     * desta empresa: um id de outra empresa não existe nesta coleção, então a tela
-     * simplesmente volta ao formulário de inclusão em vez de vazar registro alheio.
-     *
-     * @param  Collection<int, Model>  $pecas
-     */
-    private function emEdicao(Request $request, string $param, Collection $pecas): ?Model
-    {
-        $id = $request->query($param);
-
-        return ctype_digit((string) $id) ? $pecas->firstWhere('id', (int) $id) : null;
     }
 
     /** @return array<int, array{singular: string, plural: string, total: int}> */

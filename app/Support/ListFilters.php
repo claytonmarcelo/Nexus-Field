@@ -5,7 +5,6 @@ namespace App\Support;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 
 /**
  * Filtros de listagem num lugar só. Cada módulo tem a própria tela, mas a

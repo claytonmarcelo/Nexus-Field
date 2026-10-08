@@ -4,7 +4,6 @@ namespace App\Support;
 
 use App\Models\Company;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * Tenant corrente da request. Sem isso o escopo global não tem como saber

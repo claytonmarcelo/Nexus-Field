@@ -18,12 +18,13 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-93%20testes%20%2F%20697%20asser%C3%A7%C3%B5es-brightgreen" alt="93 testes, 697 asserções">
+  <img src="https://img.shields.io/badge/testes-106%20testes%20%2F%20790%20asser%C3%A7%C3%B5es-brightgreen" alt="106 testes, 790 asserções">
 </p>
 
 <p align="center">
-  <sub>Estágio atual: fundação completa (fases 1 a 8) e o primeiro módulo de operação no ar
-  (fase 9 — clientes). A tabela <a href="#módulos">Módulos</a> diz, um por um, o que já está no ar e
+  <sub>Estágio atual: fundação completa (fases 1 a 8) e os dois primeiros módulos de cadastro no ar
+  (fase 9 — clientes, fase 10 — técnicos, equipes e especialidades). A tabela
+  <a href="#módulos">Módulos</a> diz, um por um, o que já está no ar e
   o que ainda é só schema.</sub>
 </p>
 
@@ -125,6 +126,24 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - Estados de interface reais: carregando, vazio, sem permissão e erro
 - `DemoSeeder` local, que grava a demonstração numa empresa separada (`nexusfield-demo`) e recusa produção
 
+### Cadastros
+
+- **Clientes**: lista com busca, situação e cidade, paginação própria e exportação CSV; ficha com
+  contatos e endereços cadastrados em linha; exclusão lógica com restauração, e o servidor recusa
+  excluir quem já gerou ordem, chamado ou lançamento
+- **Técnicos**: escala com busca, situação, região e especialidade; ficha com especialidades, equipes
+  (com data de entrada e de saída), base de trabalho com endereços e os últimos check-ins medidos em
+  campo, contados na tabela de check-in
+- **Equipes**: quadro com líder, entrada e saída de membro gravadas na tabela intermediária — a
+  passagem anterior continua histórica —, as ordens que a equipe tem em aberto e exclusão só permitida
+  com quadro vazio
+- **Especialidades**: catálogo com o tanto de técnico que cada uma cobre; o slug nasce do nome e a
+  exclusão é recusada enquanto houver alguém usando-a
+- Endereço é relação polimórfica compartilhada (`TemEnderecos`): cliente e técnico têm o mesmo
+  formulário, o mesmo ciclo de vida e a mesma regra de endereço principal único
+- As três telas de lista passam pelos mesmos `ListFilters`, pela mesma paginação própria e pelos mesmos
+  estados desenhados de vazio e de nenhum resultado com estes filtros
+
 ### Interface
 
 - AdminLTE 4 na estrutura oficial, Bootstrap 5.3 nos componentes e camada de tokens própria
@@ -148,7 +167,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vêm uma fase por vez.
 | Página pública de apresentação | — | — | ✅ |
 | Temas, diálogos e estados de interface | — | — | ✅ |
 | Clientes e contatos | ✅ | ✅ | ✅ |
-| Técnicos e equipes | ✅ | ✅ | 🚧 fase 10 |
+| Técnicos, equipes e especialidades | ✅ | ✅ | ✅ |
 | Catálogo de serviços e produtos | ✅ | ✅ | 🚧 fase 11 |
 | Ordens de serviço | ✅ | ✅ | 🚧 fase 12 |
 | Chamados | ✅ | ✅ | 🚧 fase 13 |
@@ -198,7 +217,12 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 | `PermissionCatalog` | Módulos e ações de permissão em um único lugar, lidos por seeder, menu e middleware |
 | `TenantContext` / `CompanyScope` / `ResolveCompany` | Isolamento por empresa em toda query |
 | `DashboardMetrics` | As contagens do painel, todas em SQL contra a empresa logada |
-| `StatusCatalog` / `Formatters` | Estados e formatações (dinheiro, data, telefone) num único lugar |
+| `StatusCatalog` / `Formatters` | Estados e formatações (dinheiro, decimal, data e hora) num único lugar |
+| `ListFilters` | Busca, filtro por coluna, ordenação e por-página lidos do query string |
+| `Export` | CSV com BOM e separador `;`, escrito a partir da mesma consulta da tela |
+| `Auditor` / `Auditable` | Trilha de auditoria gravada nas mudanças de estado, sem mudar tela nenhuma |
+| `TemEnderecos` | Endereços polimórficos e o endereço principal de um cadastro |
+| `EmEdicao` / `CuidaDeEnderecos` | Edição em linha na própria ficha e o ciclo de vida do endereço aninhado |
 | `Navigation` | Menu montado por permissão e rota existente |
 | `Nf` (`theme`, `toast`, `confirm`, `forms`, `flash`, `passwords`) | Únicos caminhos permitidos para tema, aviso e diálogo na tela |
 
@@ -210,9 +234,10 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 nexusfield/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/     → Welcome, Auth\Login, Auth\PasswordReset, Dashboard
+│   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians e os Concerns compartilhados
 │   │   └── Middleware/      → ResolveCompany (tenancy) e EnsurePermission (autorização)
-│   ├── Models/              → Company, Plan, User, Role, Permission, Client, Address…
+│   ├── Models/              → Company, Plan, User, Role, Permission, Client, Contact, Address,
+│   │                          Technician, Team, Specialty…
 │   └── Support/             → PermissionCatalog, Navigation, StatusCatalog, Formatters, TenantContext
 ├── bootstrap/               → inicialização e registro de rotas
 ├── config/                  → banco, sessão, filesystem, temas
@@ -225,14 +250,16 @@ nexusfield/
 ├── lang/pt_BR/              → validação e mensagens de senha em português
 ├── public/                  → index.php, favicon, img/ com a marca e assets compilados
 ├── resources/
-│   ├── css/nexusfield/      → tokens.css, base.css, components.css
-│   ├── js/nexusfield/       → theme, notify, dialog, forms, flash, passwords
-│   └── views/               → Blade: componentes ui/, layouts, páginas públicas e de entrada
+│   ├── css/nexusfield/      → tokens.css, base.css, components.css, public.css, listings.css
+│   ├── js/nexusfield/       → theme, notify, dialog, confirm, forms, flash, passwords, listas, jquery
+│   └── views/               → Blade: componentes ui/ e layouts, páginas públicas, de entrada,
+│                              de clientes, de técnicos, de equipes e de especialidades
 ├── routes/                  → web.php
 ├── storage/                 → logs, cache e uploads (fora da raiz pública)
 ├── tests/
-│   ├── Feature/             → telas, autenticação, tenancy, layout autenticado
-│   └── Unit/                → catálogo de permissões, paleta, iniciais, formatadores
+│   ├── Feature/             → entrada e recuperação, autorização por papel, tenancy, layout
+│   │                          autenticado, painel, demonstração, conta raiz, clientes e técnicos
+│   └── Unit/                → paleta dos dois temas, contrato das capturas, iniciais do usuário
 └── CHANGELOG.md             → histórico por fase
 ```
 
@@ -260,6 +287,7 @@ nexusfield/
 │  MySQL 8 · InnoDB · utf8mb4                 │
 │  companies ─┬─ users ─ roles ─ permissions  │
 │             ├─ clients ─ contacts ─ addresses │
+│             ├─ technicians ─ teams ─ specialties │
 │             ├─ orders ─ tickets ─ appointments │
 │             ├─ check-in ─ estoque ─ financeiro │
 │             └─ settings ─ notifications ─ auditoria │
@@ -420,12 +448,14 @@ Depois:
 php artisan test
 ```
 
-Hoje são **78 testes / 621 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **106 testes / 790 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com
 token válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato
 do seletor de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG
 e a marca verde medida do medalhão, o contrato das seis capturas deste README (existem, estão
-linkadas e medem 1440×900) e a proibição dos diálogos nativos do navegador.
+linkadas e medem 1440×900), a proibição dos diálogos nativos do navegador, o CRUD de clientes com
+contatos e endereços, e o de técnicos, equipes e especialidades — inclusive a ficha de outra empresa
+que a rota não alcança e a exclusão recusada quando já existe histórico.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -472,14 +502,14 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 - [x] **Fase 8.2** — Refino de cabeçalho e rodapé, chave de tema em pílula e revelar senha
 - [x] **Fase 8.3** — Paleta global: fundo preto no escuro, branco neutro no claro, texto acima do AA
 - [x] **Fase 9** — Clientes: CRUD, filtros, paginação própria, ficha com contatos e endereços
+- [x] **Fase 10** — Técnicos, equipes e especialidades: escala, quadro com histórico de passagem e base de trabalho
 
 ### Em curso
 
-- [ ] Fase 10 — Técnicos e equipes
+- [ ] Fase 11 — Catálogo de serviços e produtos
 
 ### Planejado
 
-- [ ] Fase 11 — Catálogo de serviços e produtos
 - [ ] Fase 12 — Ordens de serviço
 - [ ] Fase 13 — Chamados
 - [ ] Fase 14 — Agenda (FullCalendar 6)
