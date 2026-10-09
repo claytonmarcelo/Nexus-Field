@@ -29,6 +29,54 @@ class PermissionCatalog
         'audit' => ['view', 'export'],
     ];
 
+    /**
+     * Rótulo em português de cada módulo. A matriz de permissões do papel
+     * desenha daqui: catálogo em inglês na interface de um sistema em
+     * português é classe morta com crachá.
+     *
+     * @var array<string, string>
+     */
+    public const ROTULOS_MODULOS = [
+        'dashboard' => 'Painel',
+        'clients' => 'Clientes',
+        'technicians' => 'Técnicos',
+        'teams' => 'Equipes',
+        'services' => 'Serviços',
+        'products' => 'Produtos',
+        'stock' => 'Estoque',
+        'orders' => 'Ordens de serviço',
+        'tickets' => 'Chamados',
+        'agenda' => 'Agenda',
+        'financial' => 'Financeiro',
+        'reports' => 'Relatórios',
+        'notifications' => 'Notificações',
+        'users' => 'Usuários',
+        'roles' => 'Papéis',
+        'settings' => 'Configurações',
+        'audit' => 'Auditoria',
+    ];
+
+    /**
+     * O verbo do catálogo traduzido para a tela. `execute` na ordem é
+     * "Executar", `move` no estoque é "Movimentar" — a coluna esquerda da
+     * matriz é a mesma em qualquer papel.
+     *
+     * @var array<string, string>
+     */
+    public const ROTULOS_ACOES = [
+        'view' => 'Ver',
+        'create' => 'Criar',
+        'update' => 'Editar',
+        'delete' => 'Excluir',
+        'export' => 'Exportar',
+        'approve' => 'Aprovar',
+        'execute' => 'Executar',
+        'close' => 'Fechar',
+        'move' => 'Movimentar',
+        'adjust' => 'Ajustar',
+        'manage' => 'Gerenciar',
+    ];
+
     /** @return array<string, array{module: string, action: string}> */
     public static function all(): array
     {
@@ -52,6 +100,16 @@ class PermissionCatalog
         return array_keys(static::all());
     }
 
+    public static function moduloRotulo(string $modulo): string
+    {
+        return static::ROTULOS_MODULOS[$modulo] ?? $modulo;
+    }
+
+    public static function acaoRotulo(string $acao): string
+    {
+        return static::ROTULOS_ACOES[$acao] ?? $acao;
+    }
+
     /** @return array<string, array<int, string>> */
     public static function byRole(string $role): array
     {
@@ -65,14 +123,20 @@ class PermissionCatalog
                 'services.view', 'services.create', 'services.update',
                 'products.view', 'products.create', 'products.update',
                 'stock.view', 'stock.move', 'stock.adjust', 'stock.export',
-                'orders.view', 'orders.create', 'orders.update', 'orders.approve', 'orders.export',
+                'orders.view', 'orders.create', 'orders.update', 'orders.approve', 'orders.execute', 'orders.export',
                 'tickets.view', 'tickets.create', 'tickets.update', 'tickets.execute', 'tickets.close',
                 'tickets.export',
                 'agenda.view', 'agenda.create', 'agenda.update', 'agenda.delete',
                 'financial.view', 'financial.create', 'financial.update', 'financial.approve', 'financial.export',
                 'reports.view', 'reports.export',
                 'notifications.view', 'notifications.manage',
-                'users.view',
+                // A Fase 20 entrega ao supervisor a gerência do time que ele
+                // alcança: ver a folha, criar e editar quem enxerga menos que
+                // ele, e ler os papéis. Excluir conta e desenhar papel continuam
+                // degrau de administrador — e o alcance, não a rota, é que fecha
+                // a mão dele no formulário.
+                'users.view', 'users.create', 'users.update',
+                'roles.view',
                 'settings.view',
                 'audit.view', 'audit.export',
             ],

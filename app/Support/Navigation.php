@@ -81,6 +81,18 @@ class Navigation
                         'permission' => 'notifications.view',
                         'icon' => 'fa-regular fa-bell',
                     ],
+                    [
+                        'label' => 'Usuários',
+                        'route' => 'users.index',
+                        'permission' => 'users.view',
+                        'icon' => 'fa-solid fa-user-shield',
+                    ],
+                    [
+                        'label' => 'Papéis',
+                        'route' => 'roles.index',
+                        'permission' => 'roles.view',
+                        'icon' => 'fa-solid fa-key',
+                    ],
                 ],
             ],
             [

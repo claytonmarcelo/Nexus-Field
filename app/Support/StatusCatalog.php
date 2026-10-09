@@ -71,7 +71,7 @@ class StatusCatalog
         ],
         'user' => [
             'active' => ['Ativo', 'done'],
-            'disabled' => ['Desativado', 'canceled'],
+            'inactive' => ['Inativo', 'canceled'],
         ],
         'company' => [
             'active' => ['Ativa', 'done'],

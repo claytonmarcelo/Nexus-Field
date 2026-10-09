@@ -25,6 +25,8 @@ use App\Http\Controllers\Technicians\TechnicianAddressController;
 use App\Http\Controllers\Technicians\TechnicianController;
 use App\Http\Controllers\Tickets\TicketCommentController;
 use App\Http\Controllers\Tickets\TicketController;
+use App\Http\Controllers\Users\RoleController;
+use App\Http\Controllers\Users\UserController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -480,5 +482,66 @@ Route::middleware(['auth', 'company'])->group(function () {
         Route::delete('{categoria}', [ServiceCategoryController::class, 'destroy'])
             ->middleware('permission:services.delete')
             ->name('destroy');
+    });
+
+    /*
+     * A folha de ponto do acesso. A permissão da rota abre a porta; quem decide
+     * se o papel cabe na mão do editor é o controle — ninguém concede o que não
+     * tem, e a conta raiz não passa por tela nenhuma, nem pela do administrador.
+     * `novo` vem antes de `{conta}` por motivo de despacho, não de estética:
+     * a rota literal precisa ser lida como tela de cadastro, não como id.
+     */
+    Route::prefix('usuarios')->name('users.')->group(function () {
+        Route::middleware('permission:users.view')->group(function () {
+            Route::get('/', [UserController::class, 'index'])->name('index');
+        });
+
+        Route::middleware('permission:users.create')->group(function () {
+            Route::get('novo', [UserController::class, 'create'])->name('create');
+            Route::post('/', [UserController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:users.update')->group(function () {
+            Route::get('{conta}/editar', [UserController::class, 'edit'])->name('edit');
+            Route::put('{conta}', [UserController::class, 'update'])->name('update');
+        });
+
+        Route::delete('{conta}', [UserController::class, 'destroy'])
+            ->middleware('permission:users.delete')
+            ->name('destroy');
+
+        Route::get('{conta}', [UserController::class, 'show'])
+            ->middleware('permission:users.view')
+            ->name('show');
+    });
+
+    /*
+     * Os papéis: a listagem e a ficha são leitura (`roles.view` — o supervisor
+     * enxerga o alcance de cada tipo de acesso sem poder desenhá-lo); criar,
+     * editar e excluir papel personalizado são degrau de administrador, e os
+     * cinco de sistema respondem 403 na cara de quem tentar mexer por tela.
+     */
+    Route::prefix('papeis')->name('roles.')->group(function () {
+        Route::middleware('permission:roles.view')->group(function () {
+            Route::get('/', [RoleController::class, 'index'])->name('index');
+        });
+
+        Route::middleware('permission:roles.create')->group(function () {
+            Route::get('novo', [RoleController::class, 'create'])->name('create');
+            Route::post('/', [RoleController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:roles.update')->group(function () {
+            Route::get('{papel}/editar', [RoleController::class, 'edit'])->name('edit');
+            Route::put('{papel}', [RoleController::class, 'update'])->name('update');
+        });
+
+        Route::delete('{papel}', [RoleController::class, 'destroy'])
+            ->middleware('permission:roles.delete')
+            ->name('destroy');
+
+        Route::get('{papel}', [RoleController::class, 'show'])
+            ->middleware('permission:roles.view')
+            ->name('show');
     });
 });

@@ -57,7 +57,7 @@ class AuthenticationTest extends TestCase
         $company = $this->makeCompany();
         $this->seedPermissions();
         $user = $this->makeUser('employee', $company, 'inativo@test.local');
-        $user->forceFill(['status' => 'disabled'])->save();
+        $user->forceFill(['status' => 'inactive'])->save();
 
         $this->post('/login', [
             'email' => 'inativo@test.local',

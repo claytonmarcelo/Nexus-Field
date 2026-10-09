@@ -887,6 +887,37 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   com "7 pendentes" e o rodapé do centro, e a varredura rodou de verdade — 14 avisos gerados na
   primeira passada, zero na segunda, o deduplicador funcionando sem leitura no meio.
 
+- Gestão de contas e papéis (FASE 20): a regra do núcleo é "ninguém concede o que não
+  tem". `UserController` (`/usuarios`) e `RoleController` (`/papeis`) chegam com folha de
+  ponto, filtros das primitivas compartilhadas, ordenação, paginação e quotas — o topo da
+  listagem diz "X CONTAS NA FOLHA · PLANO PERMITE N CONTAS", e criar conta acima do teto do
+  plano é recusada antes de qualquer INSERT. O editor só vê, no formulário, os papéis cujo
+  conjunto de permissões cabe dentro das dele (`podeConceder`); mexer numa conta que enxerga
+  mais do que você responde 403; a conta raiz não se edita nem se exclui por tela; e ninguém
+  desativa a própria conta, tira de si mesmo o último papel de administrador ou exclui a conta
+  que ainda é o acesso de uma ficha de técnico — a exclusão é soft delete.
+- Pareamento papel Cliente ↔ carteira, recusado em flash porque regra em closure não roda
+  sobre valor nulo: conta de papel Cliente precisa apontar para uma carteira da empresa, só a
+  conta de papel Cliente se vincula a carteira, e uma carteira não aceita duas contas de acesso.
+- Papéis de sistema são intocáveis por tela (403 em editar/excluir) porque o provisionamento é
+  dono deles; papéis personalizados têm CRUD completo, slug imutável de nascimento, exclusão
+  recusada enquanto houver conta atrelada, e a matriz de permissões do formulário só desenha
+  permissões que o próprio editor já tem. `nf:papeis:sincronizar` regrava os cinco papéis de
+  sistema de todas as empresas a partir do catálogo, é idempotente e não encosta nos
+  personalizados.
+- Supervisor ganha `orders.execute`, `users.view/create/update` e `roles.view` (sem
+  `users.delete`), o status de conta vira `inactive`/«Inativo» no `StatusCatalog`, e a sidebar
+  recebe Usuários e Papéis na seção Gestão. Seis telas novas (listagem, ficha e formulário de
+  conta; listagem, ficha com alcance por módulo e formulário de papel), todas em 1440×900
+  verificado nos dois temas.
+- `UsersTest` (13 testes) e `RolesTest` (10) cobram o servidor de perto: isolamento de tenant,
+  concessão fora do alcance recusada, teto do plano, raiz 403, auto-degradação bloqueada, ficha
+  de técnico segurando a exclusão, papel de sistema imutável, slug reservado, delete de papel em
+  uso, edição de papel reposicionando os efeitos das contas atreladas, e o comando de
+  sincronização regravando de verdade e sem duplicar na segunda passada. A suíte fecha em
+  255 testes / 2529 asserções.
+
+
 ### Alterado
 
 - Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de
