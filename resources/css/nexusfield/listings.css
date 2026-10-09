@@ -374,3 +374,209 @@
         transition: none;
     }
 }
+
+/* ------------------------------------------------------------------ *
+ * Matéria da listagem
+ *
+ * O que o painel aprendeu desce para as dez telas de lista pelo mesmo
+ * caminho: token da casa, nenhum hex literal, nenhuma classe de utilitário
+ * que o build não conheça. A peça central aqui é a linha no celular — que é
+ * onde um técnico de campo realmente abre esta aplicação.
+ * ------------------------------------------------------------------ */
+
+/* A barra de filtros é cartão de serviço, não faixa cinza: wash, luz na quina
+   de cima e o mesmo filete interno que veste o cartão do painel. */
+.nf-filters {
+    background:
+        linear-gradient(180deg, var(--nf-tint), transparent 62%),
+        var(--nf-surface);
+    box-shadow: var(--nf-shadow-sm), inset 0 1px 0 var(--nf-sheen);
+}
+
+.nf-filters .form-label {
+    font-family: var(--nf-font-mono);
+    letter-spacing: .09em;
+}
+
+/* Régua da lista: o total de registros e o número da página são a única parte
+   que muda de valor, então entram em figura tabular para não dançar. */
+.nf-list-head-titulo {
+    font-family: var(--nf-font-mono);
+    font-size: .72rem;
+    letter-spacing: .1em;
+    font-variant-numeric: tabular-nums;
+    color: var(--nf-text-faint);
+}
+
+/*
+ * Coluna ordenável. O padding sai do <th> e vai para o link, que passa a
+ * ocupar a célula inteira: dois pixels de alvo em cima de uma palavra de seis
+ * letras é o tipo de botão que ninguém acerta no polegar. A coluna vigente não
+ * grita — ela só carrega o fio de marca por baixo.
+ */
+.nf-th-sort {
+    padding: 0;
+}
+
+.nf-sort-link {
+    padding: .45rem .6rem;
+    width: 100%;
+    transition: background-color .15s var(--nf-ease), box-shadow .15s var(--nf-ease);
+}
+
+.nf-sort-link:hover {
+    background: var(--nf-tint);
+}
+
+.nf-sort-link.is-active {
+    color: var(--nf-text);
+    box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--nf-primary) 55%, transparent);
+}
+
+.nf-pager-resumo {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Página corrente é pílula cheia na cor da marca; o resto são números em mono
+   tabular, para a barra de páginas não tremer quando a lista passa de 9. */
+.nf-pager .page-link {
+    min-width: 2rem;
+    border-radius: 999px;
+    font-family: var(--nf-font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Bootstrap solda as páginas numa barra só: come a borda da esquerda e quadrada
+   as pontas de fora. Aqui cada página é uma pílula independente, então os dois
+   lados voltam a existir e o respiro entre elas passa a ser margem. */
+.nf-pager .page-item:not(:first-child) .page-link,
+.nf-pager .page-item:not(:last-child) .page-link {
+    margin-left: .2rem;
+    border-left-width: var(--bs-pagination-border-width);
+    border-radius: 999px;
+}
+
+.nf-pager .page-item.active .page-link {
+    background: var(--nf-primary);
+    border-color: var(--nf-primary);
+    color: var(--nf-on-brand);
+    font-weight: 600;
+}
+
+.nf-pager .page-item.disabled .page-link {
+    background: transparent;
+}
+
+/* A linha responde ao cursor antes do clique: tinta de passagem, não a cor de
+   marca, que pertence ao que está ativo e não ao que está sendo olhado. */
+.nf-table > tbody > tr:hover > td {
+    background-color: color-mix(in srgb, var(--nf-text) 4%, transparent);
+}
+
+@media (max-width: 767.98px) {
+    /*
+     * A ficha. No celular a linha deixa de ser linha: cada célula vira um par
+     * rótulo-valor, com o rótulo vindo do próprio <th> — lido em `listas.js`,
+     * porque rótulo digitado à mão em dez telas é a primeira coisa a discordar
+     * do cabeçalho quando alguém renomeia uma coluna.
+     *
+     * Sem JavaScript nada quebra: a tabela continua tabela e rola dentro do
+     * `.table-responsive` que ela já tem. O cabeçalho não é apagado, é recolhido
+     * ao quadro de um pixel — as colunas continuam existindo para quem precisa
+     * delas, e cada célula passa a carregar o próprio nome à vista.
+     */
+    .nf-table-cards,
+    .nf-table-cards > tbody,
+    .nf-table-cards > tbody > tr,
+    .nf-table-cards > tbody > tr > td {
+        display: block;
+        width: auto;
+    }
+
+    .nf-table-cards > thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .nf-table-cards > tbody > tr {
+        padding: .35rem .75rem .5rem;
+        margin-bottom: .6rem;
+        background:
+            linear-gradient(180deg, var(--nf-tint), transparent 55%),
+            var(--nf-surface);
+        border: 1px solid var(--nf-line);
+        border-radius: var(--bs-border-radius-lg);
+        box-shadow: var(--nf-shadow-sm), inset 0 1px 0 var(--nf-sheen);
+    }
+
+    /*
+     * Grade, e não flex: uma célula costuma trazer dois ou três blocos
+     * empilhados (nome, fantasia, selo de excluído). Como item de flex eles
+     * sairiam lado a lado, espremidos; na grade cada um cai na coluna do valor
+     * e a linha continua tendo uma cara só. O texto solto da célula — que é a
+     * maioria delas — entra sozinho na primeira vaga livre da coluna dois.
+     */
+    .nf-table-cards > tbody > tr > td {
+        display: grid;
+        grid-template-columns: 7rem minmax(0, 1fr);
+        align-items: baseline;
+        column-gap: .8rem;
+        padding: .34rem 0;
+        border: 0;
+        background: transparent;
+        white-space: normal;
+        font-size: .9rem;
+    }
+
+    .nf-table-cards > tbody > tr > td + td {
+        border-top: 1px solid var(--nf-etch);
+    }
+
+    .nf-table-cards > tbody > tr > td > * {
+        grid-column: 2;
+        min-width: 0;
+    }
+
+    .nf-table-cards > tbody > tr > td::before {
+        content: attr(data-rotulo);
+        /* A coluna do valor pode estar alinhada à direita — o número continua
+           dela. O rótulo não: ele é sempre a borda esquerda do par. */
+        grid-column: 1;
+        grid-row: 1;
+        text-align: start;
+        font-family: var(--nf-font-mono);
+        font-size: .64rem;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--nf-text-faint);
+    }
+
+    /* A primeira célula é a identidade da linha: ela não precisa de rótulo, é
+       ela que se lê primeiro no polegar, e é nela que o link mora. */
+    .nf-table-cards > tbody > tr > td:first-child {
+        grid-template-columns: minmax(0, 1fr);
+        padding: .1rem 0 .4rem;
+        font-size: 1rem;
+    }
+
+    .nf-table-cards > tbody > tr > td:first-child > * {
+        grid-column: 1;
+    }
+
+    .nf-table-cards > tbody > tr > td:first-child::before {
+        content: none;
+    }
+
+    .nf-table-cards .nf-table-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: .3rem;
+    }
+}

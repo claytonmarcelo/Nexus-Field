@@ -16,6 +16,10 @@ const ESPERA_BUSCA = 350;
 export function init() {
     const tempores = new WeakMap();
 
+    // A ficha do celular precisa saber o nome de cada coluna antes de alguém
+    // chegar perto dela: o rótulo é lido do cabeçalho, não digitado na tela.
+    document.querySelectorAll('table.nf-table').forEach(etiquetarCelulas);
+
     document.addEventListener('change', (event) => {
         const campo = event.target.closest('[data-nf-autosubmit]');
 
@@ -52,4 +56,55 @@ function enviar(form) {
     }
 
     form.requestSubmit();
+}
+
+/**
+ * Dá a cada célula o nome da própria coluna, para o CSS de `listings.css`
+ * montar a ficha no celular.
+ *
+ * O texto é lido do `<th>` vivo, e não de um `data-rotulo` digitado em dez
+ * telas: renomear uma coluna passaria a exigir a mesma mudança linha a linha
+ * abaixo dela, e é assim que um cabeçalho começa a mentir sobre o valor ao
+ * lado. Do cabeçalho só interessa a palavra que a pessoa vê — o texto
+ * `visually-hidden` que explica a ordenação ao leitor de tela e os ícones
+ * ficam de fora da leitura.
+ *
+ * A ficha só veste a tabela inteira. Uma linha com `colspan` quebraria o
+ * alinhamento do resto sem que nada avisasse, e chute de rótulo é pior que a
+ * tabela rolante de sempre.
+ */
+function etiquetarCelulas(tabela) {
+    const cabecalhos = tabela.querySelectorAll(':scope > thead > tr');
+
+    if (cabecalhos.length !== 1) {
+        return;
+    }
+
+    const colunas = [...cabecalhos[0].children];
+    const linhas = [...tabela.querySelectorAll(':scope > tbody > tr')];
+
+    if (colunas.length === 0 || linhas.length === 0) {
+        return;
+    }
+
+    const rotulos = colunas.map((celula) => {
+        const texto = celula.cloneNode(true);
+        texto.querySelectorAll('.visually-hidden, [aria-hidden="true"]').forEach((n) => n.remove());
+
+        return texto.textContent.replace(/\s+/g, ' ').trim();
+    });
+
+    if (linhas.some((linha) => linha.children.length !== rotulos.length)) {
+        return;
+    }
+
+    linhas.forEach((linha) => {
+        [...linha.children].forEach((celula, indice) => {
+            if (rotulos[indice] !== '') {
+                celula.dataset.rotulo = rotulos[indice];
+            }
+        });
+    });
+
+    tabela.classList.add('nf-table-cards');
 }

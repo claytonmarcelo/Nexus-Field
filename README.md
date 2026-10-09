@@ -379,7 +379,9 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   continuar legível nos dois temas e respeitar `prefers-reduced-motion`
 - Diálogos e avisos só por SweetAlert2 e Toastr — `alert()`, `confirm()` e `prompt()` nativos são
   vetados no projeto e cobertos por teste
-- Layout responsivo, com o painel em uma coluna no celular
+- Layout responsivo, com o painel em uma coluna no celular e a linha de listagem virando ficha: cada
+  célula passa a mostrar o rótulo da própria coluna, lido do cabeçalho por `listas.js`. Sem
+  JavaScript a ficha não veste nada — a tabela continua tabela, rolando onde já rolava
 
 ---
 

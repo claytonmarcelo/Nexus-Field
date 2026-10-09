@@ -1012,6 +1012,42 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   capturas autenticadas do painel em 1440×900 — claro e escuro — medindo 14 cartões, `trilho: 2px`,
   etiqueta e cabeçalho em `ui-monospace`, `nf-medidor` ativo, 11 de 17 pontos pulsando e
   `transborda: false` com a lista de culpados vazia.
+- O refino desceu do painel para as telas de listagem pelo mesmo caminho: token da casa, nenhum
+  hex literal, nenhuma classe de utilitário que o build não conheça. Nenhuma tela de listagem foi
+  tocada — o que mudou foi `listings.css` e um leitor de cabeçalho em `listas.js`.
+- A barra de filtros virou cartão de serviço (wash, luz na quina de cima e filete interno, iguais aos
+  do painel) e o rótulo de campo entrou em mono. A régua acima da tabela — "25 ordens encontradas ·
+  página 1 de 2" — é mono versalete com figura tabular, porque é a única parte da frase que muda de
+  valor quando a consulta muda.
+- Coluna ordenável: o alvo do clique deixou de ser a palavra e passou a ser a célula inteira, com o
+  padding indo do `<th>` para o link. A coluna vigente não troca a cor da letra — ela carrega um fio
+  de marca por baixo, que é o suficiente para dizer "por aqui" sem gritar.
+- Paginação: o Bootstrap soldava as páginas numa barra só, comendo a borda esquerda e quadrando as
+  pontas de fora. Cada página voltou a ser pílula independente, em mono tabular para a barra não
+  tremer quando a lista passa de 9, e a corrente do meio é cheia na cor da marca.
+- A linha responde ao cursor com tinta de passagem, não com a cor de marca: a marca pertence ao que
+  está ativo, não ao que está sendo olhado.
+- A ficha de celular. Abaixo de 768px a linha da tabela deixa de ser linha e vira cartão: rótulo à
+  esquerda em mono versalete, valor à direita, divisão gravada entre os pares. O rótulo é lido do
+  próprio `<th>` em `etiquetarCelulas()`, porque um `data-rotulo` digitado à mão em cada tela é a
+  primeira coisa a discordar do cabeçalho quando alguém renomeia uma coluna. Do cabeçalho só
+  interessa a palavra que a pessoa vê — o `visually-hidden` que explica a ordenação ao leitor de tela
+  e os ícones ficam fora da leitura.
+- A ficha veste a tabela inteira ou nenhuma: uma linha com `colspan` quebraria o alinhamento do resto
+  sem avisar, então a tabela que não casa célula com coluna continua rolando como sempre. Sem
+  JavaScript nada quebra — a ficha é melhoria, não pré-requisito. E o cabeçalho não é apagado, é
+  recolhido ao quadro de um pixel: as colunas continuam existindo para quem precisa delas.
+- Célula em grade, não em flex: uma célula costuma trazer dois ou três blocos empilhados (nome,
+  fantasia, selo de excluído) e como item de flex eles sairiam lado a lado, espremidos.
+- Colhido na própria captura, dentro do grupo: o `text-align: end` de uma coluna de número arrastava
+  junto o rótulo gerado pela célula, e "Total" aparecia solto no meio da ficha. O rótulo é sempre a
+  borda esquerda do par, alinhado por cima do valor que ele nomeia.
+- Prova do grupo: `npm run build` limpo, suíte completa verde, e as capturas de `/clientes` em
+  1440×900 nos dois temas, `/clientes` em 390×844 e `/ordens` em 390×1700 nos dois temas, e
+  `/financeiro` em 1440×900 — medindo célula etiquetada (`rotuloPintado: "Ordem"`), exibição `grid`
+  no celular e `table-cell` no desktop, cabeçalho recolhido (`absolute 1px`), pílula de paginação em
+  `ui-monospace` com raio 999px, fio de ordenação ativa na cor da marca e `transborda: false` em
+  todas.
 
 ### Corrigido
 
