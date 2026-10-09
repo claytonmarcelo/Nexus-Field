@@ -1048,6 +1048,25 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   no celular e `table-cell` no desktop, cabeçalho recolhido (`absolute 1px`), pílula de paginação em
   `ui-monospace` com raio 999px, fio de ordenação ativa na cor da marca e `transborda: false` em
   todas.
+- Os quatro fechados e o resumo de `/relatorios` receberam a mesma matéria, sem tocar em nenhuma
+  view: o que mudou foi um bloco "Matéria do relatório" em `listings.css`. A faixa "Período fechado"
+  largou a borda de 3px na cor da marca — o mesmo gesto de cartão com listrinha que o KPI aposentou
+  — e ganhou wash, luz na quina e o trilho de 2px que some antes do fim. A etiqueta virou versalete
+  mono, e o período em figura tabular. Quando o teto de dias poda a janela, o trilho troca para o tom
+  de perigo (`:has(.nf-relatorio-aviso)`), então a faixa já avisa antes de a pessoa ler a frase.
+- As abas entre os fechados agora são um seletor segmentado: um trilho só, em cápsula, com a aba
+  ativa levantada sobre ele. Cinco pills soltas pareciam cinco botões de ação. No mesmo trilho elas
+  passam a ser o que são, vistas diferentes do mesmo período. No celular o trilho rola de lado dentro
+  da própria faixa (579px de conteúdo em 350px de faixa) e a página não ganha rolagem horizontal.
+- Colhido na própria captura: no cartão de fechamento, o valor em fonte display partia em duas linhas
+  ("R$" em cima, "8.456,80" embaixo) quando a coluna estreitava, e lia como dois números. O valor de
+  `.nf-fact-list` agora não quebra, e quem cede espaço é o rótulo. A correção vale também para o
+  painel, que usa a mesma lista.
+- Prova do grupo: `npm run build` limpo, suíte completa verde e as capturas de
+  `/relatorios/financeiro` em 1440×900 nos dois temas, `/relatorios` em 1440×900 nos dois temas e
+  `/relatorios/chamados` em 390×1400 no claro. Medido em cada uma: trilho `2px` com borda esquerda de
+  volta a `1px`, etiqueta em `ui-monospace`, trilho de abas `inline-flex` com raio 999px, aba ativa
+  na cor da marca de cada tema e `transborda: false`.
 
 ### Corrigido
 

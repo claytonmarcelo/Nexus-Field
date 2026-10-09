@@ -1680,6 +1680,13 @@
 .nf-fact-list strong {
     font-variant-numeric: tabular-nums;
     letter-spacing: .01em;
+    white-space: nowrap;
+}
+
+/* Quem cede espaço é o rótulo: "R$" numa linha e o valor na outra lê como
+   dois números, e o fechado não pode ser lido errado por falta de coluna. */
+.nf-fact-list li > span {
+    min-width: 0;
 }
 
 /* ------------------------------------------------------------------ *

@@ -580,3 +580,116 @@
         gap: .3rem;
     }
 }
+
+/* ------------------------------------------------------------------ *
+ * Matéria do relatório
+ *
+ * O fechado é a tela que alguém imprime, copia o link e discute numa
+ * reunião, então a pergunta "de quando a quando?" precisa ser a primeira
+ * coisa lida e a navegação entre os quatro fechados precisa parecer um
+ * instrumento só. Mesma matéria do painel — luz na quina, fio gravado,
+ * trilho de tom — e nenhuma cor que já não estivesse no token.
+ * ------------------------------------------------------------------ */
+
+/*
+ * A faixa da janela deixa a borda grossa de marca, que era o mesmo gesto de
+ * "card com listrinha" que o KPI aposentou, e ganha o trilho que morre antes
+ * do fim. Quando o teto podou o período, o trilho troca para o tom de perigo:
+ * o aviso já estava escrito, agora a faixa inteira avisa antes da frase.
+ */
+.nf-relatorio-janela {
+    position: relative;
+    overflow: hidden;
+    padding: .85rem 1.1rem .85rem 1.25rem;
+    background: linear-gradient(180deg, var(--nf-tint), transparent 70%), var(--nf-surface);
+    border-left: 1px solid var(--nf-line);
+    box-shadow: var(--nf-shadow-sm), inset 0 1px 0 var(--nf-sheen);
+}
+
+.nf-relatorio-janela::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--nf-primary) 0%, transparent 95%);
+    opacity: .85;
+}
+
+.nf-relatorio-janela:has(.nf-relatorio-aviso)::before {
+    background: linear-gradient(180deg, var(--nf-danger) 0%, transparent 95%);
+}
+
+.nf-relatorio-janela > p:first-child {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .25rem 1rem;
+}
+
+.nf-relatorio-janela-rotulo {
+    display: inline;
+    font-family: var(--nf-font-mono);
+    font-size: .66rem;
+    letter-spacing: .11em;
+    color: var(--nf-text-faint);
+}
+
+.nf-relatorio-janela strong {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+}
+
+.nf-relatorio-aviso {
+    padding-top: .45rem;
+    border-top: 1px solid var(--nf-etch);
+}
+
+/*
+ * Os fechados viram um seletor segmentado: um trilho só, com a aba ativa
+ * levantada em cima dele. Cinco pills soltas pareciam cinco botões de ação;
+ * dentro do mesmo trilho elas dizem "isto é uma escolha entre vistas do mesmo
+ * período", que é exatamente o que são. No celular o trilho rola de lado
+ * dentro da própria faixa, sem empurrar a página.
+ */
+.nf-relatorio-abas {
+    padding: .1rem;
+}
+
+.nf-relatorio-abas .nav-pills {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: .2rem;
+    padding: .25rem;
+    background: linear-gradient(180deg, var(--nf-tint), transparent), var(--nf-surface);
+    border: 1px solid var(--nf-line);
+    border-radius: 999px;
+    box-shadow: inset 0 1px 0 var(--nf-sheen);
+}
+
+.nf-relatorio-abas .nav-link {
+    padding: .38rem .95rem;
+    border-radius: 999px;
+    font-size: .84rem;
+    transition: background-color .15s var(--nf-ease), color .15s var(--nf-ease), box-shadow .15s var(--nf-ease);
+}
+
+.nf-relatorio-abas .nav-link:not(.active):hover {
+    background: var(--nf-tint);
+    color: var(--nf-text);
+}
+
+.nf-relatorio-abas .nav-link.active {
+    box-shadow: var(--nf-shadow-sm), inset 0 1px 0 var(--nf-sheen);
+}
+
+/* A régua dentro da célula fica mais baixa que a do painel: ela convive com o
+   número da linha e não pode disputar altura com ele. */
+.nf-relatorio-barra {
+    height: .3rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nf-relatorio-abas .nav-link {
+        transition: none;
+    }
+}

@@ -367,6 +367,9 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   tabela saem em versalete mono (`--nf-font-mono`); o valor continua na display serifada da casa, com
   figura tabular. O ponto de estado pulsa só nos estados que ainda estão acontecendo, e nenhum desses
   tokens é utilitário de framework: são variáveis próprias, medidas nos dois temas
+- Fechados com a mesma matéria: a faixa "Período fechado" traz o trilho de 2px, que passa para o tom de
+  perigo quando o teto de dias corta a janela, e as abas entre os relatórios formam um seletor segmentado
+  num trilho só. No celular esse trilho rola dentro da própria faixa
 - Topo e pé enxutos: 44px de altura no cabeçalho (a mesma nos dois lados da aplicação) e uma linha no
   rodapé das telas abertas
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura
