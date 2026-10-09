@@ -280,7 +280,13 @@ class AgendaTest extends TestCase
         $this->assertSame('Compromisso concluído não muda mais de janela.', $recusado->json('mensagem'));
         $this->assertSame($antes, $concluido->fresh()->starts_at->toDateTimeString());
 
-        $this->actingAs($usuario)->get(route('agenda.edit', $concluido))->assertSessionHas('erro');
+        // A armadilha aqui é didática: o flash entra na sessão antes do `return`, então só
+        // `assertSessionHas('erro')` passaria mesmo se a ação devolvesse 500 por tipo de
+        // retorno errado — foi exatamente assim que esta tela quebrou e o teste sorriu.
+        // O que prova o porte é o 302 de ida e volta com o recado certo na manga.
+        $this->actingAs($usuario)->get(route('agenda.edit', $concluido))
+            ->assertStatus(302)
+            ->assertSessionHas('erro', 'Compromisso concluído é fato passado: a janela dele não se edita mais.');
 
         $this->actingAs($usuario)->put(route('agenda.update', $concluido), [
             'title' => 'Reescrevendo um fato passado',

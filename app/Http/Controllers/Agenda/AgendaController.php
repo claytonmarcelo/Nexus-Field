@@ -147,7 +147,7 @@ class AgendaController extends Controller
         ]);
     }
 
-    public function edit(Request $request, Appointment $compromisso): View
+    public function edit(Request $request, Appointment $compromisso): View|RedirectResponse
     {
         $usuario = $request->user();
         $this->garantirVisivel($compromisso, $usuario);

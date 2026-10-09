@@ -987,7 +987,7 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   não tem o degrau — com o motivo na tela e a stack fora dela —, 419 disparado na fonte da exceção,
   porque em teste o framework dispensa a conferência de origem, 500 de rota que explode e 503 com
   `artisan down` de verdade, verificado também ao vivo num servidor com `APP_DEBUG=false`. A suíte
-  fecha em 281 testes / 2664 asserções.
+  fecha em 281 testes / 2665 asserções.
 - README ganhou "Em produção": instalação sem dev, chave, migrate, seed, build, link e os quatro
   caches, a linha de cron do agendador, a ausência deliberada de worker de fila (nada implementa
   `ShouldQueue`), o que trocar no `.env` e o rodapé de marca nas páginas de erro. As quatro fases
@@ -1258,6 +1258,21 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   `nf-valor nf-mono`.
 
 ### Corrigido
+
+- A ficha de edição de um compromisso concluído devolvia 500 em vez de recusar com aviso.
+
+  * `AgendaController::edit()` tinha o tipo de retorno assinado como `Illuminate\View\View`
+    e, quando o compromisso estava travado, devolvia `back()->with('erro', …)`. O flash entrava
+    na sessão antes do `return`, o tipo chegava errado e o PHP encerrava a requisição com
+    `TypeError`. A assinatura agora é `View|RedirectResponse`, a mesma régua do `update()`
+    vizinho: o porte continua o mesmo (fato passado não se reescreve), só que devolvido pela
+    porta certa.
+  * O teste que já cobria essa recusa passou batido sobre o 500, e a razão é a armadilha
+    inteira: `assertSessionHas('erro')` olha a sessão, e a sessão já estava escrita. Agora a
+    asserção cobra o 302 de ida e volta com o recado exato, travando o porte e a forma.
+  * A caçada foi uma varredura de navegação: logou de verdade na aplicação e bateu os 72
+    endereços GET do sistema, um por um. O 500 apareceu ali, e não apareceria em teste nenhum
+    que só olhe o flash.
 
 - Auditoria técnica da fase 1 à 18, com cada erro corrigido travado por teste novo:
 
