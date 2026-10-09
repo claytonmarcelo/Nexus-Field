@@ -10,7 +10,7 @@
         <div class="row g-3">
             @foreach ($painel['kpis'] as $kpi)
                 <div class="col-12 col-sm-6 col-lg-4 col-xxl-3">
-                    <div class="card nf-kpi h-100">
+                    <div class="card nf-kpi tone-{{ $kpi['tone'] }} h-100">
                         <div class="card-body">
                             <div class="d-flex gap-3 align-items-start">
                                 <span class="nf-icon-tile tone-{{ $kpi['tone'] }}" aria-hidden="true">

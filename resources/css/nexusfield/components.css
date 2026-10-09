@@ -1390,17 +1390,13 @@
  * `.tone-*`; o desenho fica aqui, e os dois lados (badge, tile, barra) usam a
  * mesma paleta para que "em execução" tenha a mesma cor em três cartões.
  */
+/* O tom entra por variável, não por cópia: quem veste `tone-*` — o cartão, o
+   ícone, a régua — resolve a mesma cor a partir do mesmo registro, que está no
+   fim desta seção. Ícone sem tom continua na marca. */
 .nf-icon-tile {
-    color: var(--nf-primary);
-    background: var(--nf-primary-soft);
+    color: var(--nf-tone, var(--nf-primary));
+    background: var(--nf-tone-soft, var(--nf-primary-soft));
 }
-
-.nf-icon-tile.tone-open { color: var(--nf-info); background: color-mix(in srgb, var(--nf-info) 14%, transparent); }
-.nf-icon-tile.tone-progress { color: var(--nf-warning); background: color-mix(in srgb, var(--nf-warning) 14%, transparent); }
-.nf-icon-tile.tone-waiting { color: var(--nf-waiting); background: color-mix(in srgb, var(--nf-waiting) 16%, transparent); }
-.nf-icon-tile.tone-done { color: var(--nf-success); background: color-mix(in srgb, var(--nf-success) 14%, transparent); }
-.nf-icon-tile.tone-canceled { color: var(--nf-danger); background: color-mix(in srgb, var(--nf-danger) 14%, transparent); }
-.nf-icon-tile.tone-draft { color: var(--nf-text-muted); background: var(--nf-elevated); }
 
 .nf-kpi .card-body {
     padding: 1rem 1.1rem;
@@ -1453,15 +1449,8 @@
     width: var(--nf-bar-width, 0%);
     height: 100%;
     border-radius: inherit;
-    background: var(--nf-primary);
+    background: var(--nf-tone, var(--nf-primary));
 }
-
-.nf-bar-fill.tone-open { background: var(--nf-info); }
-.nf-bar-fill.tone-progress { background: var(--nf-warning); }
-.nf-bar-fill.tone-waiting { background: var(--nf-waiting); }
-.nf-bar-fill.tone-done { background: var(--nf-success); }
-.nf-bar-fill.tone-canceled { background: var(--nf-danger); }
-.nf-bar-fill.tone-draft { background: var(--nf-text-muted); }
 
 .nf-timeline {
     display: grid;
@@ -1501,6 +1490,196 @@
         grid-template-columns: 1fr;
         gap: .2rem;
     }
+}
+
+/* ------------------------------------------------------------------ *
+ * Matéria do painel
+ *
+ * Nada neste bloco depende de um dado que a tela não tenha: é camada de
+ * apresentação, e é por isso que ele existe. A casa já era preto no escuro e
+ * branco neutro no claro; o que faltava era a sensação de material — a luz que
+ * pega na quina do cartão, o fio que grava a divisão entre cabeçalho e corpo, o
+ * respiro de quem está acontecendo agora. Continua tudo em token: nenhuma cor
+ * nova entra aqui, só as que já foram medidas do medalhão.
+ * ------------------------------------------------------------------ */
+
+/*
+ * Registro único de tom. `--nf-tone` é a cor e `--nf-tone-soft` a versão
+ * diluída dela sobre a superfície; ícone, régua e trilho do cartão leem as duas.
+ * Fechar o registro num lugar é o que garante que "em execução" tenha a mesma
+ * temperatura no KPI, na barra do painel e na linha do fechado — com seis cópias
+ * espalhadas, a primeira alteração de paleta trinca a interface.
+ */
+.tone-draft { --nf-tone: var(--nf-text-muted); --nf-tone-soft: var(--nf-elevated); }
+.tone-open { --nf-tone: var(--nf-info); --nf-tone-soft: color-mix(in srgb, var(--nf-info) 14%, transparent); }
+.tone-progress { --nf-tone: var(--nf-warning); --nf-tone-soft: color-mix(in srgb, var(--nf-warning) 14%, transparent); }
+.tone-waiting { --nf-tone: var(--nf-waiting); --nf-tone-soft: color-mix(in srgb, var(--nf-waiting) 16%, transparent); }
+.tone-done { --nf-tone: var(--nf-success); --nf-tone-soft: color-mix(in srgb, var(--nf-success) 14%, transparent); }
+.tone-canceled { --nf-tone: var(--nf-danger); --nf-tone-soft: color-mix(in srgb, var(--nf-danger) 14%, transparent); }
+
+/*
+ * A quina. No claro a separação vem da sombra, que o token já resolve; no
+ * escuro sombra não existe sobre #000, e o fio de luz interno é a única
+ * maneira de o cartão ter borda sem virar mancha.
+ */
+.card {
+    background-image: linear-gradient(180deg, var(--nf-tint) 0%, transparent 3.5rem);
+    box-shadow: var(--nf-shadow-sm), inset 0 1px 0 var(--nf-sheen);
+}
+
+.card-header {
+    background-image: linear-gradient(180deg, var(--nf-tint) 0%, transparent 100%);
+    box-shadow: inset 0 -1px 0 var(--nf-etch);
+}
+
+.card-footer {
+    background-image: linear-gradient(0deg, var(--nf-tint) 0%, transparent 100%);
+    box-shadow: inset 0 1px 0 var(--nf-etch);
+}
+
+/*
+ * KPI. A faixa de marca por baixo de todo cartão era o gesto de template —
+ * "card com listrinha colorida" que nenhum instrumento faz. O que existe aqui é
+ * um trilho do lado de quem manda o número, na cor do próprio indicador, e ele
+ * morre antes do fim da linha para não virar barra lateral de menu.
+ */
+.nf-kpi {
+    transition: box-shadow var(--nf-duration) var(--nf-ease),
+        border-color var(--nf-duration) var(--nf-ease),
+        transform var(--nf-duration) var(--nf-ease);
+}
+
+.nf-kpi::after {
+    display: none;
+}
+
+.nf-kpi::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--nf-tone, var(--nf-primary)) 0%, transparent 95%);
+    opacity: .85;
+}
+
+.nf-kpi:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--nf-line-strong) 45%, var(--nf-line));
+}
+
+/* O rótulo microscópico ganha fio gravado depois da palavra: é o que segura o
+   olho no número em vez de escorregar para o ícone. */
+.nf-kpi-label {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    font-family: var(--nf-font-mono);
+    font-size: .68rem;
+    letter-spacing: .11em;
+}
+
+.nf-kpi-label::after {
+    content: "";
+    flex: 1 1 auto;
+    height: 1px;
+    background: linear-gradient(90deg, var(--nf-etch), transparent);
+}
+
+/* A variação é um dado, e dado em pílula se lê de relance. O fundo e o fio saem
+   do `currentColor`, então a pílula continua sendo a mesma cor do texto que a
+   suíte de contraste já aprova — sem tinta nova, sem promessa nova. */
+.nf-kpi-delta {
+    padding: .1rem .5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 24%, transparent);
+    font-family: var(--nf-font-mono);
+    font-size: .72rem;
+    letter-spacing: .02em;
+}
+
+.nf-icon-tile {
+    background-image: linear-gradient(180deg, var(--nf-sheen), transparent 65%);
+    box-shadow: inset 0 1px 0 var(--nf-sheen),
+        0 0 0 1px color-mix(in srgb, var(--nf-tone, var(--nf-primary)) 24%, transparent);
+    transition: transform var(--nf-duration) var(--nf-ease);
+}
+
+.nf-kpi:hover .nf-icon-tile {
+    transform: scale(1.04);
+}
+
+/*
+ * Ponto de estado que respira só quando o fato está em curso. Estado terminal
+ * não pisca: "concluída" pulsando é a interface dizendo que aquilo ainda vai
+ * mudar, e o painel mente melhor quando para no que já terminou.
+ */
+@keyframes nf-respira {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 30%, transparent);
+    }
+
+    55% {
+        box-shadow: 0 0 0 .38rem color-mix(in srgb, currentColor 0%, transparent);
+    }
+}
+
+.nf-status-open::before,
+.nf-status-progress::before,
+.nf-status-waiting::before {
+    animation: nf-respira 2.6s var(--nf-ease) infinite;
+}
+
+/*
+ * Régua. O trilho recebe fio interno para existir como instrumento e não como
+ * faixa pintada; o preenchimento ganha o brilho que corre para a direita, e a
+ * medição entra crescendo na primeira pintura. A largura continua sendo o
+ * `--nf-bar-width` que a própria tela calculou contra o maior valor do grupo —
+ * a animação mostra a régua, nunca um número que não foi medido.
+ */
+.nf-bar-track {
+    background: var(--nf-surface);
+    box-shadow: inset 0 0 0 1px var(--nf-line);
+}
+
+.nf-bar-fill {
+    position: relative;
+    transform-origin: left center;
+    animation: nf-medidor .55s var(--nf-ease) both;
+}
+
+.nf-bar-fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent 20%, var(--nf-sheen));
+}
+
+@keyframes nf-medidor {
+    from {
+        transform: scaleX(0);
+    }
+}
+
+/*
+ * Cabeçalho de tabela em mono versalete: é etiqueta de coluna, não texto
+ * corrido. O mono não deixa a largura da célula dançar quando o número embaixo
+ * muda de tamanho, que é o motivo real — a fantasia de "painel hacker" vem de
+ * graça junto.
+ */
+.nf-table > thead > tr > th {
+    font-family: var(--nf-font-mono);
+    letter-spacing: .09em;
+    background: linear-gradient(180deg, var(--nf-tint), transparent);
+}
+
+/* Fato por linha: o valor da direita é número, então pisa em figura tabular e
+   para de andar conforme o rótulo cresce. */
+.nf-fact-list strong {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .01em;
 }
 
 /* ------------------------------------------------------------------ *

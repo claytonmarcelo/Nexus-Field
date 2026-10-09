@@ -361,6 +361,12 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - AdminLTE 4 na estrutura oficial, Bootstrap 5.3 nos componentes e camada de tokens própria
 - Paleta "Premium Gourmet + Technology": só os verdes do medalhão como marca, medidos da própria logo,
   fundo preto no escuro e branco neutro no claro, sem casta de cor e sem latão
+- Matéria do painel: o cartão tem wash e filete de luz interna (`--nf-tint`/`--nf-sheen`), a divisão com
+  cabeçalho e rodapé é fio gravado (`--nf-etch`), e o tom do indicador — não a cor de marca — corre no
+  trilho esquerdo do KPI, no quadrado do ícone e na barra de distribuição. Etiqueta de KPI e cabeçalho de
+  tabela saem em versalete mono (`--nf-font-mono`); o valor continua na display serifada da casa, com
+  figura tabular. O ponto de estado pulsa só nos estados que ainda estão acontecendo, e nenhum desses
+  tokens é utilitário de framework: são variáveis próprias, medidas nos dois temas
 - Topo e pé enxutos: 44px de altura no cabeçalho (a mesma nos dois lados da aplicação) e uma linha no
   rodapé das telas abertas
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura

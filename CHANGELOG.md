@@ -974,6 +974,44 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   autor do README ganha o selo `LinkedIn` apontando para `linkedin.com/in/clayton-marcelo-dev`, na
   mesma linha e no mesmo estilo flat-square do selo de GitHub. É link de contato, não promessa de
   produto — por isso fica na assinatura e não na fileira de selos do topo.
+- O painel recebeu o primeiro grupo do refino visual "Premium Gourmet + Technology", aplicado inteiro
+  sobre a camada de tokens da casa: sem Tailwind, sem dependência nova, sem classe utilitária que não
+  exista no build. `resources/views/dashboard.blade.php` mudou uma classe (`tone-{{ $kpi['tone'] }}`
+  no cartão do indicador) e nada mais — nenhuma rota, consulta, handler ou assinatura de componente
+  foi tocada.
+- Entraram três tokens de matéria por tema: `--nf-sheen` é a luz que pega na quina de cima do cartão,
+  `--nf-tint` é o wash que separa cabeçalho de corpo, `--nf-etch` é o fio gravado na divisão. No claro
+  são traços de 3,5% a 9% de tinta sobre o branco neutro; no escuro, 2,8% a 7,5% de luz sobre o preto.
+  Os três são decorativos e não carregam letra, por isso `PaletteTest` continua medindo as mesmas
+  superfícies e o mesmo contraste de antes — e continua verde.
+- Mono virou letra de instrumento, não de corpo: `--nf-font-mono` (ui-monospace → SFMono → JetBrains
+  → Menlo → Consolas) serve ao rótulo de coluna, à etiqueta de KPI e à pílula de variação. O número
+  fica no corpo da casa com figura tabular, porque `R$ 4.095,50` alinhado com a linha de baixo é
+  requisito, não estética.
+- O vocabulário de tom deixou de ser dezessete regras copiadas. `.tone-draft/open/progress/waiting/done/canceled`
+  agora só declaram `--nf-tone` e `--nf-tone-soft`, e quem pinta — o quadrado do ícone, a barra de
+  distribuição e o trilho do KPI — lê a variável. Estado novo passa a existir num lugar só, e o tom que
+  o Blade já mandava veste o cartão inteiro em vez de só o ícone.
+- Matéria do cartão: o corpo recebe o wash e um filete de luz interna no topo (`inset 0 1px 0
+  --nf-sheen`); cabeçalho e rodapé descem de tom e ganham o fio gravado, de modo que a divisão é um
+  corte no material, não uma borda genérica.
+- KPI: a faixa de marca embaixo do cartão — que era o gesto de template mais visível da tela — saiu, e
+  entrou um trilho de 2px na lateral esquerda, do tom do indicador ao transparente. A etiqueta passou
+  a versalete mono entreletrado com um fio gravado atrás dela, a variação virou cápsula na cor do
+  próprio sinal, e o ícone respira 4% quando o cartão inteiro vai ao hover.
+- Vida medida, não decorada: os pontos de estado pulam apenas nos estados que ainda estão acontecendo
+  (`open`, `progress`, `waiting`) — 11 dos 17 pontos do painel, porque concluído e cancelado não têm o
+  que respirar — e a régua de distribuição cresce de zero com `nf-medidor` e brilho no preenchimento.
+  Os dois continuam dentro do clamp de `prefers-reduced-motion` da base.
+- Cabeçalho de tabela em versalete mono entreletrado sobre o wash, que é o que o pedido pedia, feito no
+  seletor `.nf-table > thead > tr > th` que a casa já usa.
+- Adiado de propósito: sparkline e medidor radial. Desenhar curva sem série temporal guardada no banco
+  é exatamente a funcionalidade falsa que este projeto proibiu — `DashboardMetrics` compara dois
+  períodos, mas não guarda a série ponto a ponto. Entram quando a agregação existir, não antes.
+- Prova do grupo: `npm run build` limpo, suíte completa verde em 214 testes / 2336 asserções, e as duas
+  capturas autenticadas do painel em 1440×900 — claro e escuro — medindo 14 cartões, `trilho: 2px`,
+  etiqueta e cabeçalho em `ui-monospace`, `nf-medidor` ativo, 11 de 17 pontos pulsando e
+  `transborda: false` com a lista de culpados vazia.
 
 ### Corrigido
 

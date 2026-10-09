@@ -68,6 +68,15 @@
     --nf-shadow-md: 0 6px 18px -6px rgba(27, 31, 40, .16), 0 2px 6px rgba(27, 31, 40, .06);
     --nf-shadow-lg: 0 22px 48px -20px rgba(27, 31, 40, .28), 0 6px 16px rgba(27, 31, 40, .08);
 
+    /* Matéria: a luz que pega na quina de cima, o wash que separa cabeçalho de
+       corpo e o fio gravado na divisão. Translúcidos de propósito — somados ao
+       fundo eles movem dois ou três pontos de luminância, o bastante para a
+       borda existir sem empurrar texto nenhum para baixo do contraste que a
+       suíte mede. */
+    --nf-sheen: rgba(255, 255, 255, .9);
+    --nf-tint: rgba(27, 31, 40, .035);
+    --nf-etch: rgba(27, 31, 40, .07);
+
     /* Malha: gradiente que sustenta o "premium" sem virar estampa */
     --nf-gradient-app: linear-gradient(180deg, #fbfcfd 0%, var(--nf-bg) 42%, #ebedf1 100%);
     --nf-gradient-brand: linear-gradient(135deg, var(--nf-brand-deep) 0%, var(--nf-primary) 48%, var(--nf-brand-vivid) 130%);
@@ -171,6 +180,13 @@
     --nf-shadow-md: 0 10px 24px -12px rgba(0, 0, 0, .9), 0 0 0 1px rgba(255, 255, 255, .04);
     --nf-shadow-lg: 0 28px 56px -24px rgba(0, 0, 0, 1), 0 0 0 1px rgba(255, 255, 255, .05);
 
+    /* No escuro a quina é a única luz que existe, e o wash é o que separa o
+       cabeçalho do corpo sem criar mancha: 3% de branco sobre #0c0c0d ainda lê
+       como preto. */
+    --nf-sheen: rgba(255, 255, 255, .06);
+    --nf-tint: rgba(255, 255, 255, .028);
+    --nf-etch: rgba(255, 255, 255, .075);
+
     --nf-gradient-app: linear-gradient(180deg, #070708 0%, var(--nf-bg) 46%, #000000 100%);
     --nf-gradient-brand: linear-gradient(135deg, #14551d 0%, var(--nf-primary) 58%, var(--nf-brand-mint) 128%);
 
@@ -259,6 +275,12 @@
 
     --nf-duration: 180ms;
     --nf-ease: cubic-bezier(.22, .61, .36, 1);
+
+    /* Mono é letra de instrumento, não de corpo: cabe em rótulo de coluna, régua
+       e sigla. Número continua no corpo da casa com figura tabular — monoespaçar
+       todo dado é justamente o sotaque de painel técnico genérico que aqui se
+       evita; o que se quer do mono é o alinhamento de etiqueta, não a fantasia. */
+    --nf-font-mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
 }
 
 /*
