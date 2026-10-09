@@ -1018,6 +1018,25 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   chave, senha renovada que aposenta a antiga sem vazá-la para o log e a agenda do técnico que não mostra a
   janela de outro campo. A varredura de navegação passou a 73 endereços GET com `/perfil` no mapa.
 
+- Camada de serviços entre a tela e o banco (`app/Services`), o degrau do meio que faltava no desenho
+  interface → serviço → backend → dados. Até aqui o controller era ao mesmo tempo a fachada e a caneta:
+  abria transação, criava a linha, gravava a passagem de estado, tocava o sino e escrevia na trilha.
+- `App\Services\Orders\FluxoDeOrdem` é dono da vida da ordem — número sequencial com a passagem de
+  abertura e a comissão do técnico numa única transação, cadastro que nunca toca em estado, travessia com
+  carimbo e sino de fim de percurso, e o apagar que só vale para o rascunho que nunca virou trabalho.
+  `App\Services\Orders\RegistroDePresenca` é dono da escrita em campo: a visita nasce do relógio do
+  aplicativo, a distância se mede deste lado da linha e a chegada abre a execução pelo fluxo, não por fora.
+- `App\Services\Recusa` é a porta pela qual o domínio diz não: o salto que o fluxo não tem e a chegada
+  depois do fim voltam como 302 com o motivo na tela, em vez de exceção na cara do visitante. `tom()`
+  escolhe entre `erro` e `aviso`, então a régua de tonalidade continua sendo de quem apresenta.
+- A régua não foi duplicada no caminho: quem oferece o botão e quem deixa passar leem a mesma
+  `proximosEstados()`, e a máquina de estados continua sendo `ServiceOrder::FLUXO` no modelo. Qualificar
+  quem registra presença ficou na apresentação de propósito — autorização é o degrau acima do serviço.
+- `CamadaDeServicosTest` (6 testes / 33 asserções) chama o serviço sem HTTP e depois lê a fonte dos dois
+  controllers: nenhum deles abre transação, cria linha, toca sino nem escreve na trilha. A suíte fecha em
+  298 testes / 2768 asserções, Pint PASS em 173 arquivos, e as 27 provas de ordens e chegadas passaram sem
+  uma mensagem ou um redirecionamento alterado.
+
 ### Alterado
 
 - Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de

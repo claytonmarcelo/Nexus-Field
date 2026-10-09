@@ -11,22 +11,20 @@ use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderCheckin;
-use App\Models\ServiceOrderStatusHistory;
 use App\Models\Team;
 use App\Models\Technician;
 use App\Models\User;
+use App\Services\Orders\FluxoDeOrdem;
+use App\Services\Recusa;
 use App\Support\Export;
 use App\Support\Formatters;
 use App\Support\ListFilters;
-use App\Support\Notifier;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -41,6 +39,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class OrderController extends Controller
 {
     use EmEdicao, EnxergaAOrdem;
+
+    public function __construct(private readonly FluxoDeOrdem $fluxo) {}
 
     private const ORDENAVEIS = [
         'number', 'title', 'priority', 'status', 'scheduled_starts_at', 'scheduled_ends_at', 'created_at',
@@ -92,7 +92,7 @@ class OrderController extends Controller
             'tecnicos' => $this->tecnicos(),
             'equipas' => $this->equipas(),
             'prioridades' => StatusCatalog::options('priority'),
-            'situacoes' => $this->estadosIniciais($request->user()),
+            'situacoes' => $this->fluxo->estadosIniciais($request->user()),
         ]);
     }
 
@@ -101,33 +101,7 @@ class OrderController extends Controller
         $usuario = $request->user();
         $dados = $request->validate($this->regras($usuario), $this->mensagens());
 
-        $ordem = DB::transaction(function () use ($dados, $usuario): ServiceOrder {
-            $ordem = ServiceOrder::create([
-                ...$this->normaliza($dados),
-                'number' => ServiceOrder::proximoNumero(),
-            ]);
-
-            ServiceOrderStatusHistory::query()->create([
-                'service_order_id' => $ordem->id,
-                'user_id' => $usuario->id,
-                'from_status' => null,
-                'to_status' => $ordem->status,
-                'note' => 'Ordem aberta na tela de ordens.',
-                'created_at' => now(),
-            ]);
-
-            if ($ordem->technician_id !== null) {
-                $ordem->assignments()->create([
-                    'technician_id' => $ordem->technician_id,
-                    'assigned_by' => $usuario->id,
-                    'assigned_at' => now(),
-                ]);
-            }
-
-            return $ordem;
-        });
-
-        $this->avisarNovaOrdem($ordem, $usuario);
+        $ordem = $this->fluxo->abrir($usuario, $dados);
 
         return redirect()
             ->route('orders.show', $ordem)
@@ -156,7 +130,7 @@ class OrderController extends Controller
 
         return view('orders.show', [
             'ordem' => $ordem,
-            'proximosEstados' => $this->proximosEstados($ordem, $usuario),
+            'proximosEstados' => $this->fluxo->proximosEstados($ordem, $usuario),
             'itemEmEdicao' => $this->emEdicao($request, 'editar_item', $ordem->items),
             'servicos' => $this->servicos(),
             'produtos' => $this->produtos(),
@@ -217,7 +191,7 @@ class OrderController extends Controller
         $ordem->loadMissing('items');
         $dados = $request->validate($this->regras($usuario, $ordem), $this->mensagens());
 
-        $ordem->update($this->normaliza($dados));
+        $this->fluxo->atualizar($ordem, $dados);
 
         return redirect()
             ->route('orders.show', $ordem)
@@ -225,9 +199,9 @@ class OrderController extends Controller
     }
 
     /**
-     * O único caminho que muda o estado depois da criação. Além de trocar a
-     * coluna, põe o carimbo do momento e grava a passagem com quem fez: é isso
-     * que responde "quem abriu esta ordem e quando" daqui a três meses.
+     * O botão de estado. A tela pede o destino, o serviço sabe se o caminho existe e
+     * se este autor pode mandar nele — aqui só cabe a tradução do "não" para a flash,
+     * porque máquina, carimbo, passagem e sino moram em `FluxoDeOrdem`.
      */
     public function mudarStatus(Request $request, ServiceOrder $ordem): RedirectResponse
     {
@@ -241,96 +215,18 @@ class OrderController extends Controller
             'nota.required_if' => 'Cancelar uma ordem sem registrar o motivo não é cancelamento.',
         ]);
 
-        $destino = $validado['estado'];
-
-        if (! $ordem->podeMudarPara($destino)) {
-            return back()->with('erro', sprintf(
-                'A ordem %s está “%s” e não pode ir para “%s”: o fluxo do módulo é o que vale.',
-                $ordem->number,
-                StatusCatalog::label('order', $ordem->status),
-                StatusCatalog::label('order', $destino),
-            ));
+        try {
+            $origem = $this->fluxo->mudarStatus($ordem, $usuario, $validado['estado'], $validado['nota'] ?? null);
+        } catch (Recusa $recusa) {
+            return back()->with($recusa->tom(), $recusa->getMessage());
         }
-
-        if (! array_key_exists($destino, $this->proximosEstados($ordem, $usuario))) {
-            return back()->with('erro', 'Tirar um rascunho do papel e cancelar uma ordem pedem a permissão de aprovação.');
-        }
-
-        $origem = StatusCatalog::label('order', $ordem->status);
-        $ordem->mudarStatus($destino, $usuario, $validado['nota'] ?? null);
-
-        $this->avisarFimDePercurso($ordem, $destino, $usuario);
 
         return back()->with('status', sprintf(
             'Ordem %s: %s → %s.',
             $ordem->number,
-            $origem,
-            StatusCatalog::label('order', $destino),
+            StatusCatalog::label('order', $origem),
+            StatusCatalog::label('order', $ordem->status),
         ));
-    }
-
-    /**
-     * Ordem recém-criada toca no sino de quem tem de mexer nela: se já nasceu
-     * com técnico, a conta da ficha dele; se nasceu sem responsável, a decisão
-     * sobe para quem tem a permissão de aprovação da escala. Em ambos os casos
-     * quem abriu a ordem não ouve o próprio sino — o autor acabou de ver o ato.
-     */
-    private function avisarNovaOrdem(ServiceOrder $ordem, User $usuario): void
-    {
-        $título = sprintf('Ordem %s criada para %s.', $ordem->number, $ordem->client->name);
-        $link = route('orders.show', $ordem);
-
-        if ($ordem->technician?->user !== null) {
-            Notifier::para($ordem->technician->user, 'ordem.criada', $título, $ordem->title, $link, [
-                'order_id' => $ordem->id,
-            ]);
-
-            return;
-        }
-
-        Notifier::paraQuemPode('orders.approve', 'ordem.criada', $título, $ordem->title, $link, [
-            'order_id' => $ordem->id,
-        ], $usuario);
-    }
-
-    /**
-     * Só o fim de percurso toca sino: concluída ou cancelada. O carimbo do meio
-     * do fluxo ("em execução", "pausada") é gesto interno do escritório e não
-     * acorda ninguém. A audiência é de quem tem pele na ordem — as contas do
-     * técnico responsável, do quadro de comissão ativo e do cliente dono da
-     * carteira — e o autor do carimbo fica de fora. Quando o fim é o
-     * cancelamento, o motivo registrado viaja como corpo do aviso: quem esperava
-     * o serviço tem direito de saber por que não veio.
-     */
-    private function avisarFimDePercurso(ServiceOrder $ordem, string $destino, User $usuario): void
-    {
-        if (! in_array($destino, ['completed', 'canceled'], true)) {
-            return;
-        }
-
-        $tipo = $destino === 'completed' ? 'ordem.concluida' : 'ordem.cancelada';
-        $título = sprintf('Ordem %s %s.', $ordem->number, mb_strtolower(StatusCatalog::label('order', $destino)));
-        $corpo = $destino === 'canceled' ? $ordem->cancellation_reason : null;
-        $link = route('orders.show', $ordem);
-
-        $fichas = $ordem->assignments()->whereNull('released_at')->pluck('technician_id');
-
-        if ($ordem->technician_id !== null) {
-            $fichas = $fichas->push($ordem->technician_id);
-        }
-
-        $contas = User::query()
-            ->where('company_id', $ordem->company_id)
-            ->where('status', 'active')
-            ->where(fn ($q) => $q
-                ->whereIn('id', Technician::query()->whereIn('id', $fichas)->whereNotNull('user_id')->pluck('user_id'))
-                ->orWhere('client_id', $ordem->client_id))
-            ->where('id', '!=', $usuario->id)
-            ->get();
-
-        foreach ($contas as $conta) {
-            Notifier::para($conta, $tipo, $título, $corpo, $link, ['order_id' => $ordem->id]);
-        }
     }
 
     /**
@@ -340,18 +236,11 @@ class OrderController extends Controller
      */
     public function destroy(ServiceOrder $ordem): RedirectResponse
     {
-        if ($ordem->status !== 'draft') {
-            return redirect()
-                ->route('orders.show', $ordem)
-                ->with('erro', sprintf(
-                    'A ordem %s não é mais rascunho (%s), então não pode ser apagada. Cancele-a com o motivo registrado.',
-                    $ordem->number,
-                    StatusCatalog::label('order', $ordem->status),
-                ));
+        try {
+            $numero = $this->fluxo->retirar($ordem);
+        } catch (Recusa $recusa) {
+            return redirect()->route('orders.show', $ordem)->with('erro', $recusa->getMessage());
         }
-
-        $numero = $ordem->number;
-        $ordem->delete();
 
         return redirect()
             ->route('orders.index')
@@ -418,32 +307,6 @@ class OrderController extends Controller
         return ListFilters::periodo($query, $request, 'scheduled_starts_at');
     }
 
-    /**
-     * Estados que a ficha oferece como botão: o fluxo do modelo decide o caminho
-     * e a permissão de aprovação decide se o passo é deste usuário.
-     *
-     * @return array<string, string> slug => rótulo
-     */
-    private function proximosEstados(ServiceOrder $ordem, User $usuario): array
-    {
-        $podeAprovar = $usuario->hasPermission('orders.approve');
-
-        return collect(ServiceOrder::FLUXO[$ordem->status] ?? [])
-            ->reject(fn (string $destino) => in_array($destino, ServiceOrder::ESTADOS_APROVADOS, true) && ! $podeAprovar)
-            ->mapWithKeys(fn (string $destino) => [$destino => StatusCatalog::label('order', $destino)])
-            ->all();
-    }
-
-    /** @return array<string, string> */
-    private function estadosIniciais(User $usuario): array
-    {
-        $aceitos = $usuario->hasPermission('orders.approve')
-            ? ServiceOrder::ESTADOS_INICIAIS
-            : ['draft'];
-
-        return array_intersect_key(StatusCatalog::options('order'), array_flip($aceitos));
-    }
-
     /** @return array<int, string> */
     private function clientes(): array
     {
@@ -508,34 +371,8 @@ class OrderController extends Controller
     }
 
     /**
-     * O que a tela não pergunta, o banco responde: fim previsto pela duração
-     * estimada do serviço e UF sempre em duas maiúsculas.
-     *
-     * @param  array<string, mixed>  $dados
      * @return array<string, mixed>
      */
-    private function normaliza(array $dados): array
-    {
-        $inicio = $dados['scheduled_starts_at'] ?? null;
-        $fim = $dados['scheduled_ends_at'] ?? null;
-
-        if ($inicio !== null && $fim === null && filled($dados['service_id'] ?? null)) {
-            $duracao = Service::query()->whereKey($dados['service_id'])->value('estimated_minutes');
-
-            if ($duracao !== null) {
-                $fim = Carbon::parse($inicio)->addMinutes((int) $duracao)->toDateTimeString();
-            }
-        }
-
-        $dados['scheduled_ends_at'] = $fim;
-
-        if (filled($dados['state'] ?? null)) {
-            $dados['state'] = mb_strtoupper($dados['state']);
-        }
-
-        return $dados;
-    }
-
     /**
      * @return array<string, mixed>
      */
@@ -571,7 +408,7 @@ class OrderController extends Controller
         ] + ($ordem === null ? [
             // No nascimento a ordem é rascunho ou aberta, e nada além: execução,
             // espera, conclusão e cancelamento são do botão de estado.
-            'status' => ['required', Rule::in(array_keys($this->estadosIniciais($usuario)))],
+            'status' => ['required', Rule::in(array_keys($this->fluxo->estadosIniciais($usuario)))],
         ] : []);
     }
 

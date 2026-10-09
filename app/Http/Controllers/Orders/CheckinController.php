@@ -9,8 +9,8 @@ use App\Models\ServiceOrder;
 use App\Models\ServiceOrderCheckin;
 use App\Models\Technician;
 use App\Models\User;
-use App\Support\Auditor;
-use App\Support\Distancia;
+use App\Services\Orders\RegistroDePresenca;
+use App\Services\Recusa;
 use App\Support\Export;
 use App\Support\Formatters;
 use App\Support\ListFilters;
@@ -18,7 +18,6 @@ use App\Support\StatusCatalog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -57,8 +56,7 @@ class CheckinController extends Controller
 {
     use EnxergaAOrdem;
 
-    /** Estados de ordem que aceitam presença em campo: rascunho ainda não saiu da mesa. */
-    private const ORDENS_ACEITAM_CHEGADA = ['open', 'in_progress', 'on_hold'];
+    public function __construct(private readonly RegistroDePresenca $presenca) {}
 
     private const ORDENAVEIS = ['checkin_at', 'checkout_at', 'status', 'created_at'];
 
@@ -110,69 +108,24 @@ class CheckinController extends Controller
     /**
      * Chegada em campo. A rota está aninhada na ordem — `{ordem}/chegada` — porque
      * é a ordem que responde pelo local, pelo responsável e pelo endereço medido.
+     * Qualificar quem registra é daqui (é autorização); escrever a passagem é do
+     * serviço, e a recusa volta como flash — nunca como 500.
      */
     public function store(Request $request, ServiceOrder $ordem): RedirectResponse
     {
         $usuario = $request->user();
         $this->garantirVisivel($ordem, $usuario);
 
-        if (! in_array($ordem->status, self::ORDENS_ACEITAM_CHEGADA, true)) {
-            return redirect()->route('orders.show', $ordem)->with('erro', $ordem->estaEncerrada()
-                ? sprintf(
-                    'A ordem %s já foi encerrada: presença em campo não se registra depois do fim do trabalho.',
-                    $ordem->number,
-                )
-                : sprintf(
-                    'A ordem %s ainda é rascunho: libere-a para o campo antes de registrar a chegada.',
-                    $ordem->number,
-                ));
-        }
-
         $validado = $request->validate($this->regras(), $this->mensagens());
         $tecnico = $this->quemEsteve($ordem, $usuario);
 
-        if ($ordem->checkins()->where('technician_id', $tecnico->id)->open()->exists()) {
-            return back()->with('aviso', sprintf(
-                '%s já está em campo nesta ordem: registre a saída antes de marcar uma nova chegada.',
-                $tecnico->name,
-            ));
+        try {
+            $visita = $this->presenca->chega($ordem, $tecnico, $usuario, $validado);
+        } catch (Recusa $recusa) {
+            return $recusa->tom() === 'aviso'
+                ? back()->with('aviso', $recusa->getMessage())
+                : redirect()->route('orders.show', $ordem)->with('erro', $recusa->getMessage());
         }
-
-        $medida = Distancia::metros(
-            $validado['latitude'] ?? null,
-            $validado['longitude'] ?? null,
-            $ordem->latitude,
-            $ordem->longitude,
-        );
-
-        $visita = DB::transaction(function () use ($ordem, $usuario, $tecnico, $validado, $medida): ServiceOrderCheckin {
-            $visita = ServiceOrderCheckin::query()->create([
-                'service_order_id' => $ordem->id,
-                'technician_id' => $tecnico->id,
-                'checkin_at' => now(),
-                'checkin_latitude' => $validado['latitude'] ?? null,
-                'checkin_longitude' => $validado['longitude'] ?? null,
-                'checkin_distance' => $medida,
-                'status' => 'open',
-                'observation' => $validado['observacao'] ?? null,
-            ]);
-
-            // A chegada abre a execução pelo fluxo da ordem, com a passagem e o
-            // autor na trilha — o mesmo caminho do botão de estado, não um atalho
-            // que troca a coluna por fora.
-            if ($ordem->podeMudarPara('in_progress')) {
-                $ordem->mudarStatus('in_progress', $usuario, 'Chegada registrada em campo pelo check-in.');
-            }
-
-            return $visita;
-        });
-
-        Auditor::gravar('chegada em campo', $visita, [], sprintf(
-            '%s: %s chegou ao local%s.',
-            $ordem->number,
-            $tecnico->name,
-            $this->resumoDaMedida($medida, $ordem),
-        ));
 
         return redirect()->route('orders.show', $ordem)->with('status', sprintf(
             'Chegada de %s registrada às %s em %s.',
@@ -193,41 +146,14 @@ class CheckinController extends Controller
         $this->garantirVisitaVisivel($visita, $usuario);
         $this->garantirResponsavel($visita, $usuario);
 
-        if (! $visita->estaAberto()) {
-            return back()->with('aviso', sprintf(
-                'A saída desta visita já foi registrada em %s.',
-                Formatters::dateTime($visita->checkout_at),
-            ));
-        }
-
         $validado = $request->validate($this->regras(), $this->mensagens());
         $ordem = $visita->serviceOrder()->firstOrFail();
 
-        $medida = Distancia::metros(
-            $validado['latitude'] ?? null,
-            $validado['longitude'] ?? null,
-            $ordem->latitude,
-            $ordem->longitude,
-        );
-
-        $visita->update([
-            'checkout_at' => now(),
-            'checkout_latitude' => $validado['latitude'] ?? null,
-            'checkout_longitude' => $validado['longitude'] ?? null,
-            'checkout_distance' => $medida,
-            'status' => 'closed',
-            'observation' => filled($validado['observacao'] ?? null)
-                ? $validado['observacao']
-                : $visita->observation,
-        ]);
-
-        Auditor::gravar('saída em campo', $visita, [], sprintf(
-            '%s: %s deixou o local após %s%s.',
-            $ordem->number,
-            $visita->technician->name,
-            Formatters::duration($visita->duracaoMinutos()),
-            $medida === null ? '' : sprintf(' (%s m do endereço)', Formatters::decimal($medida)),
-        ));
+        try {
+            $visita = $this->presenca->sai($visita, $ordem, $validado);
+        } catch (Recusa $recusa) {
+            return back()->with($recusa->tom(), $recusa->getMessage());
+        }
 
         return redirect()->route('orders.show', $ordem)->with('status', sprintf(
             'Saída registrada às %s: %s no local em %s.',
@@ -355,18 +281,6 @@ class CheckinController extends Controller
             'longitude.required_with' => 'Posição incompleta não é posição: envie a longitude junto com a latitude.',
             'observacao.max' => 'O relato de campo tem de caber em 500 caracteres.',
         ];
-    }
-
-    /** O endereço da ordem pode não ter coordenada: aí não há vão a medir, e a tela diz isso. */
-    private function resumoDaMedida(?float $medida, ServiceOrder $ordem): string
-    {
-        if ($medida === null) {
-            return $ordem->latitude === null || $ordem->longitude === null
-                ? ' — sem medida: o endereço da ordem não tem coordenada'
-                : ' — sem posição lida no aparelho';
-        }
-
-        return sprintf(' (%s m do endereço)', Formatters::decimal($medida));
     }
 
     /** @return array<int, mixed> */
