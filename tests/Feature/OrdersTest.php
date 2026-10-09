@@ -10,6 +10,7 @@ use App\Models\ServiceOrder;
 use App\Models\ServiceOrderAssignment;
 use App\Models\ServiceOrderItem;
 use App\Models\ServiceOrderStatusHistory;
+use App\Models\Team;
 use App\Models\Technician;
 use App\Models\User;
 use App\Support\DashboardMetrics;
@@ -930,5 +931,34 @@ class OrdersTest extends TestCase
         TenantContext::forget();
 
         return $produto;
+    }
+
+    public function test_o_servidor_recusa_tecnico_desligado_e_equipe_encerrada(): void
+    {
+        [$empresa, $usuario] = $this->empresaComAdmin();
+        $cliente = $this->cliente($empresa, 'Padaria Sant’Anna');
+        $desligado = $this->tecnico($empresa, 'Técnico Desligado', ['status' => 'inactive']);
+
+        TenantContext::set($empresa->id);
+        $fechada = Team::query()->create(['name' => 'Equipe Encerrada', 'leader_id' => null, 'status' => 'inactive']);
+        TenantContext::forget();
+
+        $base = ['title' => 'Manutenção preventiva', 'priority' => 'normal', 'status' => 'draft'];
+
+        // O formulário nem offers o desligado; quem enviar o id mesmo assim cai na
+        // mesma régua da agenda: quem saiu da escala não entra em ordem.
+        $this->actingAs($usuario)->post(route('orders.store'), $base + [
+            'client_id' => $cliente->id,
+            'technician_id' => $desligado->id,
+        ])->assertSessionHasErrors('technician_id');
+
+        $this->actingAs($usuario)->post(route('orders.store'), $base + [
+            'client_id' => $cliente->id,
+            'team_id' => $fechada->id,
+        ])->assertSessionHasErrors('team_id');
+
+        $ordem = $this->ordem($empresa, $cliente);
+        $this->actingAs($usuario)->post(route('orders.assignments.store', $ordem), ['tecnico_id' => $desligado->id])
+            ->assertSessionHasErrors('tecnico_id');
     }
 }

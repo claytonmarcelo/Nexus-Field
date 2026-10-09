@@ -423,7 +423,8 @@ class TicketController extends Controller
                         ->whereIn('id', ServiceOrder::query()->visiveisPara($usuario)->select('id'));
                 })],
             'technician_id' => ['nullable', Rule::exists('technicians', 'id')
-                ->where(fn ($query) => $query->where('company_id', $empresa)->whereNull('deleted_at'))],
+                ->where(fn ($query) => $query->where('company_id', $empresa)
+                    ->where('status', '<>', 'inactive')->whereNull('deleted_at'))],
             'responsible_user_id' => ['nullable', Rule::exists('users', 'id')->where('company_id', $empresa)],
             'subject' => ['required', 'string', 'max:180'],
             'description' => ['nullable', 'string', 'max:20000'],

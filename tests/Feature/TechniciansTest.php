@@ -416,4 +416,20 @@ class TechniciansTest extends TestCase
 
         return $cliente;
     }
+
+    public function test_tecnico_arquivado_continua_com_ficha_e_carimbo_de_saida(): void
+    {
+        [$empresa, $usuario] = $this->empresaComAdmin();
+        $tecnico = $this->tecnico($empresa, 'Jonas da Câmara Fria');
+
+        TenantContext::set($empresa->id);
+        $tecnico->delete();
+        TenantContext::forget();
+
+        $this->actingAs($usuario)->get(route('technicians.show', $tecnico))
+            ->assertOk()
+            ->assertSee('Excluído em', false);
+
+        $this->actingAs($usuario)->delete(route('technicians.destroy', $tecnico))->assertNotFound();
+    }
 }

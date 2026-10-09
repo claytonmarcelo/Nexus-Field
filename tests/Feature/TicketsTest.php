@@ -541,4 +541,19 @@ class TicketsTest extends TestCase
 
         $this->fail("O painel não entregou o KPI '{$rotulo}'.");
     }
+
+    public function test_o_chamado_nao_adota_tecnico_fora_da_escala(): void
+    {
+        [$empresa, $usuario] = $this->empresaComAdmin();
+        $padaria = $this->cliente($empresa, 'Padaria Sant’Anna');
+        $desligado = $this->tecnico($empresa, 'Técnico Desligado', ['status' => 'inactive']);
+
+        $this->actingAs($usuario)->post(route('tickets.store'), [
+            'client_id' => $padaria->id,
+            'category' => 'refrigeracao',
+            'priority' => 'normal',
+            'subject' => 'Vitrine sem gelar desde a manhã',
+            'technician_id' => $desligado->id,
+        ])->assertSessionHasErrors('technician_id');
+    }
 }

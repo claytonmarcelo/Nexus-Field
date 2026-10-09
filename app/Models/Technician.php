@@ -82,4 +82,23 @@ class Technician extends Model
     {
         return $q->where('status', '<>', 'inactive');
     }
+
+    /**
+     * A rota também resolve o registro arquivado, mas só na leitura: a ficha
+     * existe para mostrar o selo de arquivado e o histórico, e uma ordem antiga
+     * tem direito de apontar para ele. Escrita não passa por cadastro morto —
+     * POST, PUT, PATCH e DELETE continuam no 404, que é o servidor recusando
+     * antes de qualquer botão. A única porta de volta é o botão restaurar, que
+     * anda pelo id e não por esta binding. O escopo da empresa segue valendo.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $consulta = $this->newQuery()->where($field ?? $this->getRouteKeyName(), $value);
+
+        if (in_array(request()->method(), ['GET', 'HEAD'], true)) {
+            return $consulta->withTrashed()->first();
+        }
+
+        return $consulta->first();
+    }
 }

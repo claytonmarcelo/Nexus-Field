@@ -84,7 +84,7 @@
 
                 @unless ($editando)
                     <p class="nf-text-muted-2 mb-0 small">
-                        O produto nasce com saldo zero: o estoque só existe depois da primeira movimentação, na fase 16.
+                        O produto nasce com saldo zero: o estoque existe a partir da primeira movimentação registrada.
                     </p>
                 @endunless
             </div>

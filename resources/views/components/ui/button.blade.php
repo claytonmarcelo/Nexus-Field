@@ -1,4 +1,5 @@
-{{-- Botão do design system. Renderiza <a> quando tem href, <button> caso contrário. --}}
+{{-- Botão do design system. Renderiza <a> quando tem href, <button> caso contrário.
+     A classe do componente e a que a tela passam por um único class mesclado. --}}
 @props([
     'variant' => 'primary',
     'size' => 'md',
@@ -25,8 +26,7 @@
         @if (! $disabled) href="{{ $href }}" @endif
         role="button"
         @if ($disabled) aria-disabled="true" tabindex="-1" @endif
-        class="{{ $classes }}"
-        {{ $attributes->except('type') }}
+        {{ $attributes->except('type')->class($classes) }}
     >
         @if ($icon)
             <i class="{{ $icon }}" aria-hidden="true"></i>
@@ -36,9 +36,8 @@
 @else
     <button
         type="{{ $type }}"
-        class="{{ $classes }}"
         @disabled($disabled)
-        {{ $attributes }}
+        {{ $attributes->class($classes) }}
     >
         @if ($icon)
             <i class="{{ $icon }}" aria-hidden="true"></i>

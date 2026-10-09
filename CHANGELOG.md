@@ -848,6 +848,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Alterado
 
+- Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de
+  prioridade e os apelidos leram `ResolveCompany::class`, e o arquivo entrou no estilo que
+  o próprio framework dita.
+
 - A paleta "Premium Gourmet + Technology" foi harmonizada com a nova logo: a marca saiu do teal
   `#1b6a5b` / `#46b39b` e entrou no verde cromado do medalhão (`#1c6b28` no claro, `#5eb85e` no
   escuro), com o latão (`#8a6212` / `#d9b25c`) mantido como contra-ponto gourmet. O aviso mudou para
@@ -1102,6 +1106,29 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   `nf-valor nf-mono`.
 
 ### Corrigido
+
+- Auditoria técnica da fase 1 à 18, com cada erro corrigido travado por teste novo:
+
+  * O servidor aceitava técnico desligado em ordem, chamado e quadro de comissão — a tela
+    não oferece, mas um pedido mexido na mão entrava na escala. A validação agora é a mesma
+    régua da agenda (`status <> inactive`), e a ordem só aceita equipe ativa, exatamente
+    como o próprio formulário já filtrava.
+  * Cadastro arquivado vivia escondido atrás de 404: as bindings de cliente, técnico,
+    serviço e produto resolviam só linha viva, então o selo "Excluído em…" que a ficha
+    desenha era código morto e uma ordem antiga que aponta para quem já saiu fechava em
+    porta. A binding resolve o arquivado na leitura e a escrita continua recusada pelo
+    mesmo 404 — a única porta de volta é o botão restaurar, que anda pelo id. A ficha do
+    produto arquivado lê o saldo central pela mesma régua da listagem, sem receber nulo.
+  * CSV baixado é vetor de injeção: célula de texto começando com `=`, `+`, `-` ou `@`
+    o Excel executaria como fórmula no lugar de mostrar o cadastro. `Export::celula()`
+    agora põe apóstrofo de escape nessas células — só as de texto: número negativo é
+    saldo, não fórmula, e perderia a aritmética da coluna.
+  * `x-ui.button` desenhava dois atributos `class` na mesma tag: o navegador fica com o
+    primeiro e a classe que a tela passava era descartada em silêncio — o vermelho do
+    "Excluir" das ações, por exemplo. Agora a classe do componente e a da tela se mesclam
+    num atributo só.
+  * Duas guardas `Route::has('orders.show')` que juravam fase 12 e o texto "na fase 16"
+    do formulário de produto, aposentados: a tela prometia o que já era realidade.
 
 - Avatar com glifo solto: `User::initials()` montava "A(" a partir de "Administrador (demo)",
   porque todo token separado por espaço entrava no cálculo. Agora só palavra que começa com letra

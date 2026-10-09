@@ -36,7 +36,8 @@ class OrderAssignmentController extends Controller
 
         $validado = $request->validate([
             'tecnico_id' => ['required', Rule::exists('technicians', 'id')
-                ->where(fn ($consulta) => $consulta->where('company_id', TenantContext::id())->whereNull('deleted_at')),
+                ->where(fn ($consulta) => $consulta->where('company_id', TenantContext::id())
+                    ->where('status', '<>', 'inactive')->whereNull('deleted_at')),
             ],
             'comissao_nota' => ['nullable', 'string', 'max:500'],
         ], [

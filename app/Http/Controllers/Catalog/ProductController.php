@@ -64,7 +64,10 @@ class ProductController extends Controller
 
     public function show(Product $produto): View
     {
-        $carregado = $produto->newQuery()
+        // withTrashed: a rota também resolve o produto arquivado, e a ficha dele
+        // precisa do saldo central pelo mesmo SQL da listagem — sem o escopo vivo,
+        // a linha arquivada chegaria nula aqui.
+        $carregado = $produto->newQuery()->withTrashed()
             ->whereKey($produto->id)
             ->withCentralBalance()
             ->first();

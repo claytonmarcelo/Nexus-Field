@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Middleware\EnsurePermission;
+use App\Http\Middleware\ResolveCompany;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,20 +16,20 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
-            \App\Http\Middleware\ResolveCompany::class,
+            ResolveCompany::class,
         ]);
 
         // O tenant tem de existir antes de a rota trocar o parâmetro por modelo:
         // sem essa ordem o CompanyScope ainda está cego durante o SubstituteBindings
         // e a ficha de um registro de outra empresa abre normal.
         $middleware->prependToPriorityList(
-            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            prepend: \App\Http\Middleware\ResolveCompany::class,
+            before: SubstituteBindings::class,
+            prepend: ResolveCompany::class,
         );
 
         $middleware->alias([
-            'permission' => \App\Http\Middleware\EnsurePermission::class,
-            'company' => \App\Http\Middleware\ResolveCompany::class,
+            'permission' => EnsurePermission::class,
+            'company' => ResolveCompany::class,
         ]);
 
         $middleware->redirectGuestsTo(fn () => route('login'));

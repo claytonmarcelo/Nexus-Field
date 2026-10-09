@@ -480,9 +480,11 @@ class OrderController extends Controller
                 ->where(fn ($query) => $query->where('company_id', $empresa)->whereNull('deleted_at'))],
             'service_id' => ['nullable', Rule::exists('services', 'id')
                 ->where(fn ($query) => $query->where('company_id', $empresa)->whereNull('deleted_at'))],
-            'team_id' => ['nullable', Rule::exists('teams', 'id')->where('company_id', $empresa)],
+            'team_id' => ['nullable', Rule::exists('teams', 'id')
+                ->where('company_id', $empresa)->where('status', 'active')],
             'technician_id' => ['nullable', Rule::exists('technicians', 'id')
-                ->where(fn ($query) => $query->where('company_id', $empresa)->whereNull('deleted_at'))],
+                ->where(fn ($query) => $query->where('company_id', $empresa)
+                    ->where('status', '<>', 'inactive')->whereNull('deleted_at'))],
             'title' => ['required', 'string', 'max:180'],
             'description' => ['nullable', 'string', 'max:5000'],
             'priority' => ['required', Rule::in(array_keys(StatusCatalog::options('priority')))],

@@ -330,4 +330,38 @@ class ClientsTest extends TestCase
 
         return $endereco;
     }
+
+    public function test_cliente_arquivado_continua_com_ficha_e_carimbo_de_saida(): void
+    {
+        [$empresa, $usuario] = $this->empresaComAdmin();
+        $cliente = $this->cliente($empresa, 'Padaria Sant’Anna');
+
+        TenantContext::set($empresa->id);
+        $cliente->delete();
+        TenantContext::forget();
+
+        // A ordem antiga continua apontando para este cliente: a ficha existe para
+        // mostrar o carimbo de saída, não para virar 404 na mão de quem consulta.
+        $this->actingAs($usuario)->get(route('clients.show', $cliente))
+            ->assertOk()
+            ->assertSee('Excluído em', false);
+
+        // Leitura abre, escrita não: o 404 no PUT é o servidor recusando o
+        // cadastro morto — a volta à vida só acontece pelo botão restaurar.
+        $this->actingAs($usuario)->put(route('clients.update', $cliente), ['name' => 'Voltou pela rota', 'status' => 'active'])
+            ->assertNotFound();
+    }
+
+    public function test_a_exportacao_devolve_como_texto_a_celula_que_parece_formula(): void
+    {
+        [$empresa, $usuario] = $this->empresaComAdmin();
+        $this->cliente($empresa, '=PROCV(1)', ['document' => '+5-5']);
+
+        $csv = $this->actingAs($usuario)->get(route('clients.export'))->streamedContent();
+
+        // Sem o apóstrofo de escape, o Excel executaria a fórmula no lugar de
+        // mostrar o cadastro: injeção de CSV é vetor real em relatório baixado.
+        $this->assertStringContainsString("'=PROCV(1)", $csv);
+        $this->assertStringContainsString("'+5-5", $csv);
+    }
 }

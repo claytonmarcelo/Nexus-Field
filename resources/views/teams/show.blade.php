@@ -180,16 +180,10 @@
                                         <td>{{ $ordem->tecnico }}</td>
                                         <td class="text-end">
                                             @can('orders.view')
-                                                {{-- A rota só existe a partir da fase 12: a tela não pode
-                                                     prometer um link que o aplicativo ainda não desenha. --}}
-                                                @if (Route::has('orders.show'))
-                                                    <x-ui.button variant="ghost" size="sm"
-                                                        :href="route('orders.show', $ordem->id)" icon="fa-solid fa-eye">
-                                                        Ordem
-                                                    </x-ui.button>
-                                                @else
-                                                    <span class="nf-text-muted-2 small">tela de ordens na fase 12</span>
-                                                @endif
+                                                <x-ui.button variant="ghost" size="sm"
+                                                    :href="route('orders.show', $ordem->id)" icon="fa-solid fa-eye">
+                                                    Ordem
+                                                </x-ui.button>
                                             @else
                                                 <span class="nf-text-muted-2 small">sem acesso às ordens</span>
                                             @endcan

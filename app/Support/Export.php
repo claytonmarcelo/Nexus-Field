@@ -52,7 +52,17 @@ class Export
             return Formatters::dateTime($valor);
         }
 
-        return str_replace(["\r\n", "\r"], "\n", trim((string) $valor));
+        $texto = str_replace(["\r\n", "\r"], "\n", trim((string) $valor));
+
+        // Injeção de CSV: uma célula de texto que começa com =, +, - ou @ é lida
+        // como fórmula pelo Excel. O apóstrofo devolve o conteúdo como texto, que
+        // é o que um relatório sempre quis ser. Só o texto entra na conta: um
+        // número negativo é saldo, não fórmula, e perderia a aritmética da coluna.
+        if (is_string($valor) && $texto !== '' && preg_match('/^[=+\-@]/', $texto)) {
+            return "'".$texto;
+        }
+
+        return $texto;
     }
 
     private static function nome(string $base): string

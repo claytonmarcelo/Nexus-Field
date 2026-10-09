@@ -520,4 +520,28 @@ class CatalogTest extends TestCase
 
         return (float) $carregado->central_balance;
     }
+
+    public function test_as_fichas_arquivadas_de_servico_e_produto_continuam_abrindo(): void
+    {
+        [$empresa, $usuario] = $this->empresaComAdmin();
+        $servico = $this->servico($empresa, 'Câmara fria: manutenção anual');
+        $produto = $this->produto($empresa, 'Flange 3/4');
+
+        TenantContext::set($empresa->id);
+        $servico->delete();
+        $produto->delete();
+        TenantContext::forget();
+
+        $this->actingAs($usuario)->get(route('services.show', $servico))
+            ->assertOk()
+            ->assertSee('Excluído em', false);
+        $this->actingAs($usuario)->get(route('products.show', $produto))
+            ->assertOk()
+            ->assertSee('Excluído em', false);
+
+        // Arquivado não se apaga duas vezes nem se edita pela rota: a escrita
+        // encontra 404 na binding, e a restauração tem caminho próprio.
+        $this->actingAs($usuario)->delete(route('products.destroy', $produto))->assertNotFound();
+        $this->actingAs($usuario)->put(route('products.update', $produto), ['name' => 'X'])->assertNotFound();
+    }
 }
