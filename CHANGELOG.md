@@ -998,6 +998,26 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   [C. Marcelo Dev. Brasil](https://www.youtube.com/@c.marcelodev.brasil) ao lado de GitHub e LinkedIn,
   no mesmo padrão `flat-square` dos outros contatos.
 
+- Perfil da conta: `/perfil` (GET e PUT), `/perfil/chave` e `/perfil/senha` com
+  `App\Http\Controllers\Auth\ProfileController`. A cadeia que a plataforma promete — welcome → acessar →
+  login → dashboard → módulos → **perfil** → logout — parava no painel porque não existia espelho. Nenhum
+  degrau de permissão no caminho: perfil é a única coisa que pertence de fato a quem está logado. A tela lê
+  do banco empresa, plano, papéis, chave, telefone, último acesso, vínculos de ficha e, para quem conduz
+  campo, as próximas janelas da própria agenda — as mesmas linhas que o calendário desenha. Os links de
+  destino só aparecem para quem tem a permissão de abri-los, para o espelho não virar corredor de 403.
+- Troca de chave de acesso e de senha própria autenticadas, as duas exigindo `current_password`: o e-mail é
+  o que o login digita, e sem prova um terminal deixado aberto seria a porta para assumir a identidade
+  alheia. A senha nova passa pelo mesmo `Password::min(10)->letters()->numbers()` do reset, tem que ser
+  diferente da atual, e a renovação encerra as demais sessões da conta quando o driver é `database` — a que
+  renovou continua viva. Senha não entra na auditoria: o que fica é o ato. A conta raiz mantém no modelo a
+  guarda do próprio e-mail, e a recusa chega como 302 com flash, não como 500.
+- "Meu perfil" no dropdown do cabeçalho, um degrau antes de "Sair".
+- `ProfileTest` (10 testes / 65 asserções): espelho aberto para um técnico sem nenhum degrau de módulo,
+  gravação com carimbo na trilha, salvamento igual que não inventa carimbo, recusa de chave sem a senha
+  atual e com e-mail de outra conta, login que passa a valer pelo e-mail novo, raiz que não troca a própria
+  chave, senha renovada que aposenta a antiga sem vazá-la para o log e a agenda do técnico que não mostra a
+  janela de outro campo. A varredura de navegação passou a 73 endereços GET com `/perfil` no mapa.
+
 ### Alterado
 
 - Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de

@@ -133,6 +133,12 @@
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
+                        <a class="dropdown-item" href="{{ route('profile.show') }}">
+                            <i class="fa-regular fa-id-badge me-2" aria-hidden="true"></i>
+                            Meu perfil
+                        </a>
+                    </li>
+                    <li>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="dropdown-item nf-user-menu-out">

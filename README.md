@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-281%20testes%20%2F%202670%20asser%C3%A7%C3%B5es-brightgreen" alt="282 testes, 2670 asserções">
+  <img src="https://img.shields.io/badge/testes-292%20testes%20%2F%202735%20asser%C3%A7%C3%B5es-brightgreen" alt="292 testes, 2735 asserções">
 </p>
 
 <p align="center">
@@ -109,6 +109,7 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - Recuperação de acesso pelo password broker do framework: token de uso único, expiração própria e
   senha nova com no mínimo 10 caracteres, letras e números
 - Botão de revelar senha em todo campo de senha, inclusive na redefinição
+- Senha própria trocada por dentro da conta, com a senha atual como prova (ver "Perfil da conta")
 
 ### Autorização e papéis
 
@@ -383,6 +384,26 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   nascimento, exclusão recusada enquanto houver conta atrelada, e `nf:papeis:sincronizar` regrava os
   cinco de sistema sem encostar nos personalizados
 
+### Perfil da conta
+
+- `/perfil` fecha a cadeia que a plataforma promete: entrar, trabalhar e **saber quem se é nela**. Não tem
+  permissão no caminho de propósito — perfil não é módulo da empresa, é a única coisa que pertence de fato
+  a quem está logado, e negá-la a um técnico seria dizer que ele não pode encostar na própria conta
+- A tela lê do banco a identidade inteira: empresa, plano, papéis concedidos, chave de acesso, telefone,
+  último acesso, data de nascimento da conta e os vínculos de ficha (técnico e carteira), cada link só
+  aparece para quem tem o degrau de abrir a tela de destino
+- Quem conduz campo vê, no espelho, as **próximas janelas da própria agenda** — as mesmas linhas que o
+  calendário desenha, ordenadas por horário, com o cliente e a ordem presos
+- Trocar a chave de acesso (o e-mail, que é o que o login digita) e renovar a senha exigem
+  `current_password`: sem essa prova, um terminal deixado aberto viraria a porta para assumir a
+  identidade alheia. A senha nova segue o mesmo mínimo do reset — 10 caracteres, letras e números — e
+  precisa ser diferente da atual
+- Renovar a senha derruba as demais sessões da conta quando o driver de sessão é o banco; a sessão que
+  renovou continua aberta. A senha em si nunca entra em log nem em auditoria: o que fica registrado é o ato
+- A conta raiz mantém a guarda do modelo no espelho: o e-mail dela não se troca por tela nenhuma, e a
+  recusa chega como 302 com o motivo na tela — não como 500
+- "Meu perfil" entrou no dropdown do cabeçalho, um degrau acima de "Sair"
+
 ### Configurações da empresa
 
 - Perfil editável com freios honestos: a chave de endereço e o plano não se mexem por esta tela nem
@@ -471,6 +492,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vieram uma fase por vez
 | Relatórios e exportações | ✅ | ✅ | ✅ |
 | Notificações | ✅ | ✅ | ✅ |
 | Usuários e papéis | ✅ | ✅ | ✅ |
+| Perfil da conta, chave e senha próprias | ✅ | — (é a própria conta) | ✅ |
 | Configurações da empresa | ✅ | ✅ | ✅ |
 | Auditoria | ✅ | ✅ | ✅ |
 
@@ -806,9 +828,9 @@ Depois:
 php artisan test
 ```
 
-Hoje são **282 testes / 2670 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **292 testes / 2735 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
-válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
+válido/forgiado/fraco, perfil próprio com chave e senha trocadas só mediante a senha atual, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
 tinta do menu sobre o painel claro — e a marca verde medida do medalhão, o contrato das seis capturas
 deste README (existem, estão linkadas e medem 1440×900), a proibição dos diálogos nativos do navegador,
@@ -944,6 +966,9 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 - [x] **Fase 22** — Auditoria: trilha virou tela com ficha que congela o nome do autor e mostra o
   antes/depois campo a campo, exportação pelo degrau próprio saindo da mesma consulta filtrada, e o
   gravador corrigido na raiz — sem dupla codificação, com as linhas antigas continuando legíveis
+- [x] **Perfil da conta** — espelho em `/perfil` com os dados lidos do banco, as próximas janelas da
+  agenda do técnico, troca de chave de acesso e renovação de senha ambas exigindo a senha atual,
+  sessões demais encerradas na renovação e "Meu perfil" no dropdown do cabeçalho
 - [x] **Prontidão de deploy** — caches de configuração, rota, view e evento validados, páginas de erro
   403/404/419/500/503 vestindo a marca sem vazar stack, e o passo a passo de produção documentado
 

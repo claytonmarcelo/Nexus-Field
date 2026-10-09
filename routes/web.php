@@ -4,6 +4,7 @@ use App\Http\Controllers\Agenda\AgendaController;
 use App\Http\Controllers\Audit\AuditController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Catalog\ProductController;
 use App\Http\Controllers\Catalog\ServiceCategoryController;
 use App\Http\Controllers\Catalog\ServiceController;
@@ -584,5 +585,19 @@ Route::middleware(['auth', 'company'])->group(function () {
         Route::get('/{ato}', [AuditController::class, 'show'])
             ->middleware('permission:audit.view')
             ->name('show');
+    });
+
+    /*
+     * O espelho. Nenhuma permissão no caminho: perfil é a única coisa que pertence
+     * de fato a quem está logado, e negá-la a um técnico seria dizer que ele não pode
+     * nem saber quem é na casa. A proteção que existe aqui é outra, e é mais dura —
+     * troca de chave e de senha exigem a senha atual, porque sem essa prova um terminal
+     * deixado aberto viraria a porta de entrada na identidade alheia.
+     */
+    Route::prefix('perfil')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'show'])->name('show');
+        Route::put('/', [ProfileController::class, 'update'])->name('update');
+        Route::put('chave', [ProfileController::class, 'email'])->name('email');
+        Route::put('senha', [ProfileController::class, 'password'])->name('password');
     });
 });
