@@ -93,6 +93,12 @@ class Navigation
                         'permission' => 'roles.view',
                         'icon' => 'fa-solid fa-key',
                     ],
+                    [
+                        'label' => 'Configurações',
+                        'route' => 'settings.index',
+                        'permission' => 'settings.view',
+                        'icon' => 'fa-solid fa-sliders',
+                    ],
                 ],
             ],
             [

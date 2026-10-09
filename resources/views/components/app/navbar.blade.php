@@ -116,6 +116,12 @@
                                 <p class="nf-user-menu-org">
                                     {{ $user->company?->name ?? 'Sem empresa vinculada' }}
                                 </p>
+                                @if (($logoEmpresa = $user->company?->logo_path) !== null)
+                                    <img class="nf-nav-logo"
+                                        src="{{ asset('storage/'.mb_substr($logoEmpresa, strlen('storage/'))) }}"
+                                        alt="Marca de {{ $user->company->name }}"
+                                        title="{{ $user->company->name }}">
+                                @endif
                             </div>
                         </div>
                     </li>

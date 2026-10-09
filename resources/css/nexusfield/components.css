@@ -2007,3 +2007,29 @@
 .nf-bell-foot:hover {
     text-decoration: underline;
 }
+
+/*
+ * A marca da empresa assume o medalhao da faixa do sidebar quando existe: mesmo
+ * lado de 30px da marca da plataforma, cantos proprios e a imagem inteira,
+ * nunca cortada -- o que a casa envia e o que se ve.
+ */
+.brand-link .nf-sidebar-logo {
+    width: 30px;
+    height: 30px;
+    flex: none;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/*
+ * No menu da conta a marca e assinatura: vive abaixo do nome da empresa,
+ * na cor original, sem passar de 2rem de altura para nao empurrar o resto.
+ */
+.nf-nav-logo {
+    display: block;
+    max-width: 7.5rem;
+    max-height: 2rem;
+    object-fit: contain;
+    margin-top: .35rem;
+    border-radius: 8px;
+}

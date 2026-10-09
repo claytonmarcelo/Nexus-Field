@@ -18,6 +18,7 @@ use App\Http\Controllers\Orders\OrderAssignmentController;
 use App\Http\Controllers\Orders\OrderController;
 use App\Http\Controllers\Orders\OrderItemController;
 use App\Http\Controllers\Reports\ReportController;
+use App\Http\Controllers\Settings\SettingController;
 use App\Http\Controllers\Stock\MovementController;
 use App\Http\Controllers\Technicians\SpecialtyController;
 use App\Http\Controllers\Technicians\TeamController;
@@ -543,5 +544,23 @@ Route::middleware(['auth', 'company'])->group(function () {
         Route::get('{papel}', [RoleController::class, 'show'])
             ->middleware('permission:roles.view')
             ->name('show');
+    });
+
+    /*
+     * A casa em ordem. `settings.view` abre a tela para leitura — o supervisor
+     * precisa saber qual raio o check-in aceita antes de cobrar o time por
+     * causa dele; `settings.manage` é o degrau de administrador que encosta em
+     * qualquer valor. Perfil, operação e varredura saem todos pelo mesmo
+     * PUT porque configuração não é registro: é a opinião de uma empresa só,
+     * gravada chave a chave no mesmo carimbo de auditoria.
+     */
+    Route::prefix('configuracoes')->name('settings.')->group(function () {
+        Route::get('/', [SettingController::class, 'index'])
+            ->middleware('permission:settings.view')
+            ->name('index');
+
+        Route::put('/', [SettingController::class, 'update'])
+            ->middleware('permission:settings.manage')
+            ->name('update');
     });
 });

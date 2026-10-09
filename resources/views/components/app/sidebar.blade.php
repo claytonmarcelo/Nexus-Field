@@ -7,12 +7,19 @@
 
 @php
     $secoes = \App\Support\Navigation::for($user);
+    $marca = $user->company?->logo_path ? asset('storage/'.mb_substr($user->company->logo_path, strlen('storage/'))) : null;
 @endphp
 
 <aside class="app-sidebar">
     <div class="sidebar-brand">
         <a class="brand-link" href="{{ route('welcome') }}" aria-label="NEXUS-FIELD, página inicial">
-            <x-ui.brand-mark />
+            @if ($marca !== null)
+                {{-- A empresa em casa: a marca dela ocupa o medalhão, a palavra
+                     da plataforma continua sendo o endereço do link. --}}
+                <img class="nf-sidebar-logo" src="{{ $marca }}" alt="" aria-hidden="true">
+            @else
+                <x-ui.brand-mark />
+            @endif
             <span class="brand-text">
                 <span class="nf-wordmark-lead">NEXUS</span><span class="nf-wordmark-tail">-FIELD</span>
             </span>

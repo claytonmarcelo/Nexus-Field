@@ -733,3 +733,52 @@
         transition: none;
     }
 }
+
+/*
+ * A fase 21 abre a casa para dentro: a marca da empresa divide a cena com o
+ * edital de envio, e o nome dela ganha a mesma matéria do painel — luz na
+ * quina de cima e fio de borda. Nada aqui desenha o que o banco não tem: sem
+ * logo enviada, a barra continua com a marca da plataforma.
+ */
+.nf-marca-edital {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1.5rem;
+}
+
+.nf-marca-atual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .5rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--nf-line);
+    border-radius: 14px;
+    background:
+        linear-gradient(180deg, var(--nf-tint, rgba(125, 125, 125, .05)), transparent 60%),
+        var(--nf-elevated, var(--nf-surface));
+    box-shadow: var(--nf-shadow-sm);
+    min-width: 12rem;
+}
+
+.nf-marca-img {
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+}
+
+.nf-marca-envio {
+    flex: 1 1 18rem;
+    max-width: 30rem;
+}
+
+@media (max-width: 575.98px) {
+    .nf-marca-edital {
+        gap: 1rem;
+    }
+
+    .nf-marca-atual {
+        width: 100%;
+    }
+}

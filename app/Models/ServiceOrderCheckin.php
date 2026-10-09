@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
+use App\Support\Settings;
+use App\Support\SettingsCatalog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -159,10 +161,8 @@ class ServiceOrderCheckin extends Model
 
     public static function raioAceito(): float
     {
-        $escolhido = CompanySetting::valueFor(self::CHAVE_RAIO);
-
-        return is_numeric($escolhido) && (float) $escolhido > 0
-            ? (float) $escolhido
-            : self::RAIO_PADRAO_METROS;
+        // A escolha da empresa, lida pela mesma chave que a tela de
+        // configurações grava — sem opinião guardada, o padrão da casa.
+        return (float) Settings::valor(SettingsCatalog::RAIO_CHECKIN);
     }
 }

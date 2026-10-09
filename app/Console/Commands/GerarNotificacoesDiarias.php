@@ -10,6 +10,8 @@ use App\Models\Technician;
 use App\Models\User;
 use App\Support\Formatters;
 use App\Support\Notifier;
+use App\Support\Settings;
+use App\Support\SettingsCatalog;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
 use Illuminate\Console\Command;
@@ -53,6 +55,10 @@ class GerarNotificacoesDiarias extends Command
 
     private function ordensAtrasadas(): int
     {
+        if (! Settings::ligado(SettingsCatalog::AVISO_ORDENS_ATRASADAS)) {
+            return 0;
+        }
+
         $gerados = 0;
 
         foreach (ServiceOrder::query()->overdue()->orderBy('scheduled_ends_at')->get() as $ordem) {
@@ -105,9 +111,13 @@ class GerarNotificacoesDiarias extends Command
 
     private function cobrancasVencendo(): int
     {
+        if (! Settings::ligado(SettingsCatalog::AVISO_VENCIMENTOS)) {
+            return 0;
+        }
+
         $gerados = 0;
         $hoje = now()->toDateString();
-        $limite = now()->addDays(2)->toDateString();
+        $limite = now()->addDays(Settings::inteiro(SettingsCatalog::DIAS_ALERTA_VENCIMENTO))->toDateString();
 
         $registros = FinancialRecord::query()
             ->emAberto()
@@ -147,6 +157,10 @@ class GerarNotificacoesDiarias extends Command
 
     private function agendaDeAmanha(): int
     {
+        if (! Settings::ligado(SettingsCatalog::AVISO_AGENDA)) {
+            return 0;
+        }
+
         $gerados = 0;
         $amanhã = now()->addDay();
 

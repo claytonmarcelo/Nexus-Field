@@ -917,6 +917,31 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   sincronização regravando de verdade e sem duplicar na segunda passada. A suíte fecha em
   255 testes / 2529 asserções.
 
+- Configurações da empresa (FASE 21): `SettingController` (`/configuracoes`) arruma a casa sem
+  inventar nada. O perfil (nome, documento, telefone, e-mail, site) é editável, mas a chave de
+  endereço e o plano não se mexem por esta tela nem para o administrador — a primeira é única para
+  sempre, o segundo é contrato com a plataforma. O e-mail do perfil é único por empresa e o site só
+  aceita URL de verdade. A marca sai do medalhão genérico e entra na faixa do sidebar e no menu da
+  conta: o envio valida PNG/JPG/WEBP entre 64 e 1200 pixels de cada lado, até 2 MB, e o SVG armado
+  de script fica do lado de fora — o arquivo é gravado na pasta da empresa com nome gerado por nós,
+  e a marca antiga sai do arquivo junto com a troca, sem imagem órfã em storage.
+- Cinco preferências no `SettingsCatalog`, cada uma com consumo vivo no código e nenhum campo morto
+  em tela: o raio aceito no check-in (`ServiceOrderCheckin::raioAceito`), a janela do alerta de
+  vencimento (os dias da varredura diária) e três chaves que ligam ou desligam, por empresa, as três
+  famílias do sino. Número vazio é «sem opinião»: a linha sai da `company_settings` e o padrão da
+  casa volta a valer, e o `Settings::valor` lê o valor já com o tipo certo.
+- Supervisor vê, administrador gere (`settings.view` contra `settings.manage`): a tela em modo
+  leitura mostra o cartão «Modo leitura» e desabilita cada campo, e o PUT sem `settings.manage` é
+  barrado com 403 antes de encostar em qualquer valor. Cada campo alterado sai carimbado na
+  auditoria, com o antes e o depois; se nada mudou, o flash avisa em vez de gravar poeira. A
+  sidebar ganha Configurações na seção Gestão.
+- `SettingsTest` (12 testes) aperta o servidor: 403 do supervisor, tabela vazia devolvendo o padrão,
+  raio salvo e relido pelo check-in, esvaziar a linha restaurando o padrão, a janela de vencimento
+  mexendo na varredura, as chaves silenciando o sino, salvar sem tocar, o carimbo na auditoria,
+  slug imutável, colisão de e-mail entre empresas, raio e dias fora da faixa, e o ciclo da marca
+  inteira — entra, troca, a anterior sai, e a falsa (SVG armado, png vazio, imagem miúda ou
+  larga demais) não passa. A suíte fecha em 267 testes / 2603 asserções.
+
 
 ### Alterado
 
