@@ -987,7 +987,7 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   não tem o degrau — com o motivo na tela e a stack fora dela —, 419 disparado na fonte da exceção,
   porque em teste o framework dispensa a conferência de origem, 500 de rota que explode e 503 com
   `artisan down` de verdade, verificado também ao vivo num servidor com `APP_DEBUG=false`. A suíte
-  fecha em 281 testes / 2665 asserções.
+  fecha em 282 testes / 2670 asserções.
 - README ganhou "Em produção": instalação sem dev, chave, migrate, seed, build, link e os quatro
   caches, a linha de cron do agendador, a ausência deliberada de worker de fila (nada implementa
   `ShouldQueue`), o que trocar no `.env` e o rodapé de marca nas páginas de erro. As quatro fases
@@ -1258,6 +1258,18 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   `nf-valor nf-mono`.
 
 ### Corrigido
+
+- A chave de tema trocava a cara da página e deixava o navegador com a tinta antiga.
+
+  * O AdminLTE 4 escreve `color-scheme` como estilo inline no `<html>` quando liga, e estilo
+    inline vence a regra do `tokens.css`. O `apply()` do `theme.js` atualizava
+    `data-bs-theme`, o cookie, a barra do celular e o `aria-pressed`, mas não aquele estilo:
+    depois de clicar, a página virava clara enquanto barra de rolagem, campo de data e
+    checkbox continuavam escuros até a recarga — e o contrário também.
+  * Agora `syncNativeScheme()` acompanha cada troca, na pintura inicial e no `apply()`, e o
+    contrato está travado por teste em `PaletteTest`. A varredura de navegador (MCP
+    `browser-use`) é que viu o defeito: o CSS servido está correto, então nenhum teste de
+    HTTP o pegaria.
 
 - A ficha de edição de um compromisso concluído devolvia 500 em vez de recusar com aviso.
 

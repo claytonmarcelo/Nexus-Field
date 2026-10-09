@@ -4,7 +4,8 @@
  * A preferência vai para cookie (o Blade entrega o HTML já com o tema, sem
  * flash) e para localStorage (leitura instantânea no cliente). O atributo
  * `data-bs-theme` inicial é aplicado por um script inline no <head>; aqui só
- * mantemos a chave, a cor da barra do celular e o sistema operacional.
+ * mantemos a chave, a cor da barra do celular, o esquema nativo do <html> e o
+ * sistema operacional.
  */
 const STORAGE_KEY = 'nexusfield:tema';
 const COOKIE_NAME = 'nf_theme';
@@ -31,6 +32,15 @@ export function current() {
     return document.documentElement.dataset.bsTheme === 'dark' ? 'dark' : 'light';
 }
 
+// O AdminLTE 4 escreve `color-scheme` como estilo inline no <html> quando liga, e
+// estilo inline vence a regra do tokens.css. Sem acompanhar aqui, a chave da casa
+// troca a cara da página mas deixa barra de rolagem, campo de data e checkbox com
+// a tinta do tema anterior até a próxima recarga — que é exatamente o que a
+// varredura de navegador pegou no dia 09/10/2026.
+function syncNativeScheme(mode) {
+    document.documentElement.style.colorScheme = mode;
+}
+
 function syncBrowserBar(mode) {
     const meta = document.querySelector('meta[name="theme-color"]');
 
@@ -53,6 +63,7 @@ export function apply(mode, { remember = true } = {}) {
     }
 
     document.documentElement.dataset.bsTheme = mode;
+    syncNativeScheme(mode);
     syncBrowserBar(mode);
     syncToggleState(mode);
 
@@ -69,6 +80,7 @@ export function toggle() {
 }
 
 export function init() {
+    syncNativeScheme(current());
     syncBrowserBar(current());
     syncToggleState(current());
 

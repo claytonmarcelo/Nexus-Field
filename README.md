@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-281%20testes%20%2F%202665%20asser%C3%A7%C3%B5es-brightgreen" alt="281 testes, 2665 asserções">
+  <img src="https://img.shields.io/badge/testes-281%20testes%20%2F%202670%20asser%C3%A7%C3%B5es-brightgreen" alt="282 testes, 2670 asserções">
 </p>
 
 <p align="center">
@@ -806,7 +806,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **281 testes / 2665 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **282 testes / 2670 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a

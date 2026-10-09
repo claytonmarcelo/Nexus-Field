@@ -193,6 +193,38 @@ class PaletteTest extends TestCase
         $this->assertArrayHasKey('--lte-sidebar-color', $escuro, 'o menu escuro perdeu a própria tinta');
     }
 
+    /**
+     * O AdminLTE 4 escreve `color-scheme` como estilo inline no <html> quando liga, e
+     * estilo inline vence a regra do tokens.css. Se o apply() do theme.js parar de
+     * acompanhar a troca, a chave entrega um tema ao atributo `data-bs-theme` e outro
+     * ao navegador: barra de rolagem, campo de data e checkbox seguem com a tinta
+     * antiga até a recarga. Foi assim que a varredura de navegador pegou a tela em
+     * 09/10/2026 — nenhum teste de HTTP veria, porque o CSS servido está correto.
+     */
+    public function test_a_chave_de_tema_tambem_acompanha_o_color_scheme_nativo_do_html(): void
+    {
+        $js = file_get_contents(dirname(__DIR__, 2).'/resources/js/nexusfield/theme.js');
+        $this->assertIsString($js);
+
+        $this->assertStringContainsString(
+            'document.documentElement.style.colorScheme = mode;',
+            $js,
+            'o tema parou de reescrever o color-scheme inline que o AdminLTE põe no <html>'
+        );
+
+        $this->assertStringContainsString(
+            "document.documentElement.dataset.bsTheme = mode;\n    syncNativeScheme(mode);",
+            $js,
+            'o apply() tem que sincronizar o esquema nativo junto com o atributo do tema'
+        );
+
+        $this->assertStringContainsString(
+            "export function init() {\n    syncNativeScheme(current());",
+            $js,
+            'na entrada, o esquema inline herdado do servidor também precisa ser confirmado'
+        );
+    }
+
     private function bloco(string $seletor): string
     {
         $inicio = strpos($this->css, $seletor);
