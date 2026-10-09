@@ -942,6 +942,31 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   inteira — entra, troca, a anterior sai, e a falsa (SVG armado, png vazio, imagem miúda ou
   larga demais) não passa. A suíte fecha em 267 testes / 2603 asserções.
 
+- Trilha de auditoria virou tela (FASE 22): `/auditoria` desenha o que cada conta fez na
+  empresa — quando, quem, que ação, sobre o quê, de onde (IP e navegador) e o antes/depois campo
+  a campo. A listagem usa as primitivas compartilhadas (busca, filtro por entidade e por conta,
+  período, ordenação, paginação) e o topo conta "N atos registrados · página X de Y"; a ficha do
+  ato congela o nome do autor gravado à época — quem mudou de nome não reescreve a história — e
+  avisa quando a conta que fez o ato saiu do acesso. Exportar CSV tem degrau próprio
+  (`audit.export`) e sai exatamente pela mesma consulta filtrada da listagem. Administrador e
+  supervisor enxergam a trilha; funcionário, técnico e cliente recebem 403 do servidor antes de
+  qualquer link aparecer, e ato de outra empresa responde 404.
+- O gravador da trilha foi corrigido na raiz: `Auditor` codificava o diff em JSON e a coluna
+  `changes`, que já tem cast `array`, codificava de novo — a leitura devolvia string JSON dentro
+  de string JSON. Agora o diff entra cru e o cast é o único codificador. A armadilha que
+  disfarçava o bug saiu no mesmo golpe: dentro do escopo da classe, `$ato->changes` resolve a
+  propriedade protegida `$changes` do dirty-tracking do Eloquent, nunca a coluna com cast —
+  `AuditLog::mudancas()` lê por `getAttribute()`, a única porta que enxerga o cast, e ainda
+  decodifica tolerante as linhas antigas, que continuam legíveis na tela.
+- Rótulo de entidade mora no model: `AuditLog::rotuloEntidade` traduz o `class_basename`
+  gravado (`StockMovement` → "Movimentação de estoque", `User` → "Conta de acesso"), com
+  `Str::headline` de chão para o que ainda não está na lista — código-fonte nunca aparece na
+  gestão. `pintarValor` trata nulo por traço e booleano por sim/não.
+- `Auditoria` entrou na sidebar na seção Gestão, depois de Configurações. `AuditTest` (9 testes)
+  cobre degraus de permissão, isolamento de tenant, os quatro filtros, a ficha com diff, linha
+  antiga duplamente codificada, ficha alheia 404, export com o mesmo filtro, nome congelado e a
+  regressão do gravador gravando array de verdade. A suíte fecha em 276 testes / 2642 asserções.
+
 
 ### Alterado
 

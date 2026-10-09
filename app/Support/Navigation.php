@@ -99,6 +99,12 @@ class Navigation
                         'permission' => 'settings.view',
                         'icon' => 'fa-solid fa-sliders',
                     ],
+                    [
+                        'label' => 'Auditoria',
+                        'route' => 'audit.index',
+                        'permission' => 'audit.view',
+                        'icon' => 'fa-solid fa-shield-halved',
+                    ],
                 ],
             ],
             [

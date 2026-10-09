@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Agenda\AgendaController;
+use App\Http\Controllers\Audit\AuditController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Catalog\ProductController;
@@ -562,5 +563,26 @@ Route::middleware(['auth', 'company'])->group(function () {
         Route::put('/', [SettingController::class, 'update'])
             ->middleware('permission:settings.manage')
             ->name('update');
+    });
+
+    /*
+     * A trilha por tela: `audit.view` é o degrau da gestão — o supervisor lê a
+     * história da casa, o administrador também. Exportar tem degrau próprio
+     * (`audit.export`) porque CSV sai do prédio, e sai da mesma consulta
+     * filtrada da listagem. Rota de escrita não existe de propósito: o que foi
+     * registrado aqui não se renegocia depois.
+     */
+    Route::prefix('auditoria')->name('audit.')->group(function () {
+        Route::get('/exportar', [AuditController::class, 'export'])
+            ->middleware('permission:audit.export')
+            ->name('export');
+
+        Route::get('/', [AuditController::class, 'index'])
+            ->middleware('permission:audit.view')
+            ->name('index');
+
+        Route::get('/{ato}', [AuditController::class, 'show'])
+            ->middleware('permission:audit.view')
+            ->name('show');
     });
 });

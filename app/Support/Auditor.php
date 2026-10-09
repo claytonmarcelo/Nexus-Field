@@ -65,7 +65,10 @@ class Auditor
             'entity_type' => $tipo === null ? null : Str::limit($tipo, 128, ''),
             'entity_id' => $identificador === null ? null : Str::limit($identificador, 64, ''),
             'description' => $descricao === null ? null : Str::limit($descricao, 255, ''),
-            'changes' => $mudancas === [] ? null : json_encode(static::limpar($mudancas), JSON_UNESCAPED_UNICODE),
+            // O diff entra cru: a coluna `changes` tem cast `array`, que é quem
+            // codifica. Codificar aqui também era dupla codificação — a trilha
+            // voltava lida como string JSON dentro de string JSON.
+            'changes' => $mudancas === [] ? null : static::limpar($mudancas),
             'ip_address' => $pedido?->ip(),
             'user_agent' => $pedido === null ? null : Str::limit((string) $pedido->userAgent(), 255, ''),
             'created_at' => now(),
