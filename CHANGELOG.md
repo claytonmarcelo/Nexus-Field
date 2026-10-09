@@ -967,6 +967,32 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   antiga duplamente codificada, ficha alheia 404, export com o mesmo filtro, nome congelado e a
   regressão do gravador gravando array de verdade. A suíte fecha em 276 testes / 2642 asserções.
 
+- Prontidão de deploy (a casa fecha a porta da rua): cinco páginas de erro com a marca
+  (`resources/views/errors/403|404|419|500|503.blade.php`) vestem a casca pública no lugar da página
+  crua do Symfony. O 403 e o 404 contam o motivo que o `abort()` escolheu contar — "Você não tem
+  permissão para esta ação.", "Este pagamento não pertence a esta conta." — e ficam mudos para o
+  texto que o framework inventa: `App\Support\MotivoErro` é a única porteira do critério, então nome
+  de rota pedida, nome de `Model` e inglês de Symfony não sobem para a tela. O 503 é auto-suficiente
+  por desenho — CSS embebido, nenhuma rota, nenhum asset do Vite, nenhuma sessão — porque a
+  manutenção derruba justamente o que as páginas normais usam.
+- `flash-messages` deixou de depender do middleware `web`: em rota sem esse middleware o `$errors`
+  nunca é compartilhado, o componente estourava, e a página de erro caía na casca crua que ela mesma
+  veio substituir. O guard `isset($errors)` fecha o ciclo — e é ele quem devolve ao 404 e ao 500 a
+  cara da casa.
+- A suíte ganhou trava contra o próprio ambiente: `config:cache` escreve `bootstrap/cache/config.php`
+  e esse cache vence o `<env>` do `phpunit.xml`, então a suíte passaria a rodar contra o banco de
+  desenvolvimento — onde `RefreshDatabase` apaga o que encontra. `tests/TestCase.php` lê o nome do
+  banco e recusa antes do primeiro migrate, dizendo qual cache tirar do caminho.
+- `ErrorPagesTest` (5 testes) prova as cinco portas sem debug: 404 de quem não entrou, 403 de quem
+  não tem o degrau — com o motivo na tela e a stack fora dela —, 419 disparado na fonte da exceção,
+  porque em teste o framework dispensa a conferência de origem, 500 de rota que explode e 503 com
+  `artisan down` de verdade, verificado também ao vivo num servidor com `APP_DEBUG=false`. A suíte
+  fecha em 281 testes / 2664 asserções.
+- README ganhou "Em produção": instalação sem dev, chave, migrate, seed, build, link e os quatro
+  caches, a linha de cron do agendador, a ausência deliberada de worker de fila (nada implementa
+  `ShouldQueue`), o que trocar no `.env` e o rodapé de marca nas páginas de erro. As quatro fases
+  entraram no roadmap e nas seções de módulo, e as seis telas foram recapturadas do estado atual —
+  painel com os catorze indicadores nos dois temas e o celular 390×844 emoldurado no quadro 1440×900.
 
 ### Alterado
 

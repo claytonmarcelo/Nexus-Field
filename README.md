@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-214%20testes%20%2F%202336%20asser%C3%A7%C3%B5es-brightgreen" alt="214 testes, 2336 asserções">
+  <img src="https://img.shields.io/badge/testes-281%20testes%20%2F%202664%20asser%C3%A7%C3%B5es-brightgreen" alt="281 testes, 2664 asserções">
 </p>
 
 <p align="center">
@@ -40,12 +40,10 @@ o clique abre o arquivo no tamanho capturado. O painel de celular é fotografado
 (390×844) e montado sobre o mesmo quadro de 1440×900 — é o único quadro diferente da série, e a
 legenda diz isso. Os painéis mostram a empresa de demonstração criada pelo `DemoSeeder` — é ela que
 tem ordens, chamados, financeiro e estoque para os indicadores calcularem; na empresa real sem dados,
-os mesmos blocos aparecem nos estados vazios. As três capturas do painel são anteriores à fase 16:
-desenham doze indicadores e hoje o escritório conta catorze, porque o estoque acrescentou o cartão
-"Movimentações de hoje" e a lista "Últimas movimentações", e o financeiro entrou com "A receber",
-"A pagar", "Recebido no mês" e "Despesa do mês". Elas serão recapturadas quando a última
-fase pousar — o painel ganha um bloco por módulo, e refazer a foto a cada fase manteria o README
-mentindo uma fase por vez.
+os mesmos blocos aparecem nos estados vazios. As capturas do painel já contam os catorze indicadores de hoje:
+o estoque acrescentou o cartão "Movimentações de hoje" e a lista "Últimas movimentações", e o
+financeiro entrou com "A receber", "A pagar", "Recebido no mês" e "Despesa do mês" — refeitas na
+rodada de prontidão de deploy, depois da última fase pousar.
 
 <div align="center">
 
@@ -59,7 +57,7 @@ mentindo uma fase por vez.
 
 | Painel operacional · tema claro | Painel operacional · tema escuro |
 | :--: | :--: |
-| <a href="docs/screenshots/04-painel-claro.png"><img src="docs/screenshots/04-painel-claro.png" alt="Painel em tema claro com doze indicadores, a fila de ordens da semana e a distribuição por estado" width="360"></a> | <a href="docs/screenshots/05-painel-escuro.png"><img src="docs/screenshots/05-painel-escuro.png" alt="Painel em tema escuro com os mesmos indicadores, tabelas e distribuição por estado" width="360"></a> |
+| <a href="docs/screenshots/04-painel-claro.png"><img src="docs/screenshots/04-painel-claro.png" alt="Painel em tema claro com catorze indicadores, a fila de ordens da semana e a distribuição por estado" width="360"></a> | <a href="docs/screenshots/05-painel-escuro.png"><img src="docs/screenshots/05-painel-escuro.png" alt="Painel em tema escuro com os mesmos indicadores, tabelas e distribuição por estado" width="360"></a> |
 
 </div>
 
@@ -356,6 +354,63 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - **Fora do catálogo é 404**: a rota de exportação é constrained às quatro chaves, então
   `relatorios/{qualquer-coisa}/exportar` não monta agregação inexistente
 
+### Notificações
+
+- **O sino é por conta, nunca por empresa**: a central (`/notificacoes`) filtra `user_id` de quem logou
+  antes de qualquer filtro, o PATCH de marcar lida responde 404 para aviso alheio sem confirmar que a
+  bandeja existe, e "marcar todos" varre só a caixa de quem clicou
+- Seis gatilhos em atos de negócio reais — ordem criada, comissão no quadro, conclusão, cancelamento,
+  chamado novo e resolução — mais o flash de falta no central, que agora também acorda quem repõe
+- Deduplicador por fato e origem: sem leitura no meio, o segundo toque do mesmo fato não martela a
+  mesma conta
+- Varredura diária às 07:00 (`nf:notificacoes:diaria`, `withoutOverlapping`): ordem vencida no prazo
+  previsto, conta a vencer em até dois dias e a agenda de amanhã — cada empresa varrida dentro do
+  próprio contexto de tenant, e a conta de cliente fica fora do atraso de propósito
+- Sino na barra com contagem teto 99+, dropdown dos seis últimos e fio de marca nos não lidos; o item
+  da sidebar entra para todo papel com `notifications.view`, inclusive o cliente
+
+### Usuários e papéis
+
+- A regra do núcleo: **ninguém concede o que não tem**. O editor só vê, no formulário, os papéis cujo
+  conjunto de permissões cabe dentro das dele, e mexer numa conta que enxerga mais do que você
+  responde 403
+- Folha de ponto com quota: o topo diz "X contas na folha · plano permite N", e criar conta acima do
+  teto do plano é recusada antes de qualquer INSERT
+- A conta raiz não se edita nem se exclui por tela; ninguém desativa a própria conta, nem tira de si
+  o último papel de administrador, nem exclui a conta que ainda é o acesso de uma ficha de técnico
+- Pareamento papel Cliente ↔ carteira cobrado no servidor: conta de papel Cliente aponta para uma
+  carteira da empresa, e uma carteira não aceita duas contas de acesso
+- Papéis de sistema são intocáveis por tela; personalizados têm CRUD completo, slug imutável de
+  nascimento, exclusão recusada enquanto houver conta atrelada, e `nf:papeis:sincronizar` regrava os
+  cinco de sistema sem encostar nos personalizados
+
+### Configurações da empresa
+
+- Perfil editável com freios honestos: a chave de endereço e o plano não se mexem por esta tela nem
+  para o administrador — o primeiro é único para sempre, o segundo é contrato com a plataforma
+- Marca própria: o envio valida PNG/JPG/WEBP entre 64 e 1200 pixels por lado, até 2 MB, e o SVG armado
+  de script fica do lado de fora; a marca antiga sai do arquivo junto com a troca, sem imagem órfã
+- Cinco preferências com consumo vivo — raio do check-in, janela do alerta de vencimento e três chaves
+  que ligam/desligam as famílias do sino — e número vazio é «sem opinião»: a linha sai e o padrão da
+  casa volta a valer
+- Supervisor vê, administrador gere: em modo leitura cada campo vem desabilitado com o cartão que diz
+  por quê, e o PUT sem `settings.manage` é barrado com 403 antes de encostar em qualquer valor. Cada
+  campo alterado sai carimbado na auditoria com o antes e o depois
+
+### Auditoria
+
+- A trilha virou tela (`/auditoria`): quando, quem, que ação, sobre o quê, de onde (IP e navegador) e
+  o antes/depois campo a campo, com busca, filtro por entidade e por conta, período, ordenação e
+  paginação das primitivas compartilhadas
+- O nome do autor é congelado no ato — quem mudou de nome não reescreve a história — e a ficha avisa
+  quando a conta que fez aquilo saiu do acesso
+- Exportar CSV tem degrau próprio (`audit.export`) e sai exatamente pela mesma consulta filtrada da
+  listagem
+- Ver é degrau de gestão (`audit.view`): funcionário, técnico e cliente recebem 403 do servidor antes
+  de qualquer link aparecer, e ato de outra empresa responde 404
+- Rótulo de entidade mora no model (`StockMovement` → "Movimentação de estoque"), nunca código-fonte
+  na tela; linhas antigas do tempo em que o gravador codificava o diff duas vezes continuam legíveis
+
 ### Interface
 
 - AdminLTE 4 na estrutura oficial, Bootstrap 5.3 nos componentes e camada de tokens própria
@@ -397,7 +452,7 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 
 ## Módulos
 
-O banco já modela o domínio inteiro (fase 2). As telas vêm uma fase por vez.
+O banco já modela o domínio inteiro (fase 2). As telas vieram uma fase por vez — e todas estão no ar.
 
 | Módulo | Schema | Permissões | Tela |
 | --- | :---: | :---: | :---: |
@@ -415,10 +470,10 @@ O banco já modela o domínio inteiro (fase 2). As telas vêm uma fase por vez.
 | Estoque e movimentações | ✅ | ✅ | ✅ |
 | Financeiro (contas a receber e a pagar) | ✅ | ✅ | ✅ |
 | Relatórios e exportações | ✅ | ✅ | ✅ |
-| Notificações | ✅ | ✅ | 🚧 fase 19 |
-| Usuários e papéis | ✅ | ✅ | 🚧 fase 20 |
-| Configurações da empresa | ✅ | ✅ | 🚧 fase 21 |
-| Auditoria | ✅ | ✅ | 🚧 fase 22 |
+| Notificações | ✅ | ✅ | ✅ |
+| Usuários e papéis | ✅ | ✅ | ✅ |
+| Configurações da empresa | ✅ | ✅ | ✅ |
+| Auditoria | ✅ | ✅ | ✅ |
 
 Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 
@@ -638,6 +693,40 @@ composer run dev   # servidor, filas e Vite juntos
 php artisan serve  # apenas o servidor HTTP
 ```
 
+### Em produção
+
+O mesmo passo a passo, com os cadeados de produção. Nada aqui depende de navegador: os caches, a
+varredura e os selos de ambiente rodam por linha de comando e cron.
+
+```bash
+composer install --no-dev --optimize-autoloader
+cp .env.example .env         # preencha com credenciais reais — nenhum valor de exemplo sobrevive
+php artisan key:generate
+php artisan migrate --force
+php artisan db:seed --force  # só a conta raiz; o DemoSeeder recusa produção e o teste morre nele
+npm ci && npm run build
+php artisan storage:link     # no Windows o Apache precisa poder criar a junção (ver nota abaixo)
+php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan event:cache
+```
+
+- **`.env` de produção**: `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`
+  (exige HTTPS no proxy), `DB_CONNECTION=mysql` com credencial própria e `MAIL_*` de um SMTP de
+  verdade — com `MAIL_MAILER=log` o link de recuperação de senha morre no arquivo de log
+- **Cron**: uma linha, e a varredura diária das 07:00 (ordens vencidas, contas a vencer, agenda de
+  amanhã) roda pelo relógio do servidor, nunca pelo navegador de alguém:
+  `* * * * * cd /caminho/para/o/app && php artisan schedule:run >> /dev/null 2>&1`
+- **Fila**: não há worker a subir. Nenhuma job implementa `ShouldQueue` — notificações, e-mails e
+  varreduras são síncronos ou agendados —, então `QUEUE_CONNECTION=database` existe só para nada
+  se perder se uma job entrar amanhã
+- **Rotação de credencial**: `SEED_ADMIN_PASSWORD` é para a primeira semeadura; a senha da raiz se
+  troca por dentro da aplicação depois disso, e o segredo nunca volta para o Git
+- **Páginas de erro**: 403, 404, 419, 500 e 503 vestem a marca e não vazam stack — o 500 fala do
+  lado de dentro da casa, e o 503 (manutenção) é desenhado para viver sem banco, sem sessão e sem
+  assets, porque é justamente quando eles caem que ele é chamado
+- **Windows/WAMP**: `php artisan storage:link` pode dizer "connected" sem criar nada se o usuário
+  não tem privilégio de symlink; a alternativa que funciona é a junção de diretório
+  (`New-Item -ItemType Junction -Path public\storage -Target storage\app\public`)
+
 ### Contas e acesso
 
 A conta criada pelo `db:seed` é a **conta raiz** do sistema — identidade permanente
@@ -718,7 +807,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **214 testes / 2336 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **281 testes / 2664 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
@@ -761,7 +850,9 @@ ordem da tela e com o período no nome do arquivo, a coluna pedida por injeção
 executar, o link de ordenar pelo nome que ordena nos dois sentidos, a medida inexistente que não vira zero, o
 cartão que some quando a conta não lê o módulo e o 403 que nomeia o degrau faltante; e o CSRF, que varre as views
 e o HTML servido porque o `VerifyCsrfToken` se isenta durante os testes e nenhum outro teste do projeto veria o
-formulário sem token.
+formulário sem token. As cinco portas de erro — 403, 404, 419, 500 e 503 — vestem a casca
+da casa sem depuração, contam o motivo que o servidor escolheu contar e deixam do lado de fora
+rota pedida, nome de model e stack.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -842,13 +933,26 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
   coleção inteira com o período no nome do arquivo, dois degraus de permissão (`reports.view` para a tela,
   `reports.export` para o arquivo) mais a leitura do módulo que o fechado resume, e cartão que some do hub em vez
   de abrir tela zerada
+- [x] **Fase 19** — Notificações: sino por conta com dedup por fato e origem, seis gatilhos em atos de
+  negócio reais, varredura diária às 07:00 rodando por contexto de tenant e central com os mesmos
+  filtros, ordenação e paginação das listagens
+- [x] **Fase 20** — Usuários e papéis: ninguém concede o que não tem, quota do plano barrando antes do
+  INSERT, raiz intocável por tela, auto-degradação bloqueada, papel de sistema imutável e
+  `nf:papeis:sincronizar` idempotente
+- [x] **Fase 21** — Configurações da empresa: perfil com chave de endereço e plano fora de alcance,
+  marca validada pixel a pixel sem deixar imagem órfã, cinco preferências com consumo vivo e
+  supervisor em modo leitura contra administrador que gere
+- [x] **Fase 22** — Auditoria: trilha virou tela com ficha que congela o nome do autor e mostra o
+  antes/depois campo a campo, exportação pelo degrau próprio saindo da mesma consulta filtrada, e o
+  gravador corrigido na raiz — sem dupla codificação, com as linhas antigas continuando legíveis
+- [x] **Prontidão de deploy** — caches de configuração, rota, view e evento validados, páginas de erro
+  403/404/419/500/503 vestindo a marca sem vazar stack, e o passo a passo de produção documentado
 
-### Planejado
+### A seguir
 
-- [ ] Fase 19 — Notificações
-- [ ] Fase 20 — Telas de usuários e papéis
-- [ ] Fase 21 — Configurações da empresa
-- [ ] Fase 22 — Auditoria
+O plano de reconstrução fechou: da fase 1 à 22, mais a prontidão de deploy, tudo no ar. O que vem
+depois é decisão de operação, não fase: publicar numa máquina real, contratar o primeiro tenant e
+bater o martelo da licença.
 
 ---
 

@@ -24,6 +24,6 @@
     @endif
 @endforeach
 
-@if ($errors->any() && ! filled(session('erro')))
+@if (isset($errors) && $errors->any() && ! filled(session('erro')))
     <div hidden data-nf-flash="error">{{ $errors->first() }}</div>
 @endif
