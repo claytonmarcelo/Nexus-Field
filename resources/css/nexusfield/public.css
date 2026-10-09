@@ -137,13 +137,29 @@
     filter: drop-shadow(0 0 1px rgba(255, 255, 255, .62)) drop-shadow(0 12px 26px color-mix(in srgb, var(--nf-primary) 22%, transparent));
 }
 
+/*
+ * A caixa do fluxo trocou a borda grossa de marca — o mesmo gesto de cartão com
+ * listrinha que o KPI e a faixa de período aposentaram — pelo trilho que morre
+ * antes do fim, e recebeu a luz na quina das demais caixas da casa.
+ */
 .nf-flow-panel {
+    position: relative;
+    overflow: hidden;
     border: 1px solid var(--nf-line);
-    border-left: 3px solid var(--nf-primary);
     border-radius: var(--bs-border-radius-lg);
     background-color: var(--nf-elevated);
-    box-shadow: var(--nf-shadow-md);
+    background-image: linear-gradient(180deg, var(--nf-tint), transparent 5rem);
+    box-shadow: var(--nf-shadow-md), inset 0 1px 0 var(--nf-sheen);
     padding: 1.5rem 1.5rem 1.25rem;
+}
+
+.nf-flow-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--nf-primary) 0%, transparent 95%);
+    opacity: .85;
 }
 
 .nf-flow {
@@ -175,7 +191,7 @@
     place-items: center;
     border-radius: 999px;
     background: var(--nf-gradient-brand);
-    color: var(--nf-surface);
+    color: var(--nf-on-brand);
     font-size: .72rem;
     font-weight: 600;
 }
@@ -187,7 +203,7 @@
     bottom: .15rem;
     left: .72rem;
     width: 1px;
-    background: var(--nf-line-strong);
+    background: linear-gradient(180deg, var(--nf-line-strong), transparent);
 }
 
 .nf-section {
@@ -224,7 +240,8 @@
     border: 1px solid var(--nf-line-strong);
     border-radius: var(--bs-border-radius-xl);
     background-color: var(--nf-elevated);
-    box-shadow: var(--nf-shadow-md);
+    background-image: linear-gradient(180deg, var(--nf-tint), transparent 4.5rem);
+    box-shadow: var(--nf-shadow-md), inset 0 1px 0 var(--nf-sheen);
     padding: clamp(1.5rem, 4vw, 2.75rem);
 }
 
@@ -297,7 +314,8 @@
     border: 1px solid var(--nf-line);
     border-radius: var(--bs-border-radius-xl);
     background-color: var(--nf-elevated);
-    box-shadow: var(--nf-shadow-lg);
+    background-image: linear-gradient(180deg, var(--nf-tint), transparent 4rem);
+    box-shadow: var(--nf-shadow-lg), inset 0 1px 0 var(--nf-sheen);
     padding: clamp(1.5rem, 4vw, 2.25rem);
 }
 
