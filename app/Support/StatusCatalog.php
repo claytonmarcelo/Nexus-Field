@@ -123,6 +123,21 @@ class StatusCatalog
             'ticket' => ['Chamado', 'progress'],
             'custom' => ['Compromisso interno', 'draft'],
         ],
+
+        // O vocabulário do sino: o tipo gravado pelo Notifier ganha rótulo e tom
+        // aqui, e é daqui que a central filtra — a tela não conhece texto solto.
+        'notification' => [
+            'ordem.criada' => ['Ordem criada', 'open'],
+            'ordem.atribuida' => ['Ordem atribuída', 'progress'],
+            'ordem.concluida' => ['Ordem concluída', 'done'],
+            'ordem.cancelada' => ['Ordem cancelada', 'canceled'],
+            'ordem.atrasada' => ['Ordem atrasada', 'canceled'],
+            'chamdo.aberto' => ['Chamado aberto', 'open'],
+            'chamdo.resolvido' => ['Chamado resolvido', 'done'],
+            'estoque.baixo' => ['Estoque baixo', 'waiting'],
+            'financeiro.vencendo' => ['Cobrança vencendo', 'waiting'],
+            'agenda.lembrete' => ['Lembrete de agenda', 'progress'],
+        ],
     ];
 
     public static function label(string $grupo, ?string $valor): string

@@ -17,7 +17,7 @@ class Notifier
 {
     /** @var array<int, string> tipos conhecidos, para a tela filtrar por vocabulário e não por texto solto */
     public const TIPOS = [
-        'ordem.criada', 'ordem.concluida', 'ordem.cancelada', 'ordem.atrasada',
+        'ordem.criada', 'ordem.atribuida', 'ordem.concluida', 'ordem.cancelada', 'ordem.atrasada',
         'chamdo.aberto', 'chamdo.resolvido',
         'estoque.baixo', 'financeiro.vencendo',
         'agenda.lembrete',
@@ -59,12 +59,20 @@ class Notifier
         ?string $corpo = null,
         ?string $link = null,
         array $dados = [],
+        ?User $autor = null,
     ): int {
         $destinos = static::quemPode($permissao);
 
         $gravados = 0;
 
         foreach ($destinos as $destino) {
+            // Quem praticou o ato de negócio não precisa ouvir o sino do próprio
+            // ato: ele acabou de ver o que fez. O aviso toca para quem tem de
+            // agir em seguida.
+            if ($autor !== null && (int) $destino->id === (int) $autor->id) {
+                continue;
+            }
+
             if (static::para($destino, $tipo, $titulo, $corpo, $link, $dados) !== null) {
                 $gravados++;
             }
@@ -76,10 +84,48 @@ class Notifier
     /** @return Collection<int, User> */
     public static function quemPode(string $permissao): Collection
     {
+        // O modelo User não tem escopo global de empresa: sem este filtro o sino
+        // tocaria atravessando a fronteira do tenant, e aviso que atravessa
+        // fronteira não é alerta — é vazamento.
         return User::query()
+            ->where('company_id', TenantContext::id())
             ->where('status', 'active')
             ->whereHas('roles.permissions', fn ($q) => $q->where('slug', $permissao))
             ->get();
+    }
+
+    /**
+     * Deduplicador do sino: aquela conta ainda tem um aviso por ler, daquele
+     * tipo, apontando para aquela mesma origem? A varredura diária e a falta no
+     * central são fatos que se repetem até alguém agir — sem esta pergunta o
+     * alerta vira spam, e spam ensina a pessoa a ignorar o sino.
+     */
+    public static function jaAvisaram(int $usuarioId, string $tipo, ?string $link): bool
+    {
+        return Notification::query()
+            ->where('user_id', $usuarioId)
+            ->where('type', $tipo)
+            ->whereNull('read_at')
+            ->when(
+                $link === null,
+                fn ($q) => $q->whereNull('link'),
+                fn ($q) => $q->where('link', $link),
+            )
+            ->exists();
+    }
+
+    /**
+     * O "marcar tudo lido" varre só a bandeja de quem clicou: o alvo é a conta,
+     * nunca a empresa.
+     *
+     * @return int carimbos dados
+     */
+    public static function marcarTudoComoLida(User $usuario): int
+    {
+        return Notification::query()
+            ->where('user_id', $usuario->id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
     }
 
     public static function marcarComoLida(Notification $aviso, User $quemLeu): void

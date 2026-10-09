@@ -846,6 +846,47 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   asc` e `ordem desc` finalmente diferentes, a query string de injeção respondendo 200 na ordem do catálogo, e a
   conta de campo com 403 no hub, no financeiro e no exportar.
 
+- Fase 19 — notificações: o sino toca para quem tem de ouvir, e a bandeja é de cada conta.
+  O `Notifier` ganhou o resto do vocabulário (`ordem.atribuida`) e três endurecimentos que a
+  auditoria pediu: `quemPode()` agora filtra por `company_id` — o modelo `User` não tem escopo
+  global de empresa, e um sino que atravessa a fronteira do tenant não é alerta, é vazamento —,
+  `paraQuemPode()` aceita o autor do ato e não toca sino para quem acabou de praticá-lo, e
+  `jaAvisaram()` deduplica: enquanto a conta tiver por ler um aviso daquele tipo apontando para
+  aquela origem, o fato repetido não martela. O `StatusCatalog` ganhou o grupo `notification`, e
+  é dele que a central tira rótulo, tom e as opções do filtro — tela nenhuma conhece texto solto.
+- Seis gatilhos em atos de negócio reais: ordem criada toca na conta do técnico escolhido — e,
+  sem responsável, sobe para quem tem `orders.approve`; comissionar toca a conta do quadro com a
+  nota de comissão como corpo; concluir ou cancelar toca as contas do quadro ativo, do
+  responsável e do cliente dono da carteira (o motivo do cancelamento viaja no aviso); chamado
+  novo toca uma vez para cada conta com `tickets.execute`; resolver toca o responsável e a conta
+  de cliente com a nota da resolução como corpo; e a falta no central — o flash de quem digitou —
+  agora também acorda quem repõe (`stock.adjust`), um toque por conta sem leitura.
+- Central de notificações (`/notificacoes`, `NotificationController` + `notifications/index`):
+  posse antes de permissão — a consulta filtra `user_id` de quem logou antes de qualquer filtro,
+  o PATCH de marcar lida responde 404 para aviso alheio sem confirmar que a bandeja existe, e o
+  "marcar todos" varre só a conta de quem clicou. Busca, tipo, leitura, período, ordenação e
+  paginação são as primitivas das listagens, e aviso não se apaga: fica com o carimbo da chegada
+  e o da leitura.
+- Sino na barra (`navbar`): contagem de pendentes com teto em 99+, dropdown com os seis últimos
+  avisos, fio de marca nos ainda não lidos e atalho para o centro; a consulta do sino é sempre
+  por conta, nunca por empresa, e o item entrou na seção Gestão da sidebar para todo papel com
+  `notifications.view` — inclusive o cliente.
+- Varredura diária (`nf:notificacoes:diaria`, agendada às 07:00 com `withoutOverlapping`): ordem
+  vencida no prazo previsto toca o quadro, o responsável e quem aprova escala; receita ou despesa
+  a vencer em até dois dias toca quem lê o financeiro; e a agenda de amanhã toca o técnico da
+  janela e a conta do cliente. Cada empresa é varrida dentro do próprio contexto de tenant, e a
+  conta de cliente fica fora do atraso de propósito — atraso sem ação junto é ansiedade.
+- `NotificationsTest` (12 testes, 75 asserções) trava as três decisões do servidor: bandeja por
+  conta com 404 para o sino alheio, autor que não ouve o próprio ato, sino único por permissão,
+  dedup que só libera o segundo toque depois da leitura, varredura que não empilha o mesmo fato,
+  e o escritório da empresa ao lado que não ouve nada. A suíte fecha em 232 testes / 2433
+  asserções, com o filtro de empresa em `quemPode()` aprovado pelo teste de fronteira antes de o
+  sino existir em tela.
+- Prova ao vivo no servidor de desenvolvimento: `/notificacoes` capturado em 1440×900 nos dois
+  temas com os badges por tipo e os dois carimbos visíveis, o dropdown do sino aberto no painel
+  com "7 pendentes" e o rodapé do centro, e a varredura rodou de verdade — 14 avisos gerados na
+  primeira passada, zero na segunda, o deduplicador funcionando sem leitura no meio.
+
 ### Alterado
 
 - Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de

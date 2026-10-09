@@ -8,6 +8,7 @@ use App\Models\ServiceOrder;
 use App\Models\ServiceOrderAssignment;
 use App\Models\Technician;
 use App\Support\Auditor;
+use App\Support\Notifier;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
 use Illuminate\Http\RedirectResponse;
@@ -80,6 +81,19 @@ class OrderAssignmentController extends Controller
             [],
             sprintf('%s: %s entrou no quadro de comissão.', $ordem->number, $comissao->technician->name),
         );
+
+        $contaDoTécnico = $comissao->technician?->user;
+
+        if ($contaDoTécnico !== null && (int) $contaDoTécnico->id !== (int) $usuario->id) {
+            Notifier::para(
+                $contaDoTécnico,
+                'ordem.atribuida',
+                sprintf('Você entrou no quadro da ordem %s.', $ordem->number),
+                $validado['comissao_nota'] ?? sprintf('%s colocou você no quadro desta ordem.', $usuario->name),
+                route('orders.show', $ordem),
+                ['order_id' => $ordem->id],
+            );
+        }
 
         return back()->with('status', sprintf(
             '%s comissionado na ordem %s.',

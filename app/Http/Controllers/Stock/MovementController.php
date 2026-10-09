@@ -14,6 +14,7 @@ use App\Support\Auditor;
 use App\Support\Export;
 use App\Support\Formatters;
 use App\Support\ListFilters;
+use App\Support\Notifier;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
@@ -153,6 +154,10 @@ class MovementController extends Controller
             ->with('status', $this->mensagem($movimento, $produto, $depoisCentral));
 
         $aviso = $this->avisoDeReposicao($produto, $depoisCentral);
+
+        if ($aviso !== null) {
+            $this->avisarEstoqueBaixo($produto, $aviso);
+        }
 
         return $aviso === null ? $redirect : $redirect->with('aviso', $aviso);
     }
@@ -537,6 +542,33 @@ class MovementController extends Controller
             Formatters::decimal($produto->reorder_point),
             $this->unidade($produto),
         );
+    }
+
+    /**
+     * A falta no central é o único flash de tela que também toca sino: quem vê
+     * o aviso verde é quem digitou a baixa; quem repõe precisa ser chamado à
+     * parte. O toque é um por conta sem leitura — a mesma peça voltando a
+     * faltar não martela quem ainda não leu a falta anterior, e volta a soar
+     * para quem já leu.
+     */
+    private function avisarEstoqueBaixo(Product $produto, string $aviso): void
+    {
+        $link = route('movements.index', ['produto' => $produto->id]);
+
+        foreach (Notifier::quemPode('stock.adjust') as $conta) {
+            if (Notifier::jaAvisaram((int) $conta->id, 'estoque.baixo', $link)) {
+                continue;
+            }
+
+            Notifier::para(
+                $conta,
+                'estoque.baixo',
+                sprintf('%s abaixo do ponto de reposição', $produto->name),
+                $aviso,
+                $link,
+                ['produto_id' => $produto->id],
+            );
+        }
     }
 
     /** O código da unidade, que é como a operação fala no corredor: "un", "kg", "m". */

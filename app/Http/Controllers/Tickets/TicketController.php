@@ -13,6 +13,7 @@ use App\Models\TicketStatusHistory;
 use App\Models\User;
 use App\Support\Export;
 use App\Support\ListFilters;
+use App\Support\Notifier;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
 use App\Support\TextoSeguro;
@@ -131,6 +132,8 @@ class TicketController extends Controller
             return $chamado;
         });
 
+        $this->avisarChamadoAberto($chamado, $usuario);
+
         return redirect()
             ->route('tickets.show', $chamado)
             ->with('status', "Chamado {$chamado->protocol} aberto para {$chamado->client->name}.");
@@ -234,12 +237,59 @@ class TicketController extends Controller
         $origem = StatusCatalog::label('ticket', $chamado->status);
         $chamado->mudarStatus($destino, $usuario, $validado['nota'] ?? null);
 
+        if ($destino === 'resolved') {
+            $this->avisarResolucao($chamado, $usuario, $validado['nota'] ?? null);
+        }
+
         return back()->with('status', sprintf(
             'Chamado %s: %s → %s.',
             $chamado->protocol,
             $origem,
             StatusCatalog::label('ticket', $destino),
         ));
+    }
+
+    /**
+     * Chamado novo toca para quem pode atendê-lo: toda conta ativa da empresa
+     * com a permissão `tickets.execute`. Um sino por chamado — a mesma
+     * permissão não dobra o aviso, e quem abriu o chamado não ouve o ato que
+     * acabou de praticar.
+     */
+    private function avisarChamadoAberto(Ticket $chamado, User $usuario): void
+    {
+        $título = sprintf('Chamado %s aberto: %s', $chamado->protocol, $chamado->subject);
+        $link = route('tickets.show', $chamado);
+
+        Notifier::paraQuemPode('tickets.execute', 'chamdo.aberto', $título, null, $link, [
+            'ticket_id' => $chamado->id,
+        ], $usuario);
+    }
+
+    /**
+     * Resolver é o único meio-de-percurso que toca sino: a conta de cliente dona
+     * do chamado e o responsável apontado. A nota da resolução viaja como corpo
+     * do aviso porque o que o outro lado espera é a resposta — o que foi feito —
+     * e não a notícia burocrática de que um estado mudou.
+     */
+    private function avisarResolucao(Ticket $chamado, User $usuario, ?string $nota): void
+    {
+        $título = sprintf('Chamado %s resolvido: %s', $chamado->protocol, $chamado->subject);
+        $link = route('tickets.show', $chamado);
+
+        $destinos = User::query()
+            ->where('company_id', $chamado->company_id)
+            ->where('status', 'active')
+            ->where(fn ($q) => $q
+                ->where('id', $chamado->responsible_user_id)
+                ->orWhere('client_id', $chamado->client_id))
+            ->where('id', '!=', $usuario->id)
+            ->get();
+
+        foreach ($destinos as $destino) {
+            Notifier::para($destino, 'chamdo.resolvido', $título, $nota, $link, [
+                'ticket_id' => $chamado->id,
+            ]);
+        }
     }
 
     public function export(Request $request): StreamedResponse

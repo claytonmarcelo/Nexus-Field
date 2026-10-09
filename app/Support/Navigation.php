@@ -75,6 +75,12 @@ class Navigation
                         'permission' => 'reports.view',
                         'icon' => 'fa-solid fa-chart-column',
                     ],
+                    [
+                        'label' => 'Notificações',
+                        'route' => 'notifications.index',
+                        'permission' => 'notifications.view',
+                        'icon' => 'fa-regular fa-bell',
+                    ],
                 ],
             ],
             [

@@ -12,6 +12,7 @@ use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\FinancialRecordController;
 use App\Http\Controllers\Finance\PaymentController;
+use App\Http\Controllers\Notifications\NotificationController;
 use App\Http\Controllers\Orders\CheckinController;
 use App\Http\Controllers\Orders\OrderAssignmentController;
 use App\Http\Controllers\Orders\OrderController;
@@ -284,6 +285,23 @@ Route::middleware(['auth', 'company'])->group(function () {
             ->where('relatorio', 'financeiro|operacao|chamados|estoque')
             ->middleware('permission:reports.export')
             ->name('export');
+    });
+
+    /*
+     * A bandeja é da conta, não do papel: `notifications.view` abre a tela para
+     * qualquer perfil — inclusive o de cliente — e quem separa as caixas é a
+     * coluna `user_id` na consulta do servidor. Marcar lida escreve, então vem
+     * em POST com CSRF; e o PATCH parametrizado só existe depois do literal,
+     * porque `todas-lidas` é botão, não id de aviso.
+     */
+    Route::prefix('notificacoes')->name('notifications.')->group(function () {
+        Route::middleware('permission:notifications.view')->group(function () {
+            Route::get('/', [NotificationController::class, 'index'])->name('index');
+
+            Route::patch('todas-lidas', [NotificationController::class, 'marcarTodos'])->name('mark-all');
+
+            Route::patch('{aviso}/lida', [NotificationController::class, 'marcar'])->name('mark');
+        });
     });
 
     Route::prefix('clientes')->name('clients.')->group(function () {

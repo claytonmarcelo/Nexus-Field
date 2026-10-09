@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Support\Export;
 use App\Support\Formatters;
 use App\Support\ListFilters;
+use App\Support\Notifier;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
 use Closure;
@@ -125,6 +126,8 @@ class OrderController extends Controller
 
             return $ordem;
         });
+
+        $this->avisarNovaOrdem($ordem, $usuario);
 
         return redirect()
             ->route('orders.show', $ordem)
@@ -256,12 +259,78 @@ class OrderController extends Controller
         $origem = StatusCatalog::label('order', $ordem->status);
         $ordem->mudarStatus($destino, $usuario, $validado['nota'] ?? null);
 
+        $this->avisarFimDePercurso($ordem, $destino, $usuario);
+
         return back()->with('status', sprintf(
             'Ordem %s: %s → %s.',
             $ordem->number,
             $origem,
             StatusCatalog::label('order', $destino),
         ));
+    }
+
+    /**
+     * Ordem recém-criada toca no sino de quem tem de mexer nela: se já nasceu
+     * com técnico, a conta da ficha dele; se nasceu sem responsável, a decisão
+     * sobe para quem tem a permissão de aprovação da escala. Em ambos os casos
+     * quem abriu a ordem não ouve o próprio sino — o autor acabou de ver o ato.
+     */
+    private function avisarNovaOrdem(ServiceOrder $ordem, User $usuario): void
+    {
+        $título = sprintf('Ordem %s criada para %s.', $ordem->number, $ordem->client->name);
+        $link = route('orders.show', $ordem);
+
+        if ($ordem->technician?->user !== null) {
+            Notifier::para($ordem->technician->user, 'ordem.criada', $título, $ordem->title, $link, [
+                'order_id' => $ordem->id,
+            ]);
+
+            return;
+        }
+
+        Notifier::paraQuemPode('orders.approve', 'ordem.criada', $título, $ordem->title, $link, [
+            'order_id' => $ordem->id,
+        ], $usuario);
+    }
+
+    /**
+     * Só o fim de percurso toca sino: concluída ou cancelada. O carimbo do meio
+     * do fluxo ("em execução", "pausada") é gesto interno do escritório e não
+     * acorda ninguém. A audiência é de quem tem pele na ordem — as contas do
+     * técnico responsável, do quadro de comissão ativo e do cliente dono da
+     * carteira — e o autor do carimbo fica de fora. Quando o fim é o
+     * cancelamento, o motivo registrado viaja como corpo do aviso: quem esperava
+     * o serviço tem direito de saber por que não veio.
+     */
+    private function avisarFimDePercurso(ServiceOrder $ordem, string $destino, User $usuario): void
+    {
+        if (! in_array($destino, ['completed', 'canceled'], true)) {
+            return;
+        }
+
+        $tipo = $destino === 'completed' ? 'ordem.concluida' : 'ordem.cancelada';
+        $título = sprintf('Ordem %s %s.', $ordem->number, mb_strtolower(StatusCatalog::label('order', $destino)));
+        $corpo = $destino === 'canceled' ? $ordem->cancellation_reason : null;
+        $link = route('orders.show', $ordem);
+
+        $fichas = $ordem->assignments()->whereNull('released_at')->pluck('technician_id');
+
+        if ($ordem->technician_id !== null) {
+            $fichas = $fichas->push($ordem->technician_id);
+        }
+
+        $contas = User::query()
+            ->where('company_id', $ordem->company_id)
+            ->where('status', 'active')
+            ->where(fn ($q) => $q
+                ->whereIn('id', Technician::query()->whereIn('id', $fichas)->whereNotNull('user_id')->pluck('user_id'))
+                ->orWhere('client_id', $ordem->client_id))
+            ->where('id', '!=', $usuario->id)
+            ->get();
+
+        foreach ($contas as $conta) {
+            Notifier::para($conta, $tipo, $título, $corpo, $link, ['order_id' => $ordem->id]);
+        }
     }
 
     /**

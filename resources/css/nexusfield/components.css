@@ -1886,3 +1886,124 @@
     font-size: .82rem;
     color: var(--nf-danger);
 }
+
+/* ==========================================================================
+   Sino do navbar — a bandeja resumida na barra. A contagem pendente é um selo
+   pequeno no canto do ícone; o menu é uma coluna de avisos em que a linha sem
+   leitura leva o fio verde à esquerda, e o rodapé é a única porta para a tela
+   inteira. O tom é o dos tokens: sino mudo não se destaca, sino tocado sim.
+   ================================================================== */
+.nf-bell-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 999px;
+    transition: background-color var(--nf-duration) var(--nf-ease);
+}
+
+.nf-bell-toggle:hover,
+.nf-bell-toggle:focus-visible,
+.nf-bell-toggle[aria-expanded="true"] {
+    background: var(--nf-tint);
+}
+
+.nf-bell-count {
+    position: absolute;
+    top: -.12rem;
+    right: -.18rem;
+    min-width: 1.05rem;
+    padding-inline: .24rem;
+    border-radius: 999px;
+    background: var(--nf-danger);
+    color: #fff;
+    font-size: .66rem;
+    font-weight: 700;
+    line-height: 1.05rem;
+    text-align: center;
+}
+
+.nf-bell-menu {
+    width: min(23rem, calc(100vw - 2rem));
+    padding-block: .35rem;
+    box-shadow: var(--nf-shadow-lg);
+}
+
+.nf-bell-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .45rem .9rem .5rem;
+}
+
+.nf-bell-head-title {
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+}
+
+.nf-bell-head-count {
+    font-size: .78rem;
+    color: var(--nf-text-faint);
+}
+
+.nf-bell-item {
+    display: grid;
+    gap: .18rem;
+    padding: .55rem .9rem;
+    border-inline-start: 2px solid transparent;
+    color: var(--nf-text);
+    text-decoration: none;
+}
+
+.nf-bell-item:hover,
+.nf-bell-item:focus-visible {
+    background: var(--nf-tint);
+    color: var(--nf-text);
+}
+
+.nf-bell-nova {
+    border-inline-start-color: var(--nf-primary);
+}
+
+.nf-bell-item .nf-status {
+    justify-self: start;
+}
+
+.nf-bell-item-title {
+    font-size: .86rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.nf-bell-item-when {
+    font-size: .74rem;
+    color: var(--nf-text-faint);
+    font-variant-numeric: tabular-nums;
+}
+
+.nf-bell-empty {
+    margin: 0;
+    padding: .8rem .9rem;
+    font-size: .82rem;
+    line-height: 1.45;
+    color: var(--nf-text-muted);
+}
+
+.nf-bell-foot {
+    display: block;
+    padding: .5rem .9rem;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--nf-primary);
+    text-decoration: none;
+}
+
+.nf-bell-foot:hover {
+    text-decoration: underline;
+}
