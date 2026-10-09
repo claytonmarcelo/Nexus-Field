@@ -52,6 +52,12 @@ class Navigation
                         'permission' => 'orders.view',
                         'icon' => 'fa-solid fa-location-crossing',
                     ],
+                    [
+                        'label' => 'Estoque',
+                        'route' => 'movements.index',
+                        'permission' => 'stock.view',
+                        'icon' => 'fa-solid fa-right-left',
+                    ],
                 ],
             ],
             [

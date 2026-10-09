@@ -90,7 +90,7 @@
                             ['fa-solid fa-headset', 'Chamados', 'Fila priorizada por urgência e prazo, com vínculo direto à ordem que a resolve.'],
                             ['fa-solid fa-calendar-days', 'Agenda', 'Calendário por técnico, equipe e cliente, arrastando da demanda para a janela real.'],
                             ['fa-solid fa-location-crosshairs', 'Check-in em campo', 'Entrada e saída do local com posição registrada, comprovando o que foi executado.'],
-                            ['fa-solid fa-boxes-stacked', 'Estoque', 'Produtos, serviços, lotes e movimentações ligados ao consumo de cada ordem.'],
+                            ['fa-solid fa-boxes-stacked', 'Estoque', 'Saldo somado das movimentações, carga do técnico e consumo lançado na ordem que o gastou.'],
                             ['fa-solid fa-chart-line', 'KPIs e relatórios', 'SLA, custo, produtividade e faturamento calculados sobre o que está no banco.'],
                         ] as [$icone, $titulo, $texto])
                             <div class="col-12 col-md-6 col-xl-4">

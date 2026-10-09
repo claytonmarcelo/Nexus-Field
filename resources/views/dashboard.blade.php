@@ -328,6 +328,55 @@
                     @endif
                 </x-ui.card>
             </div>
+
+            <div class="col-12 col-xl">
+                <x-ui.card title="Últimas movimentações" subtitle="O que entrou e saiu, com o efeito de cada linha no saldo que ela mexe.">
+                    @if ($painel['estoque']['movimentacoes']->isEmpty())
+                        <x-ui.state tone="empty" title="Nenhuma movimentação registrada">
+                            O livro-caixa do estoque está vazio nesta empresa.
+                        </x-ui.state>
+                    @else
+                        <ul class="nf-fact-list mb-0">
+                            @foreach ($painel['estoque']['movimentacoes'] as $movimento)
+                                @php
+                                    // Compra e ajuste movem o estoque central; carga, consumo e devolução
+                                    // movem a mala do técnico. A linha mostra o saldo que ela realmente mexe.
+                                    $central = $movimento->efeitoCentral();
+                                    $carga = $movimento->efeitoTecnico() ?? 0.0;
+                                    $efeito = abs($central) >= abs($carga) ? $central : $carga;
+                                    $unidade = $movimento->product?->unit ?? 'un';
+                                @endphp
+                                <li>
+                                    <span>
+                                        @if ($movimento->product)
+                                            @can('products.view')
+                                                <a href="{{ route('products.show', $movimento->product) }}">{{ $movimento->product->name }}</a>
+                                            @else
+                                                {{ $movimento->product->name }}
+                                            @endcan
+                                        @else
+                                            <span class="nf-text-muted-2">Produto removido do cadastro</span>
+                                        @endif
+                                        <span class="nf-text-muted-2">
+                                            · {{ StatusCatalog::label('movement', $movimento->type) }}
+                                            · {{ $movimento->technician?->name ?? 'central' }}
+                                        </span>
+                                    </span>
+                                    <strong class="nf-mono {{ $efeito < 0 ? 'nf-status-canceled' : 'nf-status-done' }}">
+                                        {{ ($efeito < 0 ? '−' : '+') . Formatters::decimal(abs($efeito)) }}
+                                        <span class="nf-text-muted-2">{{ $unidade }}</span>
+                                        <span class="nf-text-muted-2">{{ Formatters::time($movimento->recorded_at) }}</span>
+                                    </strong>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+
+                    <x-slot:tools>
+                        <a class="nf-text-muted-2" href="{{ route('movements.index') }}">Ver o livro-caixa</a>
+                    </x-slot:tools>
+                </x-ui.card>
+            </div>
         @endif
     </div>
 

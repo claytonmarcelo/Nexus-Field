@@ -17,12 +17,8 @@
 
         <div class="nf-list-acoes">
             @can('stock.view')
-                {{-- A tela de movimentações é a fase 16; o botão só aparece quando
-                     o aplicativo desenha o destino. --}}
-                @if (Route::has('movements.index'))
-                    <x-ui.button variant="ghost" size="sm" :href="route('movements.index')"
-                        icon="fa-solid fa-arrow-right-arrow-left">Movimentações</x-ui.button>
-                @endif
+                <x-ui.button variant="ghost" size="sm" :href="route('movements.index')"
+                    icon="fa-solid fa-arrow-right-arrow-left">Movimentações</x-ui.button>
             @endcan
 
             @can('products.create')

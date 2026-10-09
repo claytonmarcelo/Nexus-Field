@@ -267,6 +267,69 @@
         </div>
     </div>
 
+    @can('stock.view')
+        <div class="row g-3 mt-1">
+            <div class="col-12">
+                <x-ui.card title="Carga no nome dele" subtitle="Estado material da mala, somado das movimentações que passaram por este técnico.">
+                    @if ($carga->isEmpty())
+                        <x-ui.state tone="empty" title="Nenhuma unidade carregada">
+                            Nada saiu do estoque central para este técnico — ou tudo o que foi levado já
+                            voltou e foi devolvido.
+                        </x-ui.state>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table nf-table nf-table-wrap align-middle mb-0">
+                                <caption class="visually-hidden">Produtos que este técnico está carregando agora</caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Produto</th>
+                                        <th scope="col">SKU</th>
+                                        <th scope="col" class="text-end">Quantidade carregada</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($carga as $linha)
+                                        <tr>
+                                            <td>
+                                                @if ($linha->product)
+                                                    @can('products.view')
+                                                        <a class="fw-semibold" href="{{ route('products.show', $linha->product) }}">{{ $linha->product->name }}</a>
+                                                    @else
+                                                        <span class="fw-semibold">{{ $linha->product->name }}</span>
+                                                    @endcan
+                                                @else
+                                                    <span class="nf-text-muted-2">Produto removido do cadastro</span>
+                                                @endif
+                                            </td>
+                                            <td class="nf-mono nf-text-muted-2">{{ $linha->product?->sku }}</td>
+                                            <td class="text-end nf-mono">
+                                                {{ Formatters::decimal($linha->quantity) }}
+                                                <span class="nf-text-muted-2 small">{{ $linha->product?->unit }}</span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <p class="nf-text-muted-2 small mb-0 mt-2">
+                            É o que está na mão dele agora, não o histórico: carga soma para dentro, consumo
+                            e devolução somam para fora, e o total carregado é
+                            <span class="nf-mono">{{ Formatters::decimal($carga->sum('quantity')) }}</span>
+                            unidades.
+                        </p>
+                    @endif
+
+                    <x-slot:tools>
+                        <a class="nf-text-muted-2" href="{{ route('movements.index', ['tecnico' => $tecnico]) }}">
+                            Ver as movimentações dele
+                        </a>
+                    </x-slot:tools>
+                </x-ui.card>
+            </div>
+        </div>
+    @endcan
+
     @if ($localizacoes->isNotEmpty())
         <div class="row g-3 mt-1">
             <div class="col-12">

@@ -594,6 +594,89 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   oferece formulário a quem não pode registrar, e a coordenada absurda / relato imenso barrados na
   validação. A suíte fecha em 173 testes / 1719 asserções.
 
+- FASE 16 — estoque em livro-caixa, não em campo de quantidade. O módulo inteiro foi construído sobre uma
+  recusa: não existe tela para digitar quanto há de um produto, e `products` não tem coluna de saldo. O
+  central é a subquery que soma as linhas com o sinal de cada tipo, e é a mesma consulta da lista de
+  produtos, da ficha, do painel e do livro — um campo de quantidade viveria ao lado desse número e alguém
+  acabaria acreditando nele.
+- Migration `2026_10_08_000006_enforce_one_stock_line_per_technician_and_product`: índice único
+  `(technician_id, product_id)` em `technician_stocks`. A migration original da fase 2 não o criou, e a
+  trava pessimista que `TechnicianStock::travar()` promete só vale se houver exatamente uma linha por par
+  técnico/produto — sem o índice, duas cargas simultâneas criam duas metades do mesmo saldo e o `SUM` passa
+  a responder duas vezes.
+- `App\Models\TechnicianStock`: o estado material da mala, por produto. É a única conta do estoque que é
+  coluna e não derivação, e a distinção está escrita no docblock do model — o central é livro-caixa
+  (nenhum direito de ajustá-lo por fora das linhas), a carga é material em movimento, que precisa de uma
+  linha para travar contra si mesma. `scopeComSaldo()` esconde a zerada: produto devolvido inteiro não é
+  carga.
+- `App\Http\Controllers\Stock\MovementController` com `index`, `create`, `store` e `export` — e nada além.
+  Não existe rota para editar, apagar ou estornar uma linha: movimentação é livro-caixa append-only, e o
+  que estava errado se responde com outra linha que diz o que corrigiu. A imutabilidade é decidida no
+  roteamento, não escondendo botão.
+- Cinco tipos com dois donos: `purchase`/`return`/`adjustment` movem o estoque central
+  (`CENTRAL_SIGN`), `load`/`consume`/`return` movem a mala (`TECHNICIAN_SIGN`). O consumo não baixa o
+  central de novo porque a unidade já saiu na carga — e é isso que a asserção de saldo antes/depois do
+  consumo prova. O ajuste carrega o sinal dentro do `quantity`, porque inventário acha e perde.
+- Saldo negativo não nasce: a conta roda em `DB::transaction` com `lockForUpdate` no produto e na linha de
+  carga, e a recusa sai como `ValidationException` no campo dono do número — carga que passa do central é
+  recusada em `quantidade`, consumo ou devolução que passa da mala é recusada em `tecnico_id`, com o tanto
+  que há escrito na frase. A asserção correspondente confere que a linha e o saldo da carga travada
+  voltaram com a transação (`technician_stocks` com zero linhas).
+- `recorded_at`, `user_id` e `company_id` nunca vêm do request: o relógio é o do servidor, o autor é quem
+  está logado e a empresa é o contexto do middleware. O teste manda os quatro campos forjados (data em
+  2020, autor de outra empresa, empresa ao lado, técnico em tipo sem técnico) e lê a linha gravada — todos
+  ignorados. Tipo que a conta não registra morre na validação do campo, porque a lista aceita é a mesma
+  que o `select` oferece.
+- Vírgula decimal é recusada, não truncada: `numeric` + `decimal:0,4` barram `'0,5'` antes do
+  `(float)`, que registraria um ajuste de nada. É o mesmo contrato de todo o app — os campos são
+  `input type="number"`, que envia ponto.
+- Aviso de reposição na resposta que baixou o saldo, não na semana em que alguém abrir o painel: cruzando
+  o ponto, a redirect leva `aviso` com os dois números; acima de novo, o aviso se cala. O teste mede os
+  três momentos (antes de cruzar, cruzando, voltando).
+- Alcance decidido por responder pelo inventário: `StockMovement::alcanceRestrito()` é ter ficha de
+  técnico e não ter `stock.adjust`, e `scopeVisiveisPara()` reduz o livro às linhas com o nome dele. A
+  tela restrita não oferece seletor de técnico nem os tipos compra/ajuste, o `tecnico_id` forjado escreve
+  na própria ficha, e o CSV é `stock.export` — 403 server-side para a conta de campo.
+- Telas `resources/views/movements/index.blade.php` (o livro-caixa com saldo, efeito no central, carga do
+  técnico, ordem, autor e observação; filtros de tipo, produto, técnico, ordem, busca e período;
+  paginação própria; CSV) e `movements/create.blade.php` (o registro, com cada opção do seletor de
+  produto declarando quanto há dele no central — escolher item para baixar sem saber quanto tem é escolher
+  no escuro). Dois
+  links que mentiam para a conta de campo foram corrigidos na listagem: nome de produto e nome de técnico
+  agora só são link para quem tem `products.view` / `technicians.view`, porque ler o livro é
+  `stock.view` e abrir a ficha do colega não é.
+- Menu de Operação ganhou "Estoque" (`movements.index`, `stock.view`, `fa-right-left`), e o botão
+  "Movimentações" da lista de produtos perdeu a guarda `Route::has('movements.index')` que só existia
+  enquanto a rota não havia.
+- Painel: o bloco de estoque passou a devolver dois KPIs ("Itens abaixo do ponto de reposição" e
+  "Movimentações de hoje", contado no `recorded_at` de hoje dentro do alcance) e o cartão "Últimas
+  movimentações", com o efeito de cada linha no saldo que ela realmente mexe e saída para o livro-caixa.
+- Ficha do técnico: cartão "Carga no nome dele", lido de `stocks()->comSaldo()`, com o total em unidades e
+  o estado vazio para quem está com a mala vazia. `DashboardMetrics` e a ficha respeitam o mesmo alcance da
+  listagem, e quem tem a ficha não abre a do colega pelo cartão.
+- `DemoSeeder::estoque()` grava 27 movimentações (compra por produto, sete cargas, os consumos das peças
+  aplicadas nas ordens concluídas, uma devolução e um ajuste de −2) e `estoqueDosTecnicos()` materializa a
+  carga a partir das próprias linhas por `SUM` — a demonstração não digita saldo. Rodar o seeder de novo
+  com o índice único no lugar passou limpo, o que é a prova de que a materialização não cria par
+  duplicado.
+- `tests/Feature/StockTest.php` (10 testes / 145 asserções) cobre o saldo que é conta de linhas (e a
+  coluna de quantidade que não existe em `products`), as três recusas que não deixam rastro, a forja de
+  data/autor/empresa/técnico, o ajuste que é de quem responde pelo inventário (funcionário recusado no
+  campo, cliente 403 nas duas pontas, zero recusado, meia unidade aceita no formato do app), as rotas do
+  módulo conferidas uma por uma, o técnico falando da própria mala, o consumo que pede ordem (ausente,
+  rascunho, cancelada, da empresa ao lado, do colega, e a que passou pelo quadro de comissão real), o
+  aviso de reposição nos três momentos, os filtros com o CSV devolvendo o mesmo ponto, e o painel contando
+  o mesmo que a listagem para escritório e para campo. `DashboardTest` atualizado para o décimo terceiro
+  indicador.
+- Prova ao vivo no servidor de desenvolvimento, com sessão de verdade: item no menu, `/estoque` com 16
+  linhas e paginação, `/estoque/registrar` entregando token e o saldo de cada produto no `select`, POST
+  gravando a linha (redirect para `/estoque?produto=75` com "Compra de 3,00" no aviso e a observação
+  lendo na tabela), o mesmo POST sem token devolvendo **419**, CSV com BOM e `;` respeitando o filtro de
+  tipo, painel mostrando o KPI "Movimentações de hoje" em 1 depois da escrita, e a conta de campo sem
+  seletor de técnico, sem os tipos de inventário e com 403 no CSV. Conferência do banco: 27 linhas, 7
+  cargas, zero divergência entre carga guardada e soma das movimentações, nenhum central negativo, nenhum
+  tipo de técnico sem dono, nenhum consumo sem ordem. A suíte fecha em 185 testes / 1882 asserções.
+
 ### Alterado
 
 - A paleta "Premium Gourmet + Technology" foi harmonizada com a nova logo: a marca saiu do teal
@@ -964,23 +1047,31 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 ### Conhecido
 
 - O painel lê o banco e nada mais: os blocos operacionais existem, e as telas que produzem os de ordem,
-  chamado, agenda e presença em campo já estão no ar. Faltam as telas que alimentam os blocos de estoque e
-  financeiro, que chegam das fases 16 e 17. Clientes, técnicos, equipes, especialidades, catálogo, ordens,
-  chamados, visitas e agenda já estão no `Navigation` e alimentam os indicadores que dependem de cadastro;
-  o que ainda não tem rota não tem link no menu, por decisão e não por descuido.
+  chamado, agenda, presença em campo e estoque já estão no ar. Falta a tela que alimenta o bloco
+  financeiro, que chega na fase 17. Clientes, técnicos, equipes, especialidades, catálogo, ordens,
+  chamados, visitas, agenda e estoque já estão no `Navigation` e alimentam os indicadores que dependem de
+  cadastro; o que ainda não tem rota não tem link no menu, por decisão e não por descuido.
 - A ficha da equipe e a do serviço já abrem a ordem pelo botão, porque `orders.show` existe desde a fase
-  12. O que continua condicionado é o botão "Movimentações" da listagem de produtos e a nota de estoque
-  da ficha de ordem: ambos só são desenhados quando a rota `movements.index` existir (fase 16). A tela
-  não promete um link que o aplicativo ainda não desenha.
+  12, e a lista de produtos e a ficha do técnico já abrem o livro-caixa, porque `movements.index` existe
+  desde a fase 16. O que continua sem link é o que não tem rota: nada na tela aponta para caminho que o
+  aplicativo ainda não desenha.
 - O raio aceito pelo check-in é lido de `company_settings` (`checkin_raio`, 250 m por padrão), mas ainda não
   há tela para a empresa escolhê-lo: hoje ele entra pelo banco — e a demonstração grava 300 m de propósito,
   para que a marca "fora do raio" apareça em tela. A tela de configurações é a fase 21. Registrar a chegada
   com o aparelho bloqueado continua sendo possível: a visita entra sem medida, marcada como tal.
 - A conta de cliente já tem alcance (`users.client_id`), mas quem amarra o login à carteira hoje é o
   seeder e a mão do escritório no banco; a tela que escolhe a carteira é da fase 20 (usuários e papéis).
-- O saldo central do produto é calculado sobre `stock_movements`, e a empresa de demonstração já tem
-  movimentações semeadas; a tela que registra movimentação ainda não existe (fase 16). Hoje o número
-  é leitura fiel do banco, não edição.
+- O estoque tem um armazém só: o saldo central é a soma das linhas da empresa, sem coluna de localização,
+  porque um depósito por empresa é o que o schema modela. Quanto há de um produto é leitura do banco, nunca
+  campo editado — a tela que registra movimentação entrou na fase 16, e a que digita saldo não vai entrar
+  em fase nenhuma. Ajuste de inventário continua sendo linha com sinal, não sobrescrita.
+- A peça gasta na ordem é consumida do técnico que está na ficha ou no quadro de comissão da ordem; não há
+  reserva de estoque nem baixa automática por linha de ordem, porque reservar material que pode não ser
+  usado é outro desenho de operação. A linha cobrada da ordem e o consumo do estoque são fatos separados,
+  ligados pela ordem que o consumo cita.
+- O aviso de reposição vive na resposta que cruza o ponto e no cartão do painel. Avisar por e-mail ou
+  notificação interna é a fase 19, e a tela que escolhe o ponto de reposição de cada produto já existe
+  desde a fase 11.
 - A demonstração mora na empresa `nexusfield-demo` e cria quatro usuários, um por papel de sistema
   que o painel distingue (`admin.demo@`, `gestor.demo@`, `campo.demo@`, `cliente.demo@`, todos em
   `nexusfield.local`), com senha vinda de `SEED_DEMO_PASSWORD` — que cai para `SEED_ADMIN_PASSWORD`

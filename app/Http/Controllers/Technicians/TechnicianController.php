@@ -81,6 +81,9 @@ class TechnicianController extends Controller
             'equipes' => $tecnico->teams,
             'enderecoEmEdicao' => $this->emEdicao($request, 'editar_endereco', $tecnico->addresses),
             'localizacoes' => $tecnico->checkins()->latest('checkin_at')->limit(5)->get(),
+            'carga' => $tecnico->stocks()->comSaldo()->with('product:id,name,sku,unit')
+                ->orderBy('product_id')
+                ->get(),
         ]);
     }
 

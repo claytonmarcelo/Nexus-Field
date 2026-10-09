@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\Role;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderCheckin;
+use App\Models\StockMovement;
 use App\Models\Technician;
 use App\Models\Ticket;
 use App\Models\User;
@@ -341,6 +342,13 @@ class DashboardMetrics
 
         $abaixo = Product::query()->active()->belowReorderPoint()->get();
 
+        // O livro-caixa do painel obedece ao mesmo alcance da listagem: quem tem ficha
+        // e não responde pelo inventário vê as próprias cargas, não o movimento da empresa.
+        $hoje = StockMovement::query()
+            ->visiveisPara($this->usuario)
+            ->whereDate('recorded_at', today())
+            ->count();
+
         return [
             'kpis' => [
                 [
@@ -350,9 +358,24 @@ class DashboardMetrics
                     'tone' => $abaixo->isEmpty() ? 'done' : 'canceled',
                     'icon' => 'fa-solid fa-boxes-stacked',
                 ],
+                [
+                    'label' => 'Movimentações de hoje',
+                    'value' => $hoje,
+                    'hint' => $hoje === 0
+                        ? 'Nenhuma unidade entrou ou saiu do estoque hoje'
+                        : 'Contado no servidor, no horário de cá',
+                    'tone' => $hoje === 0 ? 'waiting' : 'progress',
+                    'icon' => 'fa-solid fa-right-left',
+                ],
             ],
             'dados' => [
                 'reposicao' => $abaixo->sortBy('central_balance')->take(5)->values(),
+                'movimentacoes' => StockMovement::query()
+                    ->visiveisPara($this->usuario)
+                    ->with(['product:id,name,unit', 'technician:id,name', 'serviceOrder:id,number'])
+                    ->latest('recorded_at')
+                    ->take(6)
+                    ->get(),
             ],
         ];
     }

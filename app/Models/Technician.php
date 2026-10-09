@@ -62,6 +62,12 @@ class Technician extends Model
         return $this->hasMany(ServiceOrderCheckin::class);
     }
 
+    /** O que ele está carregando agora, por produto. Estado, não histórico. */
+    public function stocks(): HasMany
+    {
+        return $this->hasMany(TechnicianStock::class);
+    }
+
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);

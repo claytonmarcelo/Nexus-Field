@@ -158,6 +158,10 @@ class DashboardTest extends TestCase
             'Técnicos em campo agora' => '0',
             'Clientes ativos' => '1',
             'Itens abaixo do ponto de reposição' => '1',
+            // As quatro movimentações desta ficha são de 2026-10-05: o cartão conta o
+            // dia de hoje, e um número aqui que não fosse 0 estaria somando o livro
+            // inteiro.
+            'Movimentações de hoje' => '0',
             'A receber' => 'R$ 150,00',
             'Recebido no mês' => 'R$ 40,00',
             'Despesa do mês' => 'R$ 20,00',

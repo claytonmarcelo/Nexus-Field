@@ -14,6 +14,7 @@ use App\Http\Controllers\Orders\CheckinController;
 use App\Http\Controllers\Orders\OrderAssignmentController;
 use App\Http\Controllers\Orders\OrderController;
 use App\Http\Controllers\Orders\OrderItemController;
+use App\Http\Controllers\Stock\MovementController;
 use App\Http\Controllers\Technicians\SpecialtyController;
 use App\Http\Controllers\Technicians\TeamController;
 use App\Http\Controllers\Technicians\TechnicianAddressController;
@@ -112,6 +113,28 @@ Route::middleware(['auth', 'company'])->group(function () {
         Route::patch('{visita}/saida', [CheckinController::class, 'checkout'])
             ->middleware('permission:orders.execute,orders.approve')
             ->name('checkout');
+    });
+
+    /*
+     * O estoque se escreve por movimentação, não por campo de quantidade: a tela
+     * que mostra o saldo é a de produtos (fase 11) e esta é o livro-caixa que o
+     * formou. Registrar é `stock.move`; ajustar inventário é `stock.adjust`, o
+     * degrau de quem responde pelo saldo da empresa — dentro do controlador cada
+     * tipo responde pela sua, porque a rota não sabe qual tipo foi escolhido.
+     */
+    Route::prefix('estoque')->name('movements.')->group(function () {
+        Route::get('/', [MovementController::class, 'index'])
+            ->middleware('permission:stock.view')
+            ->name('index');
+
+        Route::get('exportar', [MovementController::class, 'export'])
+            ->middleware('permission:stock.export')
+            ->name('export');
+
+        Route::middleware('permission:stock.move,stock.adjust')->group(function () {
+            Route::get('registrar', [MovementController::class, 'create'])->name('create');
+            Route::post('/', [MovementController::class, 'store'])->name('store');
+        });
     });
 
     Route::prefix('chamados')->name('tickets.')->group(function () {

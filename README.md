@@ -18,14 +18,14 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-173%20testes%20%2F%201719%20asser%C3%A7%C3%B5es-brightgreen" alt="173 testes, 1719 asserções">
+  <img src="https://img.shields.io/badge/testes-185%20testes%20%2F%201882%20asser%C3%A7%C3%B5es-brightgreen" alt="185 testes, 1882 asserções">
 </p>
 
 <p align="center">
   <sub>Estágio atual: fundação completa (fases 1 a 8), os cadastros e o catálogo no ar
   (fase 9 — clientes, fase 10 — técnicos, equipes e especialidades, fase 11 — serviços, produtos e
   categorias) e a operação aberta (fase 12 — ordens de serviço, fase 13 — chamados, fase 14 — agenda
-  em calendário). A tabela
+  em calendário, fase 15 — visita de campo com posição, fase 16 — estoque em livro-caixa). A tabela
   <a href="#módulos">Módulos</a> diz, um por um, o que já está no ar e
   o que ainda é só schema.</sub>
 </p>
@@ -40,7 +40,11 @@ o clique abre o arquivo no tamanho capturado. O painel de celular é fotografado
 (390×844) e montado sobre o mesmo quadro de 1440×900 — é o único quadro diferente da série, e a
 legenda diz isso. Os painéis mostram a empresa de demonstração criada pelo `DemoSeeder` — é ela que
 tem ordens, chamados, financeiro e estoque para os indicadores calcularem; na empresa real sem dados,
-os mesmos blocos aparecem nos estados vazios.
+os mesmos blocos aparecem nos estados vazios. As três capturas do painel são anteriores à fase 16:
+desenham doze indicadores e hoje o escritório conta treze, porque o estoque acrescentou o cartão
+"Movimentações de hoje" e a lista "Últimas movimentações". Elas serão recapturadas quando a última
+fase pousar — o painel ganha um bloco por módulo, e refazer a foto a cada fase manteria o README
+mentindo uma fase por vez.
 
 <div align="center">
 
@@ -251,6 +255,33 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - `/visitas` usa os mesmos `ListFilters`, a mesma paginação própria e o mesmo CSV (`;`, BOM, `Export`) da
   listagem: período, técnico, cliente, situação, busca por número de ordem ou nome, e o estado desenhado
   de vazio quando nada bate com os filtros
+- **Estoque**: não há campo de quantidade em lugar nenhum. `products` não tem coluna de saldo — o central
+  é a subquery SQL que soma as movimentações com o sinal de cada tipo (`StockMovement::CENTRAL_SIGN`), e é
+  a mesma consulta da lista de produtos, da ficha, do painel e do livro-caixa
+- Cinco tipos com dois donos diferentes: compra e ajuste de inventário mexem no estoque central; carga,
+  consumo e devolução mexem na mala do técnico (`TECHNICIAN_SIGN`). Consumo não baixa o central de novo
+  porque a unidade já saiu dele na carga — e é isso que a prova de saldo verifica linha por linha
+- Saldo negativo não nasce: a conta é feita dentro de uma transação com a linha do produto e a linha de
+  carga travadas por `lockForUpdate`, e o índice único `(technician_id, product_id)` — migration desta fase
+  — é o que dá sentido à trava, porque sem uma linha por par dois consumos simultâneos baixariam três
+  unidades de um produto que tinha duas
+- Livro-caixa não se edita nem se apaga: as rotas do módulo são `index`, `create`, `store` e `export`, e não
+  há rota para mudar ou riscar uma linha. O que estava errado se responde com outra linha, e a auditoria
+  mostra as duas
+- Data, autor e empresa não vêm do request: `recorded_at` é o relógio do servidor, `user_id` é quem está
+  logado e `company_id` é o contexto resolvido no middleware — os quatro campos que uma posting forjada
+  tenta mandar são ignorados, testado linha por linha
+- O recorte é responder pelo inventário: quem tem `stock.adjust` lê e move a empresa inteira; o técnico com
+  ficha fala da própria carga, lê só as linhas em que o nome dele aparece, e o formulário nem oferece
+  seletor de técnico nem os tipos compra/ajuste — a mesma lista que o select mostra é a que o servidor
+  aceita, e ela morre na validação do campo. Exportar é `stock.export`, e a conta restrita recebe 403
+- O aviso de reposição sai na resposta que baixou o saldo, não na semana em que alguém abrir o painel:
+  cruzando o ponto de reposição, a mesma redirect leva o motivo com os dois números
+- O painel conta movimentações de hoje e lista as seis últimas no mesmo alcance da listagem, e a ficha do
+  técnico mostra o estado material da mala dele — carga zerada não aparece, e quem tem a ficha não abre a
+  do colega pelo cartão
+- Filtros de tipo, produto, técnico, ordem, busca e período, paginação própria e CSV (`;`, BOM, `Export`)
+  saem da mesma `consulta()`, então o que a tela filtra é o que o arquivo entrega
 
 ### Interface
 
@@ -290,7 +321,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vêm uma fase por vez.
 | Chamados | ✅ | ✅ | ✅ |
 | Agenda e compromissos | ✅ | ✅ | ✅ |
 | Check-in / check-out com geolocalização | ✅ | ✅ | ✅ |
-| Estoque e movimentações | ✅ | ✅ | 🚧 fase 16 |
+| Estoque e movimentações | ✅ | ✅ | ✅ |
 | Financeiro | ✅ | ✅ | 🚧 fase 17 |
 | Relatórios e exportações | ✅ | ✅ | 🚧 fase 18 |
 | Notificações | ✅ | ✅ | 🚧 fase 19 |
@@ -356,21 +387,22 @@ nexusfield/
 ├── app/
 │   ├── Http/
 │   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians, Catalog, Orders (com o
-│   │   │                      CheckinController das visitas de campo), Tickets, Agenda e os Concerns
-│   │   │                      compartilhados
+│   │   │                      CheckinController das visitas de campo), Tickets, Agenda, Stock e os
+│   │   │                      Concerns compartilhados
 │   │   └── Middleware/      → ResolveCompany (tenancy) e EnsurePermission (autorização)
-│   ├── Models/              → 29 modelos do domínio: empresa e plano, usuário e RBAC, cliente com
+│   ├── Models/              → 30 modelos do domínio: empresa e plano, usuário e RBAC, cliente com
 │   │                          contato e endereço, técnico, equipe e especialidade, catálogo, ordem
 │   │                          com linha/quadro/check-in/histórico, chamado com conversa e histórico,
-│   │                          compromisso de agenda, e as tabelas que ainda só têm schema —
-│   │                          estoque, financeiro, configuração, notificação, auditoria e anexo
+│   │                          compromisso de agenda, movimentação e carga de técnico, e as tabelas que
+│   │                          ainda só têm schema — financeiro, configuração, notificação, auditoria e
+│   │                          anexo
 │   └── Support/             → PermissionCatalog, Roles, TenantContext, StatusCatalog, Formatters,
 │                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro, Distancia e
 │                              Navigation — mais Notifier, que espera a fase 19
 ├── bootstrap/               → inicialização e registro de rotas
 ├── config/                  → banco, sessão, filesystem, temas
 ├── database/
-│   ├── migrations/          → 20 migrations do schema nexusfield
+│   ├── migrations/          → 21 migrations do schema nexusfield
 │   └── seeders/             → DatabaseSeeder (plano, empresa, RBAC, conta raiz) e DemoSeeder
 ├── docs/
 │   ├── branding/            → o medalhão e a arte completa da marca oficial
@@ -383,15 +415,16 @@ nexusfield/
 │   │                          agenda, checkin, jquery
 │   └── views/               → Blade: componentes ui/ e layouts, páginas públicas, de entrada,
 │                              de clientes, de técnicos, de equipes, de especialidades, de serviços,
-│                              de produtos, de categorias, de ordens de serviço, de chamados, de agenda
-│                              e de visitas de campo
+│                              de produtos, de categorias, de ordens de serviço, de chamados, de agenda,
+│                              de visitas de campo e de movimentações de estoque
 ├── routes/                  → web.php
 ├── storage/                 → logs, cache e uploads (fora da raiz pública)
 ├── tests/
 │   ├── Feature/             → entrada e recuperação, gate de permissão por papel, tenancy, layout
 │   │                          autenticado, as três telas abertas de acesso, campo de senha, painel,
 │   │                          demonstração, conta raiz e a troca do e-mail dela, clientes, técnicos,
-│   │                          catálogo, ordens de serviço, chamados, agenda, check-in de campo e a
+│   │                          catálogo, ordens de serviço, chamados, agenda, check-in de campo,
+│   │                          estoque em livro-caixa, o token CSRF em todo formulário de escrita e a
 │   │                          proibição dos diálogos nativos
 │   └── Unit/                → paleta dos dois temas, contrato das capturas, iniciais do usuário
 └── CHANGELOG.md             → histórico por fase
@@ -439,7 +472,7 @@ A regra de dependência é uma só: tela nenhuma decide autorização. O middlew
 **MySQL 8+**, schema `nexusfield`, engine InnoDB obrigatória (chave estrangeira e transação), charset
 `utf8mb4` / `utf8mb4_unicode_ci`.
 
-O schema é versionado em 19 migrations (`database/migrations/`) e cobre o domínio inteiro: planos e
+O schema é versionado em 21 migrations (`database/migrations/`) e cobre o domínio inteiro: planos e
 empresas, usuários e RBAC, clientes e endereços, técnicos e equipes, catálogo de serviços e produtos,
 ordens de serviço, estoque, check-in, chamados, agenda, financeiro, configurações, notificações,
 auditoria e anexos.
@@ -569,6 +602,7 @@ com as chaves nomeadas e nenhuma credencial preenchida.
 | Força bruta | 5 tentativas por e-mail e IP, mais throttle de 10 requests/min na rota de entrada |
 | Autorização | `EnsurePermission` no servidor, por permissão do catálogo; a tela não decide nada |
 | Texto rico | HTML de editor passa por `TextoSeguro` (lista fechada de tags, atributos e esquemas de URL) antes do banco; sem isso seria XSS estocado |
+| Livro-caixa | Movimentação de estoque não tem rota para editar nem apagar; `recorded_at`, `user_id` e `company_id` vêm do servidor e do contexto, nunca do request, e a conta de saldo roda em transação com o produto e a linha de carga travados por `lockForUpdate` sobre o índice único `(technician_id, product_id)` |
 | Posição em campo | O aparelho lê a coordenada, mas quem mede a distância é o servidor, contra o endereço gravado na ordem; latitude/longitude fora de ±90/±180, com mais de sete decimais ou incompletas são recusadas antes de virar linha, e `technician_id`, `checkin_at` e a medida enviados pelo request são ignorados |
 | Tenancy | `CompanyScope` global; leitura fora da empresa exige `anyCompany()` explícito |
 | Conta raiz | `is_root` não é atribuível por request e a conta raiz resiste a exclusão, desativação, remanejamento e a perder a própria bandeira |
@@ -591,7 +625,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **173 testes / 1719 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **185 testes / 1882 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
@@ -613,7 +647,13 @@ check-in: a hora e o técnico que o request tenta forjar e o servidor ignora, a 
 contra o endereço da ordem, a ausência de GPS que não vira zero, a saída que encerra a passagem sem tocar
 na ordem, o raio escolhido pela empresa que marca mas não recusa, o alcance de escritório, técnico, cliente
 e conta de outra empresa na tela, no CSV e no cartão do painel, e a ficha que só oferece o formulário a quem
-pode registrar.
+pode registrar — e o de estoque: o saldo que é conta de linhas e nunca campo digitado, a carga que não passa
+do central e o consumo que não passa da mala devolvidos sem deixar rastro, a data e o autor que o request
+tenta forjar e o servidor ignora, o ajuste que é de quem responde pelo inventário, as rotas que não existem
+para editar ou apagar linha, o alcance do técnico na própria mala, a ordem que o consumo exige, o aviso que
+sai no momento em que o saldo cruza o ponto, o filtro que o CSV devolve no mesmo ponto e o painel contando o
+mesmo que a listagem; e o CSRF, que varre as views e o HTML servido porque o `VerifyCsrfToken` se isenta
+durante os testes e nenhum outro teste do projeto veria o formulário sem token.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -671,10 +711,14 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
   hora/técnico/distância decididos pelo servidor, raio aceito lido das configurações da empresa (marca, não
   recusa), ausência de GPS tratada como medida inexistente, tela `/visitas` com filtros, paginação e CSV, e
   o alcance de escritório, técnico e conta de cliente em cada leitura
+- [x] **Fase 16** — Estoque e movimentações: livro-caixa append-only com saldo central somado no SQL,
+  cinco tipos com dois donos (central e mala), trava de linha e índice único para dois registros simultâneos
+  não inventarem estoque, data e autor decididos pelo servidor, recorte por `stock.adjust`, rota nenhuma para
+  editar ou apagar, aviso de reposição na resposta que baixa o saldo, cartão no painel e carga do técnico na
+  ficha dele, filtros, paginação própria e CSV da mesma consulta
 
 ### Planejado
 
-- [ ] Fase 16 — Estoque e movimentações
 - [ ] Fase 17 — Financeiro
 - [ ] Fase 18 — Relatórios e exportações
 - [ ] Fase 19 — Notificações

@@ -54,6 +54,12 @@ class Product extends Model
         return $this->hasMany(StockMovement::class);
     }
 
+    /** O que cada técnico está carregando deste produto, por par técnico/produto. */
+    public function cargas(): HasMany
+    {
+        return $this->hasMany(TechnicianStock::class);
+    }
+
     /** Itens de ordem que já cobraram este produto. */
     public function items(): HasMany
     {
@@ -90,7 +96,40 @@ class Product extends Model
             ->whereRaw('('.$balance->toSql().') >= products.reorder_point', $balance->getBindings());
     }
 
-    private static function centralBalanceQuery(): QueryBuilder
+    /**
+     * O saldo central de um produto lido na hora. É a conta que uma saída precisa
+     * passar antes de ser gravada: a listagem mostra o saldo derivado, a gravação
+     * confere contra o mesmo `CASE`, e os dois números são o mesmo SQL — se a
+     * regra do sinal mudasse, mudaria num lugar só.
+     */
+    public function saldoCentralAtual(): float
+    {
+        [$cases, $bindings] = static::casoDoSinal();
+
+        return (float) DB::table('stock_movements')
+            ->selectRaw('coalesce(sum(case'.$cases.' else 0 end), 0) as saldo', $bindings)
+            ->where('product_id', $this->id)
+            ->where('company_id', $this->company_id)
+            ->value('saldo');
+    }
+
+    /**
+     * O que cada tipo de movimentação faz com o estoque central, em SQL. Público
+     * porque a tela de movimentações precisa montar o mesmo CASE para ordenar e
+     * somar sem inventar uma segunda régua.
+     */
+    public static function centralBalanceQuery(): QueryBuilder
+    {
+        [$cases, $bindings] = static::casoDoSinal();
+
+        return DB::table('stock_movements')
+            ->selectRaw('coalesce(sum(case'.$cases.' else 0 end), 0)', $bindings)
+            ->whereColumn('stock_movements.product_id', 'products.id')
+            ->whereColumn('stock_movements.company_id', 'products.company_id');
+    }
+
+    /** @return array{0: string, 1: array<int, mixed>} */
+    private static function casoDoSinal(): array
     {
         $cases = '';
         $bindings = [];
@@ -101,9 +140,6 @@ class Product extends Model
             $bindings[] = $sign;
         }
 
-        return DB::table('stock_movements')
-            ->selectRaw('coalesce(sum(case'.$cases.' else 0 end), 0)', $bindings)
-            ->whereColumn('stock_movements.product_id', 'products.id')
-            ->whereColumn('stock_movements.company_id', 'products.company_id');
+        return [$cases, $bindings];
     }
 }
