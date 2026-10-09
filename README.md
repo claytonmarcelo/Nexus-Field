@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-307%20testes%20%2F%202904%20asser%C3%A7%C3%B5es-brightgreen" alt="307 testes, 2904 asserções">
+  <img src="https://img.shields.io/badge/testes-311%20testes%20%2F%202945%20asser%C3%A7%C3%B5es-brightgreen" alt="311 testes, 2945 asserções">
 </p>
 
 <p align="center">
@@ -224,6 +224,9 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - **Agenda**: FullCalendar 6 lendo o MySQL da empresa por janela de tempo, não a tabela inteira — o feed
   exige `inicio` e `fim` e fecha a varredura em 120 dias, porque um `?fim=` digitado na URL não pode virar
   varredura de nove anos
+- A janela que ainda não chegou tem cara: cinco linhas de esqueleto com o shimmer da casa, o quadro
+  esmaecido e `aria-busy` no calendário. Espera sem aviso é a mesma cara de uma agenda vazia, e as duas
+  coisas não significam a mesma coisa
 - Duas naturezas no mesmo quadro: o compromisso, que se cria, edita, move e apaga, e a janela marcada na
   ordem de serviço, desenhada tracejada e somente-leitura — mover a ordem é na ficha dela, onde o motivo
   do remanejamento fica registrado
@@ -475,6 +478,15 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - Figura decorativa para quem vê, número lido para quem não vê: o `aria-label` do traço devolve "começa
   em, termina em, maior ponto" com os valores reais da série, e o anel fica `aria-hidden` porque repete o
   percentual escrito ao lado dele
+- A espera tem cara, e ela não é o spinner do vendor: onde a tela pede dados ao servidor depois de pintada
+  — hoje é só a janela da agenda — o quadro esmaece, o esqueleto de cinco linhas assume e `aria-busy` avisa
+  quem usa leitor de tela que aquilo ainda vai mudar. Silêncio na tela é lido como "não há nada"
+- A virada de tema desliza em 200ms, e só ela: o script veste `nf-tema-virando` no `<html>` durante o
+  clique e solta 260ms depois. Transição permanente faria a página subir do branco em toda recarga, e o
+  cookie com o script inline do `<head>` existem justamente para o tema chegar antes da primeira pintura
+- A folha não guarda peça de vitrine: as 202 classes `nf-` dos seis arquivos de estilo são varridas em
+  teste contra Blade, JavaScript, controller e seeder — o que ninguém veste sai da folha, porque duas
+  maneiras de escrever a mesma coisa, uma delas nunca lida, é exatamente a repetição que este desenho vetou
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura
 - O menu veste o tema da página: no claro ele é a superfície elevada com o verde de marca em quem está
   ativo, no escuro encosta no preto e só o fio de borda separa as duas áreas
@@ -849,7 +861,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **307 testes / 2904 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **311 testes / 2945 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, perfil próprio com chave e senha trocadas só mediante a senha atual, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
@@ -1001,10 +1013,12 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 - [x] **Fase 23** — Micro-visualização do painel: série por período e anel de proporção em SVG próprio,
   saído da mesma consulta dos indicadores, sem biblioteca de gráfico, sem tinta nova e sem desenho onde não
   há dado
+- [x] **Fase 24** — Camada de apresentação fechada sem exceção: esqueleto no único carregamento real da
+  interface, virada de tema com janela de 200ms e a folha varrida — nenhuma classe `nf-` esperando uso
 
 ### A seguir
 
-O plano de reconstrução fechou: da fase 1 à 23, mais a prontidão de deploy, tudo no ar. O que vem
+O plano de reconstrução fechou: da fase 1 à 24, mais a prontidão de deploy, tudo no ar. O que vem
 depois é decisão de operação, não fase: publicar numa máquina real, contratar o primeiro tenant e
 bater o martelo da licença.
 

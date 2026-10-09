@@ -11,6 +11,10 @@ const STORAGE_KEY = 'nexusfield:tema';
 const COOKIE_NAME = 'nf_theme';
 const COOKIE_DAYS = 365;
 const MODES = new Set(['light', 'dark']);
+const CLASSE_DA_VIRADA = 'nf-tema-virando';
+const JANELA_DA_VIRADA = 260;
+
+let virada = null;
 const BROWSER_BAR_COLOR = {
     light: '#f5f6f8',
     dark: '#000000',
@@ -57,15 +61,33 @@ function syncToggleState(mode) {
     });
 }
 
+/**
+ * A cor só desliza quando alguém escolhe trocar: a folha só anima enquanto o
+ * <html> veste `nf-tema-virando`, e a classe sai na janela seguinte. Pintar na
+ * carga não entra aqui de propósito — o tema já chega certo do <head>.
+ */
+function animaVirada() {
+    const raiz = document.documentElement;
+
+    raiz.classList.add(CLASSE_DA_VIRADA);
+    window.clearTimeout(virada);
+    virada = window.setTimeout(() => raiz.classList.remove(CLASSE_DA_VIRADA), JANELA_DA_VIRADA);
+}
+
 export function apply(mode, { remember = true } = {}) {
     if (!MODES.has(mode)) {
         return;
     }
 
+    const mudou = document.documentElement.dataset.bsTheme !== mode;
     document.documentElement.dataset.bsTheme = mode;
     syncNativeScheme(mode);
     syncBrowserBar(mode);
     syncToggleState(mode);
+
+    if (mudou) {
+        animaVirada();
+    }
 
     if (remember) {
         window.localStorage?.setItem(STORAGE_KEY, mode);

@@ -300,3 +300,38 @@
 .nf-legenda-marca.nf-fc-t--draft { background: var(--nf-surface); }
 .nf-legenda-marca.nf-fc-t--done { background: color-mix(in srgb, var(--nf-success) 26%, var(--nf-elevated)); border-left-color: var(--nf-success); }
 .nf-legenda-marca.nf-fc-t--canceled { background: color-mix(in srgb, var(--nf-danger) 24%, var(--nf-elevated)); border-left-color: var(--nf-danger); }
+
+/* ------------------------------------------------------------------ *
+ * O carregamento tem cara: a faixa de esqueleto que o quadro preenche.
+ *
+ * A agenda é a única tela que espera uma resposta do servidor depois de
+ * pintada, então é aqui que o skeleton da folha de componentes veste algo
+ * real — sem spinner do vendor, sem GIF, sem tinta fora do registro de
+ * tom. As cinco linhas imitam a densidade da grade mensal; o esmaecer do
+ * quadro é a mesma janela de 200ms da virada de tema.
+ * ------------------------------------------------------------------ */
+.nf-agenda-esqueleto {
+    display: grid;
+    gap: .55rem;
+    padding: .3rem 0 1rem;
+}
+
+.nf-agenda-esqueleto[hidden] {
+    display: none;
+}
+
+.nf-agenda-esqueleto .nf-skeleton {
+    height: .8rem;
+    border-radius: 6px;
+}
+
+.nf-agenda-esqueleto .nf-skeleton:nth-child(1) { width: 24%; }
+.nf-agenda-esqueleto .nf-skeleton:nth-child(2) { width: 46%; }
+.nf-agenda-esqueleto .nf-skeleton:nth-child(3) { width: 33%; }
+.nf-agenda-esqueleto .nf-skeleton:nth-child(4) { width: 58%; }
+.nf-agenda-esqueleto .nf-skeleton:nth-child(5) { width: 38%; }
+
+.nf-agenda.is-carregando {
+    opacity: .55;
+    transition: opacity .2s var(--nf-ease);
+}

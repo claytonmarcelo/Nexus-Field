@@ -29,6 +29,10 @@ function montar(elemento) {
     const csrf = elemento.dataset.csrf;
     const filtros = lerFiltros(elemento.dataset.filtro);
 
+    // O esqueleto é irmão do quadro, não filho: o FullCalendar toma o
+    // elemento onde monta e apagaria qualquer faixa deixada dentro dele.
+    const esqueleto = elemento.parentElement?.querySelector('[data-nf-esqueleto]');
+
     const calendario = new Calendar(elemento, {
         locales: [ptBr],
         locale: 'pt-br',
@@ -50,6 +54,7 @@ function montar(elemento) {
         dayMaxEvents: 4,
         stickyHeaderDates: true,
         noEventsText: 'Nenhum compromisso nem ordem agendada nesta janela.',
+        loading: (buscando) => mostrarEsqueleto(esqueleto, elemento, buscando),
         events: (info) => buscarEventos(info, feed, filtros),
         dateClick: (info) => abrirFormulario(info, podeCriar, rotaNova),
         eventDrop: (info) => remanejar(info, calendario, csrf),
@@ -57,6 +62,22 @@ function montar(elemento) {
     });
 
     calendario.render();
+}
+
+/**
+ * O único carregamento desta tela é a janela de tempo que o servidor ainda não
+ * devolveu. Enquanto ela chega, o quadro esmaece e a faixa de esqueleto aparece;
+ * `aria-busy` no elemento que tem `role="application"` é o aviso para quem usa
+ * leitor de tela de que o conteúdo ali ainda vai mudar. Sem isso, a espera seria
+ * silêncio: a mesma cara de uma agenda vazia.
+ */
+function mostrarEsqueleto(esqueleto, elemento, buscando) {
+    if (esqueleto) {
+        esqueleto.hidden = !buscando;
+    }
+
+    elemento.classList.toggle('is-carregando', buscando);
+    elemento.setAttribute('aria-busy', buscando ? 'true' : 'false');
 }
 
 async function buscarEventos(info, feed, filtros) {

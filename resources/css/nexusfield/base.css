@@ -73,6 +73,26 @@ a {
     background-clip: padding-box;
 }
 
+/*
+ * A virada de tema é a única cor que desliza na casa, e ela dura 200ms.
+ *
+ * O script veste `nf-tema-virando` no <html> no clique da pílula e tira 260ms
+ * depois. A janela existe porque transição permanente pintaria também a pintura
+ * inicial: a página subia do branco em cada recarga, e o cookie com o script
+ * inline do <head> existem justamente para o tema chegar antes da primeira
+ * pintura. O bloco de `prefers-reduced-motion` abaixo continua neutralizando a
+ * duração para quem pediu calma.
+ */
+html.nf-tema-virando *,
+html.nf-tema-virando *::before,
+html.nf-tema-virando *::after {
+    transition:
+        background-color .2s var(--nf-ease),
+        border-color .2s var(--nf-ease),
+        color .2s var(--nf-ease),
+        fill .2s var(--nf-ease);
+}
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

@@ -56,6 +56,19 @@
         :subtitle="$podeMover
             ? 'Arraste um compromisso para remarcar a janela; a ordem agendada não se move daqui — ela é movida na ficha dela, onde o motivo fica registrado.'
             : 'Esta conta lê a agenda. Remarcar uma janela é do escritório, de quem conduz a escala.'">
+        {{-- A janela é buscada no servidor a cada navegação de mês, semana ou
+             dia. Esta faixa é o esqueleto daquele intervalo: as linhas que o
+             quadro vai preencher, com o shimmer da folha de componentes. Ela
+             mora fora do `.nf-agenda` porque é lá dentro que o FullCalendar
+             escreve, e um filho sobrevivente seria apagado na montagem. --}}
+        <div class="nf-agenda-esqueleto" data-nf-esqueleto hidden>
+            <span class="nf-skeleton"></span>
+            <span class="nf-skeleton"></span>
+            <span class="nf-skeleton"></span>
+            <span class="nf-skeleton"></span>
+            <span class="nf-skeleton"></span>
+        </div>
+
         <div class="nf-agenda" data-nf-agenda
             data-feed="{{ $rotaFeed }}"
             data-nova="{{ $rotaNovo }}"

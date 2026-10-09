@@ -1060,7 +1060,22 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   micro-visualização não tem uma tinta fora do registro. A suíte fecha em 307 testes / 2904 asserções, e o
   `DemoSeederTest` ganhou a prova de que a demonstração é uma história só: a hora em que a ordem terminou é a
   mesma hora da trilha de estado, da saída da visita e da liberação da comissão.
-
+- O carregamento da agenda deixou de ser silêncio: a faixa de esqueleto com as cinco linhas que o quadro
+  preenche nasce escondida, o callback `loading` do FullCalendar a acende enquanto a janela vem do servidor,
+  o quadro esmaece em 200ms e `aria-busy` marca o calendário como ocupado. Ela mora fora do `.nf-agenda`
+  porque é lá dentro que a biblioteca escreve — filho sobrevivente seria apagado na montagem. O `nf-skeleton`
+  que a folha de componentes já desenhava, e nenhuma tela vestia, passou a ter dono.
+- A virada de tema ganhou janela: `nf-tema-virando` no `<html>` anima fundo, fio, letra e `fill` em 200ms
+  com o `--nf-ease` da casa, e a classe sai 260ms depois. A pintura inicial continua instantânea — o
+  `data-bs-theme` chega certo do `<head>`, e o script inline não conhece a classe. Quem pediu
+  `prefers-reduced-motion` continua com a duração neutralizada pela régua global de sempre.
+- `CoerenciaVisualTest` (4 testes / 41 asserções) amarra a camada de apresentação inteira: o esqueleto está
+  na página, é irmão do quadro e quem o conduz é o callback com `aria-busy`; a virada anima cor e não
+  anima forma; esqueleto e virada bebem dos tokens sem uma tinta nova; e a varredura das 202 classes `nf-`
+  dos seis arquivos de estilo, contra Blade, JavaScript, controller e seeder, não acha uma órfã — o sufixo
+  montado em tempo de execução (`nf-fc-t--{tom}`) é reconhecido pelo tronco, que é o contrato. A suíte
+  fecha em 311 testes / 2945 asserções, Pint PASS em 175 arquivos e a varredura de navegação nos mesmos 73
+  endereços GET.
 ### Alterado
 
 - Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de
@@ -1639,7 +1654,11 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 - O CSS órfão do rodapé público que a linha única dispensou: `-top`, `-brand`, `-id`, `-tagline`,
   `-capacities`, `-side`, `-links` com o estado de hover, `-bottom` e as duas regras de celular que
   só reorganizavam essas peças. Ficou `-row`, que é o que existe na tela.
-
+- As quatro classes que nenhuma interface vestia: `.form-text.nf-error` (o erro de campo é desenhado por
+  `.invalid-feedback`, e o `form-text` desta casa é ajuda, não erro), `.nf-divider`, `.nf-surface` (a
+  superfície é a variável `--nf-surface`, e o cartão já existe como `.card`) e `.nf-item-valor` (renomeada
+  para `.nf-valor` na régua de dinheiro, e o nome antigo ficou na folha). A varredura do
+  `CoerenciaVisualTest` passou a não permitir órfãs de novo.
 ### Conhecido
 
 - O painel lê o banco e nada mais: os blocos operacionais existem, e as telas que produzem os de ordem,

@@ -661,8 +661,7 @@
     color: var(--nf-text-muted);
 }
 
-.invalid-feedback,
-.form-text.nf-error {
+.invalid-feedback {
     font-size: .78rem;
     color: var(--nf-danger);
     font-weight: 500;
@@ -1193,12 +1192,6 @@
     font-size: 1rem;
 }
 
-.nf-divider {
-    border: 0;
-    border-top: 1px solid var(--nf-line);
-    opacity: 1;
-    margin-block: 1rem;
-}
 
 .nf-label {
     font-size: .72rem;
@@ -1208,12 +1201,6 @@
     color: var(--nf-text-muted);
 }
 
-.nf-surface {
-    background-color: var(--nf-elevated);
-    border: 1px solid var(--nf-line);
-    border-radius: var(--bs-border-radius-lg);
-    box-shadow: var(--nf-shadow-sm);
-}
 
 .nf-mono {
     font-variant-numeric: tabular-nums;
