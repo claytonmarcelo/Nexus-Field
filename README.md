@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/branding/marca-nexus.png" alt="NEXUS-FIELD" width="96">
+  <img src="docs/branding/marca-nexus.png" alt="NEXUS-FIELD" width="260">
 </p>
 
 <h1 align="center">NEXUS-FIELD</h1>
