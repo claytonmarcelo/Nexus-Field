@@ -994,6 +994,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   entraram no roadmap e nas seções de módulo, e as seis telas foram recapturadas do estado atual —
   painel com os catorze indicadores nos dois temas e o celular 390×844 emoldurado no quadro 1440×900.
 
+- Canal no YouTube na vitrine: a seção Desenvolvedor do README ganha o selo do canal
+  [C. Marcelo Dev. Brasil](https://www.youtube.com/@c.marcelodev.brasil) ao lado de GitHub e LinkedIn,
+  no mesmo padrão `flat-square` dos outros contatos.
+
 ### Alterado
 
 - Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de
@@ -1499,6 +1503,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   nada foi gravado. `CsrfTokenTest` (2 testes, 16 asserções) varre as 30 views de POST e ainda renderiza
   serviço, cliente e movimentação para conferir o `name="_token"` no HTML servido; a linha de CSRF do
   `README.md`, que afirmava uma cobertura que não existia, foi reescrita.
+
+- O parágrafo de estágio do README ainda parava na fase 16, anunciando "o que ainda é só schema"
+  depois de o plano ter fechado nas 22 fases mais a prontidão de deploy. Agora ele percorre as quatro
+  faixas entregues e aponta para a tabela de Módulos, que é a fonte do que está no ar.
 
 ### Removido
 

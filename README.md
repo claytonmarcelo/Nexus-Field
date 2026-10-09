@@ -22,12 +22,11 @@
 </p>
 
 <p align="center">
-  <sub>Estágio atual: fundação completa (fases 1 a 8), os cadastros e o catálogo no ar
-  (fase 9 — clientes, fase 10 — técnicos, equipes e especialidades, fase 11 — serviços, produtos e
-  categorias) e a operação aberta (fase 12 — ordens de serviço, fase 13 — chamados, fase 14 — agenda
-  em calendário, fase 15 — visita de campo com posição, fase 16 — estoque em livro-caixa). A tabela
-  <a href="#módulos">Módulos</a> diz, um por um, o que já está no ar e
-  o que ainda é só schema.</sub>
+  <sub>Estágio atual: o plano de reconstrução fechou. Da fundação (fases 1 a 8) aos cadastros e
+  ao catálogo (9 a 11), pela operação (12 a 18 — ordens, chamados, agenda, visita de campo, estoque,
+  financeiro e relatórios), pelo controle (19 a 22 — notificações, contas e papéis, configurações da
+  empresa e auditoria) e pela prontidão de deploy. A tabela
+  <a href="#módulos">Módulos</a> diz, um por um, o que está no ar.</sub>
 </p>
 
 ---
@@ -976,6 +975,7 @@ dizendo o que mudou e por quê.
       Full stack — Laravel, MySQL, JavaScript<br><br>
       <a href="https://github.com/claytonmarcelo"><img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=flat-square&logo=github" alt="GitHub"></a>
       <a href="https://www.linkedin.com/in/clayton-marcelo-dev/"><img src="https://img.shields.io/badge/LinkedIn-clayton--marcelo--dev-0A66C2?style=flat-square&logo=linkedin&logoColor=white" alt="LinkedIn"></a>
+      <a href="https://www.youtube.com/@c.marcelodev.brasil"><img src="https://img.shields.io/badge/YouTube-C.%20Marcelo%20Dev.%20Brasil-FF0000?style=flat-square&logo=youtube&logoColor=white" alt="Canal C. Marcelo Dev. Brasil no YouTube"></a>
     </td>
   </tr>
 </table>
