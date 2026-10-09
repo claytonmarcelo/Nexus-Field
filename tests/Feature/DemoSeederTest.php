@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Company;
 use App\Models\ServiceOrder;
 use App\Models\User;
+use App\Support\DashboardMetrics;
+use App\Support\TenantContext;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -119,6 +121,85 @@ class DemoSeederTest extends TestCase
             'Carteira financeira',
             $this->actingAs($tecnico)->get(route('dashboard'))->assertOk()->getContent()
         );
+    }
+
+    /**
+     * O medidor de pontualidade do painel só vale se a casa tiver as duas histórias
+     * para contar. Uma demonstração em que toda entrega atrasa (ou nenhuma) desenha
+     * um anel que não mede nada — é fixture de tela lendo um caso só.
+     */
+    public function test_a_demonstracao_da_o_contraste_que_o_medidor_de_pontualidade_precisa(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $this->seed(DemoSeeder::class);
+
+        $admin = User::query()->where('email', 'admin.demo@nexusfield.local')->firstOrFail();
+        TenantContext::resolveFromUser($admin);
+
+        $medidor = (new DashboardMetrics($admin))->toArray()['ordens']['pontualidade'];
+
+        $this->assertNotNull($medidor, 'Sem conclusão a demonstração não dá o que o medidor medir.');
+        $this->assertGreaterThan(0, $medidor['no_prazo'], 'Nenhuma entrega dentro do prazo: o anel só saberia mostrar vermelho.');
+        $this->assertLessThan($medidor['total'], $medidor['no_prazo'], 'Toda entrega dentro do prazo: o anel só saberia mostrar verde.');
+        $this->assertContains($medidor['tom'], ['done', 'waiting', 'canceled'], 'O tom do anel vem do registro único da casa.');
+
+        $html = $this->actingAs($admin)->get(route('dashboard'))->assertOk()->getContent();
+        $this->assertStringContainsString('class="nf-gauge tone-'.$medidor['tom'].'"', $html,
+            'O painel tem de desenhar o anel com o tom que a proporção da demonstração pediu.');
+        $this->assertStringContainsString($medidor['no_prazo'].' de '.$medidor['total'].' ordens concluídas',
+            preg_replace('/\s+/', ' ', $html));
+    }
+
+    /**
+     * A demonstração é uma história, não um monte de linhas: a hora em que a ordem
+     * terminou é a mesma hora em que o estado virou "concluído" na trilha, em que o
+     * técnico registrou a saída do endereço e em que a comissão dele foi liberada.
+     * Estas três amarras são o que faz o medidor de pontualidade do painel contar a
+     * verdade que a ficha mostra.
+     */
+    public function test_a_entrega_de_cada_ordem_e_a_mesma_hora_em_todos_os_lugares(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $this->seed(DemoSeeder::class);
+
+        $concluidas = ServiceOrder::query()
+            ->where('status', 'completed')
+            ->whereNotNull('completed_at')
+            ->with(['statusHistory', 'checkins', 'assignments'])
+            ->get();
+
+        $this->assertGreaterThan(0, $concluidas->count());
+
+        foreach ($concluidas as $ordem) {
+            $trilha = $ordem->statusHistory
+                ->firstWhere('to_status', 'completed');
+
+            $this->assertNotNull($trilha, "{$ordem->number} terminou sem passar pela trilha de estado.");
+            $this->assertSame(
+                $ordem->completed_at->toDateTimeString(),
+                $trilha->created_at->toDateTimeString(),
+                "{$ordem->number}: a trilha conta uma hora de entrega e a ficha conta outra."
+            );
+
+            $visita = $ordem->checkins->firstWhere('checkout_at', '!=', null);
+
+            if ($visita !== null) {
+                $this->assertSame(
+                    $ordem->completed_at->toDateTimeString(),
+                    $visita->checkout_at->toDateTimeString(),
+                    "{$ordem->number}: o técnico saiu do endereço antes de a ordem ser dada por concluída."
+                );
+                $this->assertTrue($visita->checkin_at->lte($visita->checkout_at),
+                    "{$ordem->number}: chegada depois da saída.");
+            }
+
+            foreach ($ordem->assignments as $comissao) {
+                if ($comissao->released_at !== null) {
+                    $this->assertTrue($comissao->released_at->gte($ordem->completed_at),
+                        "{$ordem->number}: a comissão foi liberada antes da entrega.");
+                }
+            }
+        }
     }
 
     /** Toda tabela que o seeder escreve, própria ou filha de uma que tem empresa. */

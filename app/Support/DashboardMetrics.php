@@ -100,14 +100,30 @@ class DashboardMetrics
         $execucao = $this->ordensDoUsuario()->inProgress()->count();
         $atrasadas = $this->ordensDoUsuario()->overdue()->count();
 
+        // Janela em dias de calendário, não em voltas de relógio: é o que deixa o
+        // número do cartão igual à soma dos últimos sete pontos do traço. Com [7×24h]
+        // a conta cortaria o dia pela metade e o desenho contaria o dia inteiro.
         $concluidasSete = $this->ordensDoUsuario()
             ->completed()
-            ->whereBetween('completed_at', [now()->subDays(7), now()])
+            ->whereBetween('completed_at', [now()->startOfDay()->subDays(6), now()])
             ->count();
         $concluidasAnteriores = $this->ordensDoUsuario()
             ->completed()
-            ->whereBetween('completed_at', [now()->subDays(14), now()->subDays(7)])
+            ->whereBetween('completed_at', [
+                now()->startOfDay()->subDays(13),
+                now()->startOfDay()->subDays(7)->endOfDay(),
+            ])
             ->count();
+
+        // O traço embaixo do KPI é a mesma consulta do número, aberta dia a dia:
+        // série e indicador têm de bater com o que o banco respondeu, nunca um
+        // enfeite de forma parecida.
+        $concluidasPorDia = $this->serieDiaria(
+            $this->ordensDoUsuario()->completed(),
+            'completed_at',
+            14,
+        );
+        $pontualidade = $this->pontualidade();
 
         $distribuicao = $this->ordensDoUsuario()
             ->selectRaw('status, count(*) total')
@@ -131,6 +147,7 @@ class DashboardMetrics
                     'tone' => 'done',
                     'icon' => 'fa-solid fa-circle-check',
                     'delta' => $this->deltaInt($concluidasSete - $concluidasAnteriores, 'vs. 7 dias anteriores'),
+                    'spark' => $concluidasPorDia + ['legenda' => 'Conclusões por dia, últimos 14 dias'],
                 ],
                 [
                     'label' => 'Com prazo vencido',
@@ -142,6 +159,7 @@ class DashboardMetrics
             ],
             'dados' => [
                 'distribuicao' => $this->distribuicao($distribuicao, $totalDistribuido),
+                'pontualidade' => $pontualidade,
                 'proximas' => $this->ordensDoUsuario()
                     ->with(['client', 'technician'])
                     ->open()
@@ -206,6 +224,8 @@ class DashboardMetrics
             ->between(now()->startOfDay(), now()->addDays(7)->endOfDay())
             ->count();
 
+        $compromissosPorDia = $this->serieJanelas($this->compromissosDoUsuario(), 14);
+
         return [
             'kpis' => [
                 [
@@ -214,6 +234,7 @@ class DashboardMetrics
                     'hint' => $proximos.' compromissos em 7 dias',
                     'tone' => 'waiting',
                     'icon' => 'fa-regular fa-calendar-check',
+                    'spark' => $compromissosPorDia + ['legenda' => 'Janelas agendadas por dia, últimos 14 dias'],
                 ],
             ],
             'dados' => [
@@ -349,6 +370,12 @@ class DashboardMetrics
             ->whereDate('recorded_at', today())
             ->count();
 
+        $movimentosPorDia = $this->serieDiaria(
+            StockMovement::query()->visiveisPara($this->usuario),
+            'recorded_at',
+            14,
+        );
+
         return [
             'kpis' => [
                 [
@@ -366,6 +393,7 @@ class DashboardMetrics
                         : 'Contado no servidor, no horário de cá',
                     'tone' => $hoje === 0 ? 'waiting' : 'progress',
                     'icon' => 'fa-solid fa-right-left',
+                    'spark' => $movimentosPorDia + ['legenda' => 'Movimentações por dia, últimos 14 dias'],
                 ],
             ],
             'dados' => [
@@ -410,6 +438,9 @@ class DashboardMetrics
         );
         $despesaMes = $this->dinheiroRealizado(FinancialRecord::EXPENSE, now()->startOfMonth(), now()->endOfMonth());
 
+        $receitaMensal = $this->serieMensal(FinancialRecord::REVENUE, 6);
+        $despesaMensal = $this->serieMensal(FinancialRecord::EXPENSE, 6);
+
         return [
             'kpis' => [
                 [
@@ -432,6 +463,14 @@ class DashboardMetrics
                     'tone' => 'done',
                     'icon' => 'fa-solid fa-arrow-trend-up',
                     'delta' => $this->deltaMoney($receitaMes - $receitaAnterior, 'vs. mês anterior'),
+                    'spark' => $receitaMensal + [
+                        'comparar' => $despesaMensal['valores'],
+                        'legenda' => 'Dinheiro realizado por mês, últimos 6 meses',
+                        'rotulo_a' => 'recebido',
+                        'rotulo_b' => 'pago',
+                        'prefixo' => 'R$ ',
+                        'decimais' => 2,
+                    ],
                 ],
                 [
                     'label' => 'Despesa do mês',
@@ -585,6 +624,141 @@ class DashboardMetrics
             ->whereHas('financialRecord', fn ($q) => $q->where('type', $tipo))
             ->whereBetween('paid_at', [$inicio, $fim])
             ->sum('amount');
+    }
+
+    /**
+     * Um ponto por dia, do mais antigo ao mais recente, contado no banco com o
+     * alcance de quem olha. Dia sem fato é zero, e zero é o que o traço mostra:
+     * buraco no meio da linha seria mentira, assim como linha desenhada quando o
+     * período inteiro está vazio. A coluna vem do chamador — nunca do pedido.
+     *
+     * @param  Builder  $consulta  já alcançada pelo usuário
+     * @return array{valores: array<int, int>, rotulos: array<int, string>}
+     */
+    private function serieDiaria(Builder $consulta, string $coluna, int $dias): array
+    {
+        $inicio = now()->startOfDay()->subDays($dias - 1);
+
+        $contados = $consulta
+            ->where($coluna, '>=', $inicio)
+            ->selectRaw('DATE('.$coluna.') as dia, count(*) as total')
+            ->groupBy('dia')
+            ->pluck('total', 'dia')
+            ->all();
+
+        $valores = [];
+        $rotulos = [];
+
+        for ($i = 0; $i < $dias; $i++) {
+            $dia = $inicio->copy()->addDays($i);
+            $valores[] = (int) ($contados[$dia->toDateString()] ?? 0);
+            $rotulos[] = $dia->format('d/m');
+        }
+
+        return ['valores' => $valores, 'rotulos' => $rotulos];
+    }
+
+    /**
+     * Série de janelas agendadas. Diferente da contagem por data de um fato: o
+     * calendário e o cartão "Agenda de hoje" chamam uma janela de "hoje" quando ela
+     * toca no dia — quem começa antes e termina depois continua sendo hoje. A série
+     * lê as janelas do período uma vez e conta por sobreposição, com a mesma regra
+     * do escopo between, para o último ponto do traço ser o número do cartão e
+     * não um número parecido.
+     *
+     * @param  Builder  $consulta  já alcançada pelo usuário
+     * @return array{valores: array<int, int>, rotulos: array<int, string>}
+     */
+    private function serieJanelas(Builder $consulta, int $dias): array
+    {
+        $inicio = now()->startOfDay()->subDays($dias - 1);
+        $fim = now()->endOfDay();
+
+        $janelas = $consulta
+            ->select('starts_at', 'ends_at')
+            ->where('starts_at', '<=', $fim)
+            ->where('ends_at', '>=', $inicio)
+            ->get();
+
+        $valores = [];
+        $rotulos = [];
+
+        for ($i = 0; $i < $dias; $i++) {
+            $dia = $inicio->copy()->addDays($i);
+            $termino = $dia->copy()->endOfDay();
+
+            $valores[] = $janelas->filter(fn ($janela) => $janela->starts_at <= $termino
+                && ($janela->ends_at ?? $janela->starts_at) >= $dia)->count();
+            $rotulos[] = $dia->format('d/m');
+        }
+
+        return ['valores' => $valores, 'rotulos' => $rotulos];
+    }
+
+    /**
+     * Dinheiro que mudou de mão por mês, do lado que se pergunta. É a mesma fonte
+     * do KPI — `Payment`, nunca a coluna prevista do lançamento — só aberta em
+     * janelas mensais para o traço ter o que contar.
+     *
+     * @return array{valores: array<int, float>, rotulos: array<int, string>}
+     */
+    private function serieMensal(string $tipo, int $meses): array
+    {
+        $inicio = now()->startOfMonth()->subMonthsNoOverflow($meses - 1);
+
+        $contados = Payment::query()
+            ->whereHas('financialRecord', fn (Builder $q) => $q->where('type', $tipo))
+            ->where('paid_at', '>=', (clone $inicio)->startOfDay())
+            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as mes, sum(amount) as total")
+            ->groupBy('mes')
+            ->pluck('total', 'mes')
+            ->all();
+
+        $valores = [];
+        $rotulos = [];
+
+        for ($i = 0; $i < $meses; $i++) {
+            $mes = (clone $inicio)->addMonthsNoOverflow($i);
+            $valores[] = round((float) ($contados[$mes->format('Y-m')] ?? 0), 2);
+            $rotulos[] = $mes->format('m/y');
+        }
+
+        return ['valores' => $valores, 'rotulos' => $rotulos];
+    }
+
+    /**
+     * Dos serviços que terminaram nos últimos trinta dias de calendário — a mesma
+     * régua dos cartões de cima —, quantos terminaram dentro do fim que a própria
+     * ordem carregou. Ordem sem prazo previsto fica fora da
+     * conta: sem prazo não há atraso a medir, e contá-la como pontual encheria o
+     * anel de proporção emprestada. Sem conclusão na janela não há anel nenhum —
+     * proporção de quê?
+     *
+     * @return array{percentual: int, no_prazo: int, total: int, tom: string}|null
+     */
+    private function pontualidade(): ?array
+    {
+        $base = fn () => $this->ordensDoUsuario()
+            ->completed()
+            ->whereNotNull('completed_at')
+            ->whereNotNull('scheduled_ends_at')
+            ->whereBetween('completed_at', [now()->startOfDay()->subDays(29), now()->endOfDay()]);
+
+        $total = $base()->count();
+
+        if ($total === 0) {
+            return null;
+        }
+
+        $noPrazo = $base()->whereColumn('completed_at', '<=', 'scheduled_ends_at')->count();
+        $percentual = (int) round($noPrazo / $total * 100);
+
+        return [
+            'percentual' => $percentual,
+            'no_prazo' => $noPrazo,
+            'total' => $total,
+            'tom' => $percentual >= 80 ? 'done' : ($percentual >= 50 ? 'waiting' : 'canceled'),
+        ];
     }
 
     private function pode(string $permissao): bool

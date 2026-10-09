@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-292%20testes%20%2F%202735%20asser%C3%A7%C3%B5es-brightgreen" alt="292 testes, 2735 asserções">
+  <img src="https://img.shields.io/badge/testes-307%20testes%20%2F%202904%20asser%C3%A7%C3%B5es-brightgreen" alt="307 testes, 2904 asserções">
 </p>
 
 <p align="center">
@@ -132,6 +132,20 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - Catorze indicadores contados no banco da empresa logada, mais a fila de ordens da semana, a
   distribuição por estado, as contas que vencem nos próximos quinze dias e os cinco últimos pagamentos
   registrados
+- Micro-visualização por cartão, desenhada pela casa em Blade + SVG, sem biblioteca de gráfico: o traço da
+  série dia a dia embaixo de "Concluídas em 7 dias", "Agenda de hoje" e "Movimentações de hoje", e recebido
+  contra pago em seis meses no cartão de caixa. Cada ponto é a contagem que o banco devolveu naquele dia ou
+  naquele mês, no alcance de quem olha — o técnico vê a própria fila no traço, como vê nos números
+- A mesma fonte, aberta por período: número e traço respondem à mesma pergunta sobre o mesmo recorte (a
+  série diária somada em sete pontos é o total do cartão de sete dias; o ponto que fecha a série é o número
+  dos cartões de hoje e do mês), e a prova do painel cobra essa régua em vez de deixar cada janela seguir
+  um caminho próprio
+- Anel de pontualidade no rodapé da distribuição de estados: dos serviços concluídos em trinta dias com fim
+  previsto, quantos terminaram dentro do prazo que a própria ficha declarou. Ficha sem prazo fica fora da
+  conta, e sem conclusão na janela o anel não existe — proporção de quê?
+- Série sem dado não desenha: menos de dois pontos, ou tudo zero, deixa o cartão só com o número dele,
+  porque linha rasteira na base é a figura dizendo que houve movimento constante onde o banco respondeu
+  "nada aconteceu"
 - Estados de interface reais: carregando, vazio, sem permissão e erro
 - `DemoSeeder` local, que grava a demonstração numa empresa separada (`nexusfield-demo`) e recusa produção
 
@@ -454,6 +468,13 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   luz na quina dos cartões autenticados. O auto nível do medalhão continua intocado
 - Topo e pé enxutos: 44px de altura no cabeçalho (a mesma nos dois lados da aplicação) e uma linha no
   rodapé das telas abertas
+- A micro-visualização veste o cartão, não o contrário: traço, área e anel usam `--nf-tone` e
+  `--nf-tone-soft` do registro único de tom (`.tone-*`), sem uma tinta fora do que os dois temas já
+  definem, e o traço de espessura fixa (`vector-effect: non-scaling-stroke`) conta a mesma história no
+  celular de 390px e na Smart TV
+- Figura decorativa para quem vê, número lido para quem não vê: o `aria-label` do traço devolve "começa
+  em, termina em, maior ponto" com os valores reais da série, e o anel fica `aria-hidden` porque repete o
+  percentual escrito ao lado dele
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura
 - O menu veste o tema da página: no claro ele é a superfície elevada com o verde de marca em quem está
   ativo, no escuro encosta no preto e só o fio de borda separa as duas áreas
@@ -828,7 +849,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **292 testes / 2735 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **307 testes / 2904 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, perfil próprio com chave e senha trocadas só mediante a senha atual, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
@@ -873,7 +894,11 @@ cartão que some quando a conta não lê o módulo e o 403 que nomeia o degrau f
 e o HTML servido porque o `VerifyCsrfToken` se isenta durante os testes e nenhum outro teste do projeto veria o
 formulário sem token. As cinco portas de erro — 403, 404, 419, 500 e 503 — vestem a casca
 da casa sem depuração, contam o motivo que o servidor escolheu contar e deixam do lado de fora
-rota pedida, nome de model e stack.
+rota pedida, nome de model e stack; e a micro-visualização do painel, que amarra cada traço à contagem
+que o banco devolveu no dia, cobra a régua entre o número do cartão e o período do traço, não deixa linha
+nascer onde não há série, nem anel nascer onde a ficha não tinha prazo, nem tinta nova entrar na folha dos
+componentes. A demonstração também é provada como história: a hora em que cada ordem terminou é a mesma hora
+gravada na trilha de estado, na saída da visita de campo e na liberação da comissão do técnico.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -897,10 +922,12 @@ php artisan db:seed --class=DemoSeeder
 
 Os usuários criados são `admin.demo@nexusfield.local` (administrador),
 `gestor.demo@nexusfield.local` (supervisor), `campo.demo@nexusfield.local` (técnico) e
-`cliente.demo@nexusfield.local` (cliente). A demonstração também enche a carteira: 17 contas (11 receitas e
-6 despesas), das quais dezesseis nascem em aberto, sem data de ocorrência, e mudam de estado só pelos 10
-pagamentos gravados como linhas reais em `payments`, com método, data e autor — `recalcularEstado()` depois de
-cada um, exatamente como a tela faz. Há receita quitada, receita meio paga e vencida, despesa em aberto e
+`cliente.demo@nexusfield.local` (cliente). A demonstração também enche a carteira: 29 contas (17 receitas e
+12 despesas), todas abertas sem data de ocorrência, mudando de estado só pelos 22 pagamentos gravados como
+linhas reais em `payments`, com método, data e autor — `recalcularEstado()` depois de
+cada um, exatamente como a tela faz. O caixa percorre seis meses: cinco meses de contrato e conta da base,
+pagos no dia em que teriam sido pagos, mais o movimento do mês corrente — é isso que dá história ao traço
+mensal do painel, sem empurrar a data de um mês para dentro de outro. Há receita quitada, receita meio paga e vencida, despesa em aberto e
 despesa vencida, e uma receita cancelada com motivo: a única decisão digitada. Nenhum estado derivado é
 escrito à mão. A senha não está neste README nem em lugar nenhum do
 repositório: ela vem de `SEED_DEMO_PASSWORD`, que cai para `SEED_ADMIN_PASSWORD` quando não tem
@@ -971,10 +998,13 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
   sessões demais encerradas na renovação e "Meu perfil" no dropdown do cabeçalho
 - [x] **Prontidão de deploy** — caches de configuração, rota, view e evento validados, páginas de erro
   403/404/419/500/503 vestindo a marca sem vazar stack, e o passo a passo de produção documentado
+- [x] **Fase 23** — Micro-visualização do painel: série por período e anel de proporção em SVG próprio,
+  saído da mesma consulta dos indicadores, sem biblioteca de gráfico, sem tinta nova e sem desenho onde não
+  há dado
 
 ### A seguir
 
-O plano de reconstrução fechou: da fase 1 à 22, mais a prontidão de deploy, tudo no ar. O que vem
+O plano de reconstrução fechou: da fase 1 à 23, mais a prontidão de deploy, tudo no ar. O que vem
 depois é decisão de operação, não fase: publicar numa máquina real, contratar o primeiro tenant e
 bater o martelo da licença.
 

@@ -31,6 +31,10 @@
                                     @elseif (!empty($kpi['hint']))
                                         <p class="nf-kpi-hint mb-0 mt-2">{{ $kpi['hint'] }}</p>
                                     @endif
+
+                                    @if (isset($kpi['spark']))
+                                        <x-ui.sparkline :serie="$kpi['spark']" />
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -127,6 +131,26 @@
                                 </li>
                             @endforeach
                         </ul>
+                    @endif
+
+                    @if ($painel['ordens']['pontualidade'] !== null)
+                        <x-slot:footer>
+                            <div class="nf-pontualidade">
+                                <x-ui.gauge :percentual="$painel['ordens']['pontualidade']['percentual']"
+                                    :tom="$painel['ordens']['pontualidade']['tom']">
+                                    {{ $painel['ordens']['pontualidade']['percentual'] }}%
+                                </x-ui.gauge>
+
+                                <div>
+                                    <p class="nf-pontualidade-rotulo mb-1">Entregas no prazo</p>
+                                    <p class="nf-pontualidade-texto mb-0">
+                                        {{ $painel['ordens']['pontualidade']['no_prazo'] }} de
+                                        {{ $painel['ordens']['pontualidade']['total'] }} ordens concluídas
+                                        nos últimos 30 dias terminaram dentro do prazo que a própria ficha previu.
+                                    </p>
+                                </div>
+                            </div>
+                        </x-slot:footer>
                     @endif
                 </x-ui.card>
             </div>

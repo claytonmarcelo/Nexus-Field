@@ -1037,6 +1037,30 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   298 testes / 2768 asserções, Pint PASS em 173 arquivos, e as 27 provas de ordens e chegadas passaram sem
   uma mensagem ou um redirecionamento alterado.
 
+- FASE 23 — micro-visualização no painel: o traço da série e o anel da proporção, desenhados pela própria
+  casa (`x-ui.sparkline` e `x-ui.gauge`, Blade + SVG) e alimentados por consulta real por período. Nenhuma
+  biblioteca de gráfico entrou no projeto e nenhuma classe ficou esperando uso.
+- `DashboardMetrics` ganhou as quatro séries que o traço pede: `serieDiaria()` conta no SQL um ponto por
+  dia, `serieJanelas()` conta a agenda pela sobreposição da janela — a mesma régua do `scopeBetween` do
+  quadro —, `serieMensal()` soma o dinheiro que mudou de mão mês a mês lendo `Payment`, nunca a coluna
+  prevista do lançamento, e `pontualidade()` mede, dos serviços concluídos em trinta dias, quantos
+  terminaram dentro do prazo que a própria ficha previu. Ordem, agenda, estoque e financeiro têm traço; no
+  financeiro o pontilhado é o que saiu, ao lado do que entrou.
+- O desenho não enfeita: menos de dois pontos, ou série toda zero, não viram linha — o cartão fica com o
+  número dele, que já é a verdade inteira — e ficha sem fim previsto não gera anel, porque sem prazo não há
+  atraso a medir. O `aria-label` devolve os números que a linha conta ("começa em, termina em, maior
+  ponto"), e o anel é `aria-hidden` porque repete o percentual escrito ao lado dele.
+- Nada de tinta nova: traço, área e anel bebem `--nf-tone`/`--nf-tone-soft` do registro único de tom
+  (`.tone-*`), e o traço usa `vector-effect: non-scaling-stroke` para contar a mesma história no celular de
+  390px e na Smart TV. O ícone continuou em cada KPI — o anel mora no rodapé da distribuição de estados, não
+  no lugar do ícone de ninguém.
+- `PainelMicroVisualizacaoTest` (7 testes / 60 asserções) amarra traço e número: a série bate com o SQL
+  ponto a ponto, cartão e traço respondem ao mesmo período (soma de sete pontos para "7 dias", último ponto
+  para "hoje" e "no mês"), o desenho só existe com dado, todo KPI mantém o ícone e a folha da
+  micro-visualização não tem uma tinta fora do registro. A suíte fecha em 307 testes / 2904 asserções, e o
+  `DemoSeederTest` ganhou a prova de que a demonstração é uma história só: a hora em que a ordem terminou é a
+  mesma hora da trilha de estado, da saída da visita e da liberação da comissão.
+
 ### Alterado
 
 - Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de
@@ -1295,6 +1319,18 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   `1px`, luz interna presente no cartão de acesso e na faixa de chamada, `transborda: false` em
   todas, e a suíte completa verde com as asserções de markup do `<strong>` atualizadas para
   `nf-valor nf-mono`.
+
+- As janelas de conclusão do painel passaram de rolagem de 24 horas para dias de calendário: "Concluídas em
+  7 dias" e os sete dias anteriores leem dias inteiros, a mesma régua da série diária que desenha embaixo do
+  número. Um traço dia a dia ao lado de um total de 7×24 horas contaria dois períodos diferentes com as
+  mesmas palavras, e o painel respondia um número enquanto a linha mostrava outro.
+- A série de agenda conta janelas que se sobrepõem ao dia, não compromissos começados no dia, porque o
+  cartão "Agenda de hoje" e o quadro já medem por sobreposição — o traço passou a desenhar o mesmo número
+  que o cartão escreve e que a agenda mostra.
+- A demonstração ganhou histórico de caixa: dez contas dos cinco meses que antecedem este (contrato mensal
+  de uma carteira e conta da base, pagas no dia em que teriam sido pagas) mais duas baixas datadas de hoje,
+  fechando em 29 contas (17 receitas, 12 despesas) e 22 pagamentos com dinheiro real em seis meses para a
+  série desenhar.
 
 ### Corrigido
 
@@ -1573,6 +1609,22 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 - O parágrafo de estágio do README ainda parava na fase 16, anunciando "o que ainda é só schema"
   depois de o plano ter fechado nas 22 fases mais a prontidão de deploy. Agora ele percorre as quatro
   faixas entregues e aponta para a tabela de Módulos, que é a fonte do que está no ar.
+
+- O `DemoSeeder` remanejava para o mês corrente todo dinheiro recebido antes dele: `dataDeCaixa()` tinha
+  um piso artificial na abertura do mês. Enquanto o painel só somava "Recebido no mês" o efeito era
+  invisível; com a série mensal desenhada, o traço contaria cinco meses vazios e um pico que não aconteceu —
+  a data do caixa mentindo para desenhar um número certo. A data do caixa agora é a data do caixa (número é
+  dia relativo a hoje, `Carbon` é o dia em si) e o único teto que restou é hoje, porque dinheiro que ainda
+  não entrou não é fato. O mês corrente continua garantido, mas por uma baixa datada de verdade no dia de
+  hoje — a ordem em execução que tem peça no carrinho — e não por data empurrada.
+- As doze ordens concluídas da demonstração terminavam todas vinte minutos depois do fim previsto, o que
+  faria o medidor de pontualidade ler 0% numa carteira que se vende como entrega no prazo. Agora nove
+  fecham antes do prazo e três depois (as de final 2 e 7), e o painel lê 75% vestindo o tom de espera que a
+  própria proporção escolheu.
+- Corrigida junto a hora dupla que o seeder passou a carregar: com as entregas dentro do prazo, a ficha
+  dizia um momento e a trilha de estado, a saída da visita e a liberação da comissão diziam outro — o
+  técnico aparecia deixando o endereço quarenta e cinco minutos depois de o serviço ter sido dado por
+  concluído. A demonstração agora calcula `$entrega` uma vez e escreve a mesma hora nos quatro lugares.
 
 ### Removido
 

@@ -2033,3 +2033,140 @@
     margin-top: .35rem;
     border-radius: 8px;
 }
+
+/* ------------------------------------------------------------------ *
+ * Micro-visualização do painel: a série por período e o anel de
+ * proporção.
+ *
+ * Nada aqui traz cor nova. Traço, área e anel bebem `--nf-tone` e
+ * `--nf-tone-soft` do `tone-*` que o cartão deles já veste — o registro único
+ * de tom da casa — então a figura nasce escura ou clara junto com a tela, no
+ * mesmo contraste do número que ela explica. O traço usa `vector-effect:
+ * non-scaling-stroke`: a figura estica com a largura do cartão, do celular de
+ * 390px ao 5K, e a espessura continua a mesma. Sem esse efeito a Smart TV
+ * afinaria a linha e o polegar no celular a engrossaria — o mesmo desenho
+ * contaria histórias diferentes por tamanho de tela.
+ * ------------------------------------------------------------------ */
+.nf-spark {
+    display: block;
+    width: 100%;
+    height: 2.125rem;
+    margin-top: .55rem;
+}
+
+.nf-spark-area {
+    fill: var(--nf-tone-soft, var(--nf-primary-soft));
+    stroke: none;
+}
+
+.nf-spark-line {
+    fill: none;
+    stroke: var(--nf-tone, var(--nf-primary));
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.nf-spark-line-b {
+    stroke: var(--nf-text-muted);
+    stroke-dasharray: 3 3;
+    opacity: .8;
+}
+
+.nf-spark-legenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .2rem .85rem;
+    margin-top: .3rem;
+    font-family: var(--nf-font-mono);
+    font-size: .6rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+}
+
+.nf-spark-legenda span::before {
+    content: "";
+    display: inline-block;
+    width: .7rem;
+    height: 2px;
+    margin-right: .35rem;
+    vertical-align: middle;
+    background: var(--nf-tone, var(--nf-primary));
+}
+
+.nf-spark-legenda span + span::before {
+    background: repeating-linear-gradient(90deg, var(--nf-text-muted) 0 3px, transparent 3px 6px);
+}
+
+.nf-gauge {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    flex: 0 0 auto;
+}
+
+.nf-gauge svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.nf-gauge-track {
+    fill: none;
+    stroke: var(--nf-tone-soft, var(--nf-elevated));
+    stroke-width: 4;
+}
+
+.nf-gauge-fill {
+    fill: none;
+    stroke: var(--nf-tone, var(--nf-primary));
+    stroke-width: 4;
+    stroke-linecap: round;
+    animation: nf-anel .6s var(--nf-ease) both;
+}
+
+.nf-gauge-centro {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--nf-surface);
+    color: var(--nf-tone, var(--nf-primary));
+    font-family: var(--nf-font-mono);
+    font-size: .72rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+@keyframes nf-anel {
+    from {
+        stroke-dashoffset: 97.39;
+    }
+}
+
+.nf-pontualidade {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+
+.nf-pontualidade-rotulo {
+    font-family: var(--nf-font-mono);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+}
+
+.nf-pontualidade-texto {
+    font-size: .82rem;
+    color: var(--nf-text-muted);
+}

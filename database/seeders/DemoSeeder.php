@@ -39,9 +39,10 @@ use Illuminate\Support\Str;
  *
  *   php artisan db:seed --class=DemoSeeder
  *
- * As datas são relativas ao dia em que o seeder roda, para o painel ter hoje,
- * ontem e semana em andamento. Rodar de novo limpa a empresa de demonstração e
- * recria do zero — é fixture de tela, não histórico de operação.
+ * As datas são relativas ao dia em que o seeder roda: o painel tem hoje, ontem,
+ * semana em andamento e seis meses de caixa para as séries desenharem. Rodar de
+ * novo limpa a empresa de demonstração e recria do zero — é fixture de tela, não
+ * histórico de operação.
  */
 class DemoSeeder extends Seeder
 {
@@ -510,6 +511,22 @@ class DemoSeeder extends Seeder
         $concluida = $status === 'completed';
         $cancelada = $status === 'canceled';
 
+        // As ordens cujo número termina em 2 ou 7 fecham depois do fim previsto
+        // (0102, 0107 e 0112) e as outras nove terminam dentro da janela que a
+        // própria ficha marcou. O atraso é derivado do número, nunca de rand: a
+        // mesma ordem semeia a mesma história em qualquer máquina, e o painel tem
+        // as duas histórias para contar em vez de um vermelho único.
+        $entregaAtrasada = in_array(substr($numero, -1), ['2', '7'], true);
+
+        // O momento da entrega é um só na demonstração: a ficha, o histórico de estado,
+        // a saída da visita e a liberação do técnico leem esta mesma variável. Com um
+        // relógio para cada lugar, a tela mostraria o técnico deixando o endereço depois
+        // de o serviço ter sido dado por concluído — e o painel mediria uma história que
+        // a própria demonstração desmente.
+        $entrega = $concluida
+            ? ($entregaAtrasada ? $fim->copy()->addMinutes(20) : $fim->copy()->subMinutes(25))
+            : null;
+
         $ordem = ServiceOrder::query()->create([
             'company_id' => $this->empresa->id,
             'client_id' => $this->clientes[$cliente]->id,
@@ -523,7 +540,7 @@ class DemoSeeder extends Seeder
             'scheduled_starts_at' => $agenda,
             'scheduled_ends_at' => $fim,
             'started_at' => $emExecucao || $cancelada ? $agenda->copy()->addMinutes(10) : null,
-            'completed_at' => $concluida ? $fim->copy()->addMinutes(20) : null,
+            'completed_at' => $entrega,
             'cancelled_at' => $cancelada ? $agenda->copy()->addHours(1) : null,
             'execution_notes' => $concluida
                 ? 'Equipamento testado em carga, leitura de temperatura dentro da faixa do fabricante.'
@@ -561,15 +578,15 @@ class DemoSeeder extends Seeder
                 'technician_id' => $this->tecnicos[$tecnico]->id,
                 'assigned_by' => $this->usuarios['supervisor']->id,
                 'assigned_at' => $agenda->copy()->subDays(2),
-                'released_at' => $concluida || $cancelada ? $fim : null,
+                'released_at' => $concluida || $cancelada ? ($entrega ?? $fim) : null,
                 'note' => $cancelada ? 'Liberado após o cancelamento.' : null,
             ]);
         }
 
-        $this->historico($ordem, $agenda, $fim, $status, $tecnico);
+        $this->historico($ordem, $agenda, $fim, $status, $tecnico, $entrega);
 
         if ($emExecucao && $tecnico !== null) {
-            $this->checkin($ordem, $tecnico, $agenda, $concluida ? $fim->copy()->addMinutes(20) : null);
+            $this->checkin($ordem, $tecnico, $agenda, $entrega);
         }
 
         $this->ordens[$numero] = $ordem;
@@ -593,7 +610,7 @@ class DemoSeeder extends Seeder
         ];
     }
 
-    private function historico(ServiceOrder $ordem, $agenda, $fim, string $status, ?int $tecnico): void
+    private function historico(ServiceOrder $ordem, $agenda, $fim, string $status, ?int $tecnico, $entrega = null): void
     {
         $trilhas = [
             'draft' => [['draft', $agenda->copy()->subDays(1)]],
@@ -603,7 +620,7 @@ class DemoSeeder extends Seeder
             'on_hold' => [['draft', $agenda->copy()->subDays(3)], ['open', $agenda->copy()->subDays(2)],
                 ['in_progress', $agenda->copy()->addHours(1)], ['on_hold', $agenda->copy()->addHours(2)]],
             'completed' => [['draft', $agenda->copy()->subDays(3)], ['open', $agenda->copy()->subDays(2)],
-                ['in_progress', $agenda->copy()->addMinutes(10)], ['completed', $fim->copy()->addMinutes(20)]],
+                ['in_progress', $agenda->copy()->addMinutes(10)], ['completed', $entrega ?? $fim->copy()->addMinutes(20)]],
             'canceled' => [['draft', $agenda->copy()->subDays(3)], ['open', $agenda->copy()->subDays(2)],
                 ['canceled', $agenda->copy()->addHours(1)]],
         ];
@@ -1019,6 +1036,12 @@ class DemoSeeder extends Seeder
             ['OS-2026-0105', 'visita_tecnica', -9, [[-9, 'debit_card', null]]],
             ['OS-2026-0104', 'mao_de_obra_e_pecas', -6, []],
             ['OS-2026-0103', 'contrato_mensal', -16, [[-16, 'pix', null]]],
+            // A meia baixa de hoje é o que garante "Recebido no mês" com número em
+            // qualquer dia em que a demonstração roda — porque ela é datada de hoje de
+            // verdade, não porque a data de outra foi movida para cá. A ordem escolhida
+            // é a que está em execução com peça no carrinho: cobrar serviço em campo é
+            // o fluxo da casa, e o valor sai do total real da ficha.
+            ['OS-2026-0114', 'mao_de_obra_e_pecas', 0, [[0, 'pix', 0.5]]],
         ];
 
         foreach ($receitas as [$numero, $categoria, $vencimento, $pagamentos]) {
@@ -1067,6 +1090,7 @@ class DemoSeeder extends Seeder
             ['Energia elétrica da base', 'instalacao', 910.00, 6, []],
             ['Folha de pagamento da equipe', 'pessoal', 5400.00, 5, []],
             ['ISS sobre as receitas da semana', 'impostos', 780.00, -1, []],
+            ['Taxa mensal da plataforma', 'instalacao', 320.00, 0, [[0, 'transfer', null]]],
         ];
 
         foreach ($despesas as [$descricao, $categoria, $valor, $vencimento, $pagamentos]) {
@@ -1083,6 +1107,49 @@ class DemoSeeder extends Seeder
 
             $this->baixar($conta, $pagamentos, $this->usuarios['administrator'], 'DESP-'.$conta->id);
         }
+
+        $this->caixaDosMesesAnteriores();
+    }
+
+    /**
+     * Caixa dos cinco meses que antecedem este: o painel desenha a série mensal do
+     * dinheiro realizado, e uma série que só começa no mês atual é um traço reto até
+     * ontem. Cada mês fecha com o contrato de uma carteira e a conta da base, pagos
+     * no dia em que teriam sido pagos — histórico de verdade, não volume empurrado
+     * para o mês que o cartão soma.
+     */
+    private function caixaDosMesesAnteriores(): void
+    {
+        foreach (range(1, 5) as $recuo) {
+            $dia = now()->startOfMonth()->subMonthsNoOverflow($recuo)->addDays(6);
+            $carteira = $this->clientes[$recuo % count($this->clientes)];
+            $mes = $dia->format('m/Y');
+
+            $contrato = FinancialRecord::query()->create([
+                'company_id' => $this->empresa->id,
+                'client_id' => $carteira->id,
+                'type' => FinancialRecord::REVENUE,
+                'category' => 'contrato_mensal',
+                'description' => 'Contrato mensal de '.$carteira->name.' — '.$mes,
+                'amount' => 1180.00 + $recuo * 45,
+                'due_date' => $dia->toDateString(),
+                'occurred_at' => null,
+                'status' => FinancialRecord::PENDING,
+            ]);
+            $this->baixar($contrato, [[$dia, 'pix', null]], $this->usuarios['supervisor'], 'CONTR-'.$mes);
+
+            $base = FinancialRecord::query()->create([
+                'company_id' => $this->empresa->id,
+                'type' => FinancialRecord::EXPENSE,
+                'category' => 'instalacao',
+                'description' => 'Aluguel e energia da base — '.$mes,
+                'amount' => 2400.00 + $recuo * 30,
+                'due_date' => $dia->toDateString(),
+                'occurred_at' => null,
+                'status' => FinancialRecord::PENDING,
+            ]);
+            $this->baixar($base, [[$dia, 'transfer', null]], $this->usuarios['administrator'], 'BASE-'.$mes);
+        }
     }
 
     /**
@@ -1092,7 +1159,7 @@ class DemoSeeder extends Seeder
      */
     private function baixar(FinancialRecord $conta, array $pagamentos, User $autor, string $referencia): void
     {
-        foreach ($pagamentos as [$dia, $metodo, $fracao]) {
+        foreach ($pagamentos as [$quando, $metodo, $fracao]) {
             $pago = $conta->pagoNoBanco();
             $valor = $fracao === null
                 ? round((float) $conta->amount - $pago, 2)
@@ -1105,7 +1172,7 @@ class DemoSeeder extends Seeder
                 'amount' => $valor,
                 'method' => $metodo,
                 'reference' => 'DEMO-'.$referencia.'-'.($conta->payments()->count() + 1),
-                'paid_at' => $this->dataDeCaixa($dia),
+                'paid_at' => $this->dataDeCaixa($quando),
                 'note' => $fracao === null
                     ? 'Baixa registrada na demonstração, que fecha a conta.'
                     : 'Parcela registrada na demonstração; o saldo segue em aberto.',
@@ -1122,17 +1189,19 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * A data do caixa. Diferente do vencimento, ela não pode cair fora do mês que o
-     * painel soma: a demonstração roda em qualquer dia, e um pagamento empurrado
-     * para o mês anterior deixaria "Recebido no mês" zerado no começo do mês. O
-     * teto é hoje porque dinheiro que ainda não entrou não é fato.
+     * A data do caixa: o dia em que o dinheiro mudou de mão. Número é dia relativo a
+     * hoje; data é a data em si, que é como a demonstração semeia os meses
+     * anteriores sem mentir a data de um pagamento. O teto é hoje porque dinheiro que
+     * ainda não entrou não é fato — e não existe mais o piso do mês corrente: com a
+     * série mensal desenhada no painel, empurrar caixa antigo para este mês seria o
+     * gráfico mentir por fora de um número certo.
      */
-    private function dataDeCaixa(int $dias): string
+    private function dataDeCaixa(int|Carbon $quando): string
     {
-        $data = now()->startOfDay()->addDays($dias);
-        $inicioDoMes = now()->startOfMonth();
+        $data = $quando instanceof Carbon ? $quando->copy() : now()->startOfDay()->addDays($quando);
+        $hoje = now()->startOfDay();
 
-        return $data->lt($inicioDoMes) ? $inicioDoMes->toDateString() : $data->toDateString();
+        return $data->gt($hoje) ? $hoje->toDateString() : $data->toDateString();
     }
 
     private function totalDaOrdem(ServiceOrder $ordem): float
