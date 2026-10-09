@@ -793,6 +793,59 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   motivo gravado, reabertura derivando o estado de novo, CSV com BOM e `;`, e a conta de campo com 403 na
   carteira e na ficha — com a travessia de cobrança ausente onde não há permissão.
 
+- FASE 18 — relatório é a mesma consulta da listagem, fatiada por período. `App\Support\Relatorio` materializa
+  quatro fechamentos (financeiro por categoria, operação por técnico, chamados por prioridade, por categoria do
+  serviço ou por técnico, estoque por produto), e cada um parte dos mesmos `visiveisPara()` que as telas de ordem,
+  chamado, carteira e movimentação usam: o número do fechado é conferível linha por linha por quem o lê, e não
+  existe uma query paralela que pode discordar da tabela.
+- O catálogo carrega a pergunta, não só o título (`CATALOGO`: `rotulo`, `aba`, `pergunta`, `modulo`, `arquivo`). A
+  aba curta existe porque a navegação entre relatórios com o título inteiro não cabe em tela nenhuma, e o módulo é
+  o degrau de leitura que cada fechado exige — ver o dinheiro só faz sentido para quem lê a carteira.
+- A janela é resolvida no servidor: sem datas é o mês corrente, com uma ponta só a outra entra a `DIAS_PADRAO` (30)
+  dias, início depois do fim é invertido em vez de virar período vazio, e acima de `DIAS_MAXIMO` (366) o início é
+  trazido para dentro com um aviso que diz quantos dias foram cortados e manda exportar em duas janelas. O teto
+  existe porque um `between` de 1900 a hoje não é relatório — é a consulta que derruba o banco da empresa pelo
+  caminho mais fácil.
+- Tela e arquivo são a mesma coleção: `fechamento()` devolve a lista já ordenada, a tela fatia em `paginar()` com a
+  página e o `porPagina` vindos da query string, e `linhasParaExportar()` escreve o inteiro na mesma ordem. O link
+  de exportação carrega a janela resolvida, o tipo, o ângulo e a ordenação vigentes, então o CSV é o que estava na
+  frente da pessoa, não uma reconsultada depois.
+- CSV honesto com o Excel brasileiro: separador `;`, BOM no início, `Formatters` em todo dinheiro, duração e
+  percentual — exportado que discorda da tela é exportado que ninguém assina — e nome de arquivo com o período que
+  aquele arquivo resume (`nexusfield-relatorio-financeiro-2026-04-01-2026-10-09-<carimbo>.csv`).
+- Ordenação por lista fechada (`ORDENAVEIS` por relatório): a coluna pedida nunca entra em SQL, porque a ordenação
+  acontece na coleção materializada, com duas passadas estáveis e medida inexistente por último nos dois sentidos.
+  Técnico sem tempo medido não é zero minuto, e `—` que abre a tabela é o mesmo que dizer que a pessoa tem o mais
+  rápido da empresa sem ter medido ninguém.
+- Dois defeitos encontrados e tratados dentro da fase, ambos pela prova ao vivo. O `linhasFinanceiro()` não
+  importava `$tipo` no closure e toda tela e todo CSV de financeiro respondia 500 — a suíte ainda não tinha aberto
+  aquela rota. E o `ordenar()` tratava `ordena=rotulo` como "nada pedido" e devolvia a ordem do catálogo: o
+  cabeçalho clicável pelo nome, que existe justamente porque a tabela abre na ordem do vocabulário, era a
+  propaganda de uma ordenação que não acontece. Descoberto porque a prova imprimiu a primeira linha em `asc` e em
+  `desc` e as duas eram a mesma; agora "nada pedido" e "pediu o nome" são perguntas diferentes, e o teste cobra os
+  dois sentidos.
+- Permissão em degraus, recusada antes de o SQL rodar: `reports.view` abre o hub e as quatro telas,
+  `reports.export` faz o arquivo — que atravessa a fronteira da empresa numa planilha anexada —, e cada fechado
+  pede ainda a leitura do módulo que resume (`financial.view`, `orders.view`, `tickets.view`, `stock.view`). Sem
+  ela, o servidor responde 403 dizendo qual degrau falta, e o cartão não aparece no hub: cartão que leva a uma tela
+  zerada é interface contando vantagem. A rota parametrizada de exportação é constrained às quatro chaves do
+  catálogo, então `relatorios/{qualquer-coisa}/exportar` responde 404 em vez de montar agregação inexistente.
+- O hub fecha o período com o resumo dos módulos que a conta alcança — a receita realizada no período e os quatro
+  fatos de operação, visita, chamado e estoque, todos contados no banco daquela empresa — e só lista os cartões
+  abertos para quem tem a leitura do módulo. Conta com `reports.view` mas sem leitura de módulo nenhum recebe a
+  frase que diz qual permissão pedir, não uma lista vazia.
+- `ReportsTest` (19 testes, 185 asserções) cobra a janela nos quatro cantos (padrão, uma ponta, invertida, cortada
+  pelo teto), o fechado somando a mesma consulta da listagem, o CSV na mesma ordem da tela com o mesmo dinheiro e o
+  período no nome do arquivo, a coluna pedida por injeção caindo no catálogo sem virar query, a ordenação pelo nome
+  nos dois sentidos, a medida inexistente que não vira zero, o 403 que nomeia o degrau faltante, o cartão que some,
+  o técnico sem `reports.view`, o funcionário que lê o estoque mas não exporta, e o fato da empresa ao lado que não
+  entra no fechado. A suíte fecha em 214 testes / 2336 asserções.
+- Prova ao vivo no servidor de desenvolvimento, com sessão de verdade e a senha lida do ambiente sem nunca aparecer
+  na saída: as cinco telas em 200 com os números reais da empresa de demonstração e a janela de 192 dias desenhada
+  no cabeçalho, os quatro CSVs bem formados (9, 6, 5 e 9 linhas, zero linha torta) com o período no nome, `ordem
+  asc` e `ordem desc` finalmente diferentes, a query string de injeção respondendo 200 na ordem do catálogo, e a
+  conta de campo com 403 no hub, no financeiro e no exportar.
+
 ### Alterado
 
 - A paleta "Premium Gourmet + Technology" foi harmonizada com a nova logo: a marca saiu do teal

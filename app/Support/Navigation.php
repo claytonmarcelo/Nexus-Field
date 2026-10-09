@@ -67,6 +67,17 @@ class Navigation
                 ],
             ],
             [
+                'label' => 'Gestão',
+                'items' => [
+                    [
+                        'label' => 'Relatórios',
+                        'route' => 'reports.index',
+                        'permission' => 'reports.view',
+                        'icon' => 'fa-solid fa-chart-column',
+                    ],
+                ],
+            ],
+            [
                 'label' => 'Cadastros',
                 'items' => [
                     [

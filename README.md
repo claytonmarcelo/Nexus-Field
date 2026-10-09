@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-185%20testes%20%2F%201882%20asser%C3%A7%C3%B5es-brightgreen" alt="185 testes, 1882 asserções">
+  <img src="https://img.shields.io/badge/testes-214%20testes%20%2F%202336%20asser%C3%A7%C3%B5es-brightgreen" alt="214 testes, 2336 asserções">
 </p>
 
 <p align="center">
@@ -94,6 +94,7 @@ cada etapa autorizada por permissão verificada no servidor e registrada em audi
 - **Multiempresa de verdade**: isolamento por empresa em toda consulta, não por convenção de tela
 - **Indicador sem número inventado**: todo KPI do painel sai de uma contagem no MySQL daquela empresa
 - **Interface nos dois temas**: claro e escuro, com a escolha persistida no navegador e no servidor
+- **Fechamento conferível**: o relatório agrega a mesma consulta que a listagem mostra, e o CSV é essa coleção inteira
 
 ---
 
@@ -329,6 +330,32 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   `financial.delete` — o técnico e a conta de cliente não chegam na carteira, e recebem 403 do servidor antes
   de ver qualquer botão
 
+### Relatórios e exportações
+
+- **Quatro fechamentos de período** (`/relatorios`): financeiro por categoria, operação por técnico, chamados por
+  prioridade, por categoria do serviço ou por técnico, e estoque por produto. Cada um responde a pergunta que está
+  escrita no próprio catálogo (`Relatorio::CATALOGO`), e o hub só mostra o cujo módulo a conta lê
+- **A janela é resolvida no servidor**: sem datas no link ela é o mês corrente, com uma só a outra ponta entra a
+  30 dias, início depois do fim é invertido, e acima de 366 dias o início é trazido para dentro com um aviso que
+  diz quantos dias foram cortados — porque um `between` de 1900 a hoje não é relatório, é a consulta que derruba
+  o banco da empresa pelo link mais fácil
+- **O número é o que a listagem já mostra**: as quatro agregações partem dos mesmos `visiveisPara()` das telas de
+  ordem, chamado, carteira e movimentação, então o fechado é conferível linha por linha por quem o lê
+- **Tela e arquivo são a mesma coleção**: a tela fatia em paginação própria, o CSV devolve o inteiro com a ordem
+  vigente, e o link de exportação carrega a janela resolvida, o tipo, o ângulo e a ordenação que estavam na frente
+  da pessoa
+- **Ordenação por lista fechada**: as colunas ordenáveis de cada relatório estão em `ORDENAVEIS` e a coluna pedida
+  nunca chega ao SQL — desconhecida, vazia ou de injeção cai na ordem do vocabulário, e valor não medido fica no
+  fim nos dois sentidos, porque técnico sem tempo medido não é zero minuto
+- **CSV honesto com o Excel brasileiro**: separador `;`, BOM no início, dinheiro e duração já formatados, e nome
+  de arquivo com o período que aquele arquivo resume
+- **Dois degraus, mais o do módulo**: `reports.view` abre o hub e as telas, `reports.export` faz o arquivo — que
+  atravessa a fronteira da empresa numa planilha anexada —, e cada fechado pede ainda a leitura do módulo que
+  resume. Sem `financial.view`, por exemplo, o financeiro responde 403 nomeando o degrau faltante e o cartão não
+  aparece no hub, em vez de levar a uma tela de zeros
+- **Fora do catálogo é 404**: a rota de exportação é constrained às quatro chaves, então
+  `relatorios/{qualquer-coisa}/exportar` não monta agregação inexistente
+
 ### Interface
 
 - AdminLTE 4 na estrutura oficial, Bootstrap 5.3 nos componentes e camada de tokens própria
@@ -369,7 +396,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vêm uma fase por vez.
 | Check-in / check-out com geolocalização | ✅ | ✅ | ✅ |
 | Estoque e movimentações | ✅ | ✅ | ✅ |
 | Financeiro (contas a receber e a pagar) | ✅ | ✅ | ✅ |
-| Relatórios e exportações | ✅ | ✅ | 🚧 fase 18 |
+| Relatórios e exportações | ✅ | ✅ | ✅ |
 | Notificações | ✅ | ✅ | 🚧 fase 19 |
 | Usuários e papéis | ✅ | ✅ | 🚧 fase 20 |
 | Configurações da empresa | ✅ | ✅ | 🚧 fase 21 |
@@ -673,7 +700,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **195 testes / 2149 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **214 testes / 2336 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
@@ -709,8 +736,13 @@ nem se apaga, o cancelamento que pede motivo e a reabertura que deriva o estado 
 vocabulário do tipo, despesa que não tem cliente, ordem e cliente que têm de ser a mesma carteira, a cobrança
 da OS que só existe com o serviço terminado e com o valor somado das linhas, a carteira que filtra no banco e
 o CSV devolvendo o mesmo saldo da ficha, e o alcance de gestor, funcionário, técnico e conta de cliente nas
-treze rotas da carteira e na cobrança que nasce na ficha da ordem; e o CSRF, que varre as views e o HTML
-servido porque o `VerifyCsrfToken` se isenta durante os testes e nenhum outro teste do projeto veria o
+treze rotas da carteira e na cobrança que nasce na ficha da ordem — e o de relatórios: a janela que um link pode
+estender até derrubar o banco e volta cortada com aviso, a ponta invertida que é aceita de cabeça para baixo em vez
+de virar período vazio, o fechado que soma a mesma consulta da listagem, o CSV que devolve a coleção inteira na
+ordem da tela e com o período no nome do arquivo, a coluna pedida por injeção que cai no catálogo em vez de
+executar, o link de ordenar pelo nome que ordena nos dois sentidos, a medida inexistente que não vira zero, o
+cartão que some quando a conta não lê o módulo e o 403 que nomeia o degrau faltante; e o CSRF, que varre as views
+e o HTML servido porque o `VerifyCsrfToken` se isenta durante os testes e nenhum outro teste do projeto veria o
 formulário sem token.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
@@ -786,10 +818,15 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
   fechado por tipo; despesa não tem cliente; a cobrança da OS recomputa o valor nas linhas do banco, só com o
   serviço terminado e uma vez por ordem; carteira com filtros, totais do recorte, paginação própria e CSV da
   mesma consulta; quatro KPIs de caixa no painel somando a mesma expressão SQL da ficha
+- [x] **Fase 18** — Relatórios e exportações: quatro fechamentos de período agregando os mesmos `visiveisPara()`
+  das listagens, janela resolvida no servidor com teto de 366 dias e aviso do que foi cortado, ordenação por lista
+  fechada em que coluna de injeção cai no catálogo, CSV (`;` + BOM + dinheiro e duração formatados) saindo da
+  coleção inteira com o período no nome do arquivo, dois degraus de permissão (`reports.view` para a tela,
+  `reports.export` para o arquivo) mais a leitura do módulo que o fechado resume, e cartão que some do hub em vez
+  de abrir tela zerada
 
 ### Planejado
 
-- [ ] Fase 18 — Relatórios e exportações
 - [ ] Fase 19 — Notificações
 - [ ] Fase 20 — Telas de usuários e papéis
 - [ ] Fase 21 — Configurações da empresa

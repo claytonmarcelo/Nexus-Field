@@ -283,6 +283,69 @@
     min-height: 1.75rem;
 }
 
+/* ── Fechamento de período (relatórios) ──────────────────────────────────── */
+
+/*
+ * A janela que o relatório efetivamente usou. Os campos de data podem chegar
+ * vazios e o número continuar existindo — é o backend que decide o mês corrente,
+ * o lado que falta e o teto — então a decisão precisa aparecer na tela em que o
+ * fechado foi lido, não só no link que alguém copiou.
+ */
+.nf-relatorio-janela {
+    display: grid;
+    gap: 0.4rem;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    background: var(--nf-surface);
+    border: 1px solid var(--nf-line);
+    border-left: 3px solid var(--nf-primary);
+    border-radius: var(--bs-border-radius);
+}
+
+.nf-relatorio-janela p {
+    margin: 0;
+}
+
+.nf-relatorio-janela-rotulo {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--nf-text-muted);
+}
+
+/*
+ * O recorte que o teto podou. Não é `.nf-status` porque aquele badge é
+ * `nowrap` por natureza e aqui a frase inteira precisa caber e quebrar.
+ */
+.nf-relatorio-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--nf-danger);
+}
+
+.nf-relatorio-abas {
+    margin: -0.25rem 0 1rem;
+    overflow-x: auto;
+}
+
+.nf-relatorio-abas .nav-link {
+    white-space: nowrap;
+}
+
+/*
+ * A barra de participação dentro da célula: a mesma régua do painel, parada
+ * dentro de uma linha de tabela. O largura fixa é o que faz a coluna parar de
+ * crescer quando a tabela inteira é larga demais.
+ */
+.nf-relatorio-barra {
+    width: 6.5rem;
+    margin-top: 0.3rem;
+    margin-left: auto;
+}
+
 @media (max-width: 767.98px) {
     .nf-check-grade {
         grid-template-columns: minmax(0, 1fr);

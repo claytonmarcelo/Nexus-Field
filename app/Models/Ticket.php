@@ -254,7 +254,13 @@ class Ticket extends Model
         });
     }
 
-    private static function prazoSql(): string
+    /**
+     * O prazo de cada prioridade em SQL, uma vez: a listagem filtra atrasados com
+     * esta expressão e o relatório mede resolução dentro do prazo com a mesma. Uma
+     * régua escrita em dois lugares é duas réguas que discordam na primeira
+     * alteração de tabela.
+     */
+    public static function prazoSql(): string
     {
         $casos = collect(self::PRAZO_HORAS)
             ->map(fn (int $horas, string $prioridade) => "when priority = '".$prioridade."' then ".$horas)

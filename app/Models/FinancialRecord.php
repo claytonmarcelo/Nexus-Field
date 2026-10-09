@@ -120,6 +120,17 @@ class FinancialRecord extends Model
         return $this->hasMany(Payment::class);
     }
 
+    /**
+     * A expressão da carteira, pública para o relatório de financeiro somar o que
+     * já mudou de mão sem escrever uma segunda régua: listagem, ficha, rodapé e
+     * relatório somam o mesmo SQL. Sem binding, então não há valor de usuário
+     * entrando na concatenação.
+     */
+    public static function pagoSql(): string
+    {
+        return self::PAGADA_SQL;
+    }
+
     /** @return array<string, string> categorias do tipo, ou o catálogo inteiro se o tipo não foi escolhido */
     public static function categorias(?string $tipo = null): array
     {

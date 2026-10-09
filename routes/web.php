@@ -16,6 +16,7 @@ use App\Http\Controllers\Orders\CheckinController;
 use App\Http\Controllers\Orders\OrderAssignmentController;
 use App\Http\Controllers\Orders\OrderController;
 use App\Http\Controllers\Orders\OrderItemController;
+use App\Http\Controllers\Reports\ReportController;
 use App\Http\Controllers\Stock\MovementController;
 use App\Http\Controllers\Technicians\SpecialtyController;
 use App\Http\Controllers\Technicians\TeamController;
@@ -259,6 +260,30 @@ Route::middleware(['auth', 'company'])->group(function () {
         Route::get('{compromisso}', [AgendaController::class, 'show'])
             ->middleware('permission:agenda.view')
             ->name('show');
+    });
+
+    /*
+     * Os fechamentos de período leem `reports.view`, e cada tela pede ainda a
+     * permissão de leitura do módulo que resume: o fechado de financeiro não sai
+     * para quem não lê a carteira. Exportar é um degrau acima (`reports.export`),
+     * porque o arquivo atravessa a fronteira da empresa numa planilha anexada.
+     *
+     * A rota parametrizada de exportação é constrained às quatro chaves do
+     * catálogo: `relatorios/{qualquer-coisa}/exportar` responde 404 em vez de
+     * montar uma agregação que não existe.
+     */
+    Route::prefix('relatorios')->name('reports.')->middleware('permission:reports.view')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+
+        Route::get('financeiro', [ReportController::class, 'financeiro'])->name('financeiro');
+        Route::get('operacao', [ReportController::class, 'operacao'])->name('operacao');
+        Route::get('chamados', [ReportController::class, 'chamados'])->name('chamados');
+        Route::get('estoque', [ReportController::class, 'estoque'])->name('estoque');
+
+        Route::get('{relatorio}/exportar', [ReportController::class, 'export'])
+            ->where('relatorio', 'financeiro|operacao|chamados|estoque')
+            ->middleware('permission:reports.export')
+            ->name('export');
     });
 
     Route::prefix('clientes')->name('clients.')->group(function () {

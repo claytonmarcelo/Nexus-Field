@@ -291,6 +291,20 @@ class ServiceOrder extends Model
         });
     }
 
+    /**
+     * O total de uma ordem escrito em SQL: o líquido dos itens menos o desconto da
+     * ordem, que é exatamente a conta de `totais()['total']`. O relatório de
+     * operação precisa somar este valor por técnico dentro de um `groupBy`, e a
+     * subconsulta correlacionada é o que evita o fã-out: juntar a tabela de itens
+     * multiplicaria as linhas da ordem e o tempo médio de execução sairia inflado.
+     * Sem binding, porque a expressão é só colunas da casa.
+     */
+    public static function totalPorOrdemSql(): string
+    {
+        return '('.static::somaDeItens('quantity * unit_price - discount')->toSql().')'
+            .' - coalesce(service_orders.discount, 0)';
+    }
+
     private static function somaBrutaQuery(): QueryBuilder
     {
         return static::somaDeItens('quantity * unit_price');
