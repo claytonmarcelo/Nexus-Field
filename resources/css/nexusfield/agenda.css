@@ -335,3 +335,14 @@
     opacity: .55;
     transition: opacity .2s var(--nf-ease);
 }
+
+/*
+ * A escrita por arrasto também tem cara. O compromisso que está no ar esmaece e
+ * recebe o fio do próprio tom; o resto do quadro continua vivo, porque ali a
+ * janela inteira ainda não chegou e aqui só aquela peça espera o banco dizer sim.
+ */
+.nf-agenda .fc-event.is-gravando {
+    opacity: .45;
+    box-shadow: inset 0 0 0 1px var(--nf-tone, var(--nf-line-strong));
+    transition: opacity .2s var(--nf-ease), box-shadow .2s var(--nf-ease);
+}

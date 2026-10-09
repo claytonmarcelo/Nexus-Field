@@ -8,10 +8,12 @@ use Tests\TestCase;
 
 /**
  * O briefing "Premium Gourmet" fecha na camada de apresentação, e apresentação que
- * ninguém veste é entropia. Estas provas amarram as três pontas que ainda faltavam
- * no global: a espera real da agenda tem esqueleto em vez de silêncio, a virada de
- * tema desliza em duzentos milissegundos sem pintar a recarga, e nenhuma classe
- * `nf-` da folha fica esperando uso de uma interface que não existe.
+ * ninguém veste é entropia. Estas provas amarram o global em cinco pontas: a espera
+ * real da agenda tem esqueleto em vez de silêncio, a virada de tema desliza em
+ * duzentos milissegundos sem pintar a recarga, nenhum caminho de rede é escrito duas
+ * vezes na mesma tela, a folha não declara a mesma propriedade para o mesmo seletor
+ * (o primeiro valor nunca é pintado), e nenhuma classe `nf-` fica esperando uso de
+ * uma interface que não existe.
  */
 class CoerenciaVisualTest extends TestCase
 {
@@ -151,6 +153,180 @@ class CoerenciaVisualTest extends TestCase
         }
 
         $this->assertSame([], $orfas, 'Classes que nenhuma interface veste: '.implode(', ', $orfas));
+    }
+
+    public function test_a_folha_para_de_se_desmentir_no_mesmo_seletor(): void
+    {
+        $repetidas = [];
+
+        foreach (self::FOLHAS as $folha) {
+            $vistas = [];
+
+            foreach ($this->blocosNivelUm($this->folha($folha)) as $bloco) {
+                foreach ($this->propriedades($bloco['corpo']) as $propriedade) {
+                    $chave = $bloco['seletor'].'{'.$propriedade.'}';
+
+                    if (isset($vistas[$chave])) {
+                        $repetidas[] = $folha.'.css -> '.$bloco['seletor'].' { '.$propriedade.' }';
+                    }
+
+                    $vistas[$chave] = true;
+                }
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $repetidas,
+            'Propriedade declarada duas vezes para o mesmo seletor, e a primeira nunca é pintada: '
+                .implode(', ', $repetidas)
+        );
+    }
+
+    public function test_os_dois_pedidos_da_agenda_caminham_pela_mesma_estrada(): void
+    {
+        $js = file_get_contents(base_path('resources/js/nexusfield/agenda.js'));
+
+        // Eram dois blocos de fetch quase idênticos: cabeçalho, corpo e as duas caras
+        // do erro escritos duas vezes, que é exatamente como uma mensagem de rede
+        // passa a estar certa num botão e errada no outro.
+        $this->assertSame(1, substr_count($js, 'await fetch('), 'A agenda voltou a ter dois caminhos de rede.');
+        $this->assertStringContainsString('async function pedido(url', $js);
+        $this->assertStringContainsString('class Recusa extends Error', $js);
+        $this->assertStringContainsString('class SemConexao extends Error', $js);
+        $this->assertStringContainsString("toast.error(erro.message, 'A agenda não abriu');", $js);
+        $this->assertStringContainsString("toast.error(erro.message, 'A janela não mudou');", $js);
+
+        // A escrita por arrasto agora tem cara enquanto o banco não responde.
+        $this->assertStringContainsString("info.el?.classList.toggle('is-gravando', ativa)", $js);
+
+        $css = $this->folha('agenda');
+        $inicio = strpos($css, '.nf-agenda .fc-event.is-gravando');
+        $this->assertNotFalse($inicio, 'O estado de escrita da agenda sumiu da folha.');
+
+        $bloco = substr($css, $inicio, strpos($css, '}', $inicio) - $inicio);
+        $this->assertMatchesRegularExpression('/var\(--nf-/', $bloco, 'O estado de escrita pinta fora do registro de tokens.');
+        $this->assertDoesNotMatchRegularExpression('/#[0-9a-fA-F]{3,8}|rgb\(/', $bloco, 'O estado de escrita trouxe tinta nova.');
+    }
+
+    /**
+     * Blocos de topo da folha, com o seletor normalizado. @media/@keyframes são
+     * contexto, não regra: quem desmente quem precisa estar na mesma altura do
+     * arquivo, senão a comparação é entre telas diferentes.
+     *
+     * @return array<int, array{seletor: string, corpo: string}>
+     */
+    private function blocosNivelUm(string $css): array
+    {
+        $limpo = preg_replace_callback(
+            '/\/\*[\s\S]*?\*\//',
+            fn (array $m): string => preg_replace('/[^\n]/', ' ', $m[0]),
+            $css
+        );
+
+        $blocos = [];
+        $contexto = [];
+        $i = 0;
+        $n = strlen($limpo);
+
+        while ($i < $n) {
+            $abre = strpos($limpo, '{', $i);
+
+            if ($abre === false) {
+                break;
+            }
+
+            // O fecho do @media não é seletor: sem andar o ponteiro, ele colaria no
+            // seletor do bloco seguinte e as duas metades do arquivo deixariam de se
+            // reconhecer como o mesmo seletor.
+            while ($contexto !== [] && $abre >= $contexto[count($contexto) - 1]['fim']) {
+                $i = max($i, $contexto[count($contexto) - 1]['fim']);
+                array_pop($contexto);
+            }
+
+            if ($i > $abre) {
+                continue;
+            }
+
+            $seletor = trim(preg_replace('/\s+/', ' ', substr($limpo, $i, $abre - $i)));
+            $profundidade = 1;
+            $fim = $abre + 1;
+
+            while ($fim < $n && $profundidade > 0) {
+                if ($limpo[$fim] === '{') {
+                    $profundidade++;
+                }
+
+                if ($limpo[$fim] === '}') {
+                    $profundidade--;
+                }
+
+                $fim++;
+            }
+
+            if (str_starts_with($seletor, '@')) {
+                $contexto[] = ['sel' => $seletor, 'fim' => $fim];
+                $i = $abre + 1;
+
+                continue;
+            }
+
+            if ($contexto === []) {
+                $blocos[] = ['seletor' => $seletor, 'corpo' => substr($limpo, $abre + 1, $fim - $abre - 2)];
+            }
+
+            $i = $fim;
+        }
+
+        $this->assertNotEmpty($blocos, 'A varredura de blocos não achou regra nenhuma.');
+
+        return $blocos;
+    }
+
+    /**
+     * Nomes de propriedade de um corpo de bloco, cortando no ';' que está fora de
+     * parêntese: gradiente e color-mix() carregam vírgula e parêntese no valor, e é
+     * o parêntese que protege a leitura.
+     *
+     * @return array<int, string>
+     */
+    private function propriedades(string $corpo): array
+    {
+        $nomes = [];
+        $pedaco = '';
+        $parenteses = 0;
+
+        for ($k = 0; $k < strlen($corpo); $k++) {
+            $c = $corpo[$k];
+
+            if ($c === '(') {
+                $parenteses++;
+            } elseif ($c === ')') {
+                $parenteses--;
+            } elseif ($c === ';' && $parenteses === 0) {
+                $nomes[] = $this->nome($pedaco);
+                $pedaco = '';
+
+                continue;
+            }
+
+            $pedaco .= $c;
+        }
+
+        $nomes[] = $this->nome($pedaco);
+
+        return array_values(array_filter($nomes));
+    }
+
+    private function nome(string $declaracao): ?string
+    {
+        $dois = strpos($declaracao, ':');
+
+        if ($dois === false || str_starts_with(trim($declaracao), '@')) {
+            return null;
+        }
+
+        return trim(substr($declaracao, 0, $dois)) ?: null;
     }
 
     private function folha(string $nome): string

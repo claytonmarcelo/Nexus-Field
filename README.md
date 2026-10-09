@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-311%20testes%20%2F%202945%20asser%C3%A7%C3%B5es-brightgreen" alt="311 testes, 2945 asserções">
+  <img src="https://img.shields.io/badge/testes-313%20testes%20%2F%202969%20asser%C3%A7%C3%B5es-brightgreen" alt="313 testes, 2969 asserções">
 </p>
 
 <p align="center">
@@ -487,6 +487,15 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - A folha não guarda peça de vitrine: as 202 classes `nf-` dos seis arquivos de estilo são varridas em
   teste contra Blade, JavaScript, controller e seeder — o que ninguém veste sai da folha, porque duas
   maneiras de escrever a mesma coisa, uma delas nunca lida, é exatamente a repetição que este desenho vetou
+- A folha também não se desmente: nenhum seletor de topo declara a mesma propriedade duas vezes. Vinte
+  declarações estavam escritas por baixo de outra que as venciam, e nunca foram pintadas — o corte saiu
+  provado no navegador, com o estilo computado idêntico byte a byte antes e depois
+- Um caminho de rede por tela: na agenda, a leitura da janela e a escrita do arrasto passam pelo mesmo
+  `pedido()`, que é quem conhece cabeçalho, corpo, CSRF e as duas caras do erro — `Recusa` quando o
+  servidor diz não, `SemConexao` quando ele não responde. Dois blocos de `fetch` quase idênticos são o
+  jeito mais rápido de uma mensagem de rede ficar certa em um botão e errada no outro
+- A escrita por arrasto tem cara enquanto o banco não respondeu: o compromisso esmaece com o fio do
+  próprio tom, e a classe sai no `finally` — gravado, recusado ou sem conexão, os três desfechos
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura
 - O menu veste o tema da página: no claro ele é a superfície elevada com o verde de marca em quem está
   ativo, no escuro encosta no preto e só o fio de borda separa as duas áreas
@@ -861,7 +870,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **311 testes / 2945 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **313 testes / 2969 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, perfil próprio com chave e senha trocadas só mediante a senha atual, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
@@ -1015,10 +1024,13 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
   há dado
 - [x] **Fase 24** — Camada de apresentação fechada sem exceção: esqueleto no único carregamento real da
   interface, virada de tema com janela de 200ms e a folha varrida — nenhuma classe `nf-` esperando uso
+- [x] **Fase 25** — Coerência global sem repetir informação: a folha parou de se desmentir (20 declarações
+  mortas cortadas, estilo computado provado idêntico), a agenda ficou com um só caminho de rede, e a
+  escrita por arrasto ganhou cara enquanto o banco não responde
 
 ### A seguir
 
-O plano de reconstrução fechou: da fase 1 à 24, mais a prontidão de deploy, tudo no ar. O que vem
+O plano de reconstrução fechou: da fase 1 à 25, mais a prontidão de deploy, tudo no ar. O que vem
 depois é decisão de operação, não fase: publicar numa máquina real, contratar o primeiro tenant e
 bater o martelo da licença.
 

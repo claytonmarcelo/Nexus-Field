@@ -80,6 +80,71 @@ function mostrarEsqueleto(esqueleto, elemento, buscando) {
     elemento.setAttribute('aria-busy', buscando ? 'true' : 'false');
 }
 
+/**
+ * Um só caminho de rede para os dois pedidos da tela — a leitura da janela e a
+ * escrita do arrasto. Cabeçalho, corpo, CSRF e a tradução do erro moram aqui; quem
+ * chama decide o que fazer com o resultado, não como pedir. Eram dois blocos de
+ * `fetch` quase idênticos, e bloco quase idêntico é o jeito mais rápido de uma
+ * mensagem de erro ficar certa num botão e errada no outro.
+ *
+ * Os dois tipos de falha são distintos de propósito: `Recusa` é o servidor dizendo
+ * não (mensagem dele, janela que não muda), `SemConexao` é o servidor que não
+ * respondeu (o quadro pode até continuar mostrando o que já tinha).
+ */
+class Recusa extends Error {
+    constructor(mensagem, status) {
+        super(mensagem);
+        this.status = status;
+    }
+}
+
+class SemConexao extends Error {}
+
+async function pedido(url, { method = 'GET', corpo = null, csrf = null } = {}) {
+    const headers = { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+
+    if (corpo !== null) {
+        headers['Content-Type'] = 'application/json';
+    }
+
+    if (csrf) {
+        headers['X-CSRF-TOKEN'] = csrf;
+    }
+
+    let resposta;
+
+    try {
+        resposta = await fetch(url, {
+            method,
+            headers,
+            credentials: 'same-origin',
+            body: corpo === null ? undefined : JSON.stringify(corpo),
+        });
+    } catch (erro) {
+        throw new SemConexao(erro?.message || 'sem resposta');
+    }
+
+    const dados = await resposta.json().catch(() => null);
+
+    if (!resposta.ok) {
+        throw new Recusa(mensagemDaRecusa(dados), resposta.status);
+    }
+
+    return dados;
+}
+
+/** A recusa que chega em JSON é a palavra do servidor; a que não chega é a da casa. */
+function mensagemDaRecusa(dados) {
+    if (dados?.mensagem) {
+        return dados.mensagem;
+    }
+
+    // Validação da Laravel devolve os campos; o que o usuário precisa ler é o primeiro.
+    const primeiro = dados?.errors && Object.values(dados.errors)[0]?.[0];
+
+    return primeiro || 'O servidor recusou a consulta da agenda.';
+}
+
 async function buscarEventos(info, feed, filtros) {
     const parametros = new URLSearchParams({
         inicio: parede(info.start),
@@ -88,19 +153,14 @@ async function buscarEventos(info, feed, filtros) {
     });
 
     try {
-        const resposta = await fetch(`${feed}?${parametros}`, {
-            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            credentials: 'same-origin',
-        });
-
-        if (!resposta.ok) {
-            toast.error(await mensagemDaResposta(resposta), 'A agenda não abriu');
+        return await pedido(`${feed}?${parametros}`);
+    } catch (erro) {
+        if (erro instanceof Recusa) {
+            toast.error(erro.message, 'A agenda não abriu');
 
             return [];
         }
 
-        return await resposta.json();
-    } catch (erro) {
         toast.error('A consulta ao calendário não respondeu. Recarregue a tela.', 'Sem conexão');
         throw erro;
     }
@@ -111,6 +171,9 @@ async function buscarEventos(info, feed, filtros) {
  * confere alcance, estado e janela antes de gravar hora. Se o servidor recusa, o
  * evento volta ao lugar de onde saiu — calendário que aceita o que o banco não
  * aceitou é a maneira mais rápida de mentir para quem lê a escala.
+ *
+ * Enquanto o PATCH não volta, o compromisso arrastado fica esmaecido: o dedo já
+ * soltou, o banco ainda não disse sim, e essa diferença precisa aparecer.
  */
 async function remanejar(info, calendario, csrf) {
     const compromisso = info.event.extendedProps;
@@ -134,36 +197,34 @@ async function remanejar(info, calendario, csrf) {
         );
     }
 
-    try {
-        const resposta = await fetch(compromisso.janela, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-                'X-CSRF-TOKEN': csrf,
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            body: JSON.stringify(corpo),
-        });
+    gravando(info, true);
 
-        if (!resposta.ok) {
-            info.revert();
-            toast.error(await mensagemDaResposta(resposta), 'A janela não mudou');
+    try {
+        const dados = await pedido(compromisso.janela, { method: 'PATCH', corpo, csrf });
+        toast.success(`Nova janela: ${dados?.compromisso?.janela ?? 'gravada no servidor'}.`);
+    } catch (erro) {
+        info.revert();
+
+        if (erro instanceof Recusa) {
+            toast.error(erro.message, 'A janela não mudou');
 
             return;
         }
 
-        const dados = await resposta.json();
-        toast.success(`Nova janela: ${dados.compromisso.janela}.`);
-    } catch (erro) {
-        info.revert();
         toast.error('O servidor não respondeu ao remanejamento. A janela voltou ao lugar.', 'Sem conexão');
         throw erro;
+    } finally {
+        gravando(info, false);
     }
 
     // Relê a janela: o servidor pode ter deslocado os dias inteiros, e o quadro tem
     // de mostrar o que está gravado, não o que o dedo soltou.
     calendario.refetchEvents();
+}
+
+/** A marca de escrita no evento que está no ar, e só nele — o resto do quadro segue vivo. */
+function gravando(info, ativa) {
+    info.el?.classList.toggle('is-gravando', ativa);
 }
 
 /** Clicar num dia vazio é começar a remarcar: a janela escolhida vai na URL do formulário. */
@@ -202,17 +263,4 @@ function parede(momento) {
 
     return `${momento.getFullYear()}-${duas(momento.getMonth() + 1)}-${duas(momento.getDate())}`
         + `T${duas(momento.getHours())}:${duas(momento.getMinutes())}:${duas(momento.getSeconds())}`;
-}
-
-async function mensagemDaResposta(resposta) {
-    const corpo = await resposta.json().catch(() => null);
-
-    if (corpo?.mensagem) {
-        return corpo.mensagem;
-    }
-
-    // Validação da Laravel devolve os campos; o que o usuário precisa ler é o primeiro.
-    const primeiro = corpo?.errors && Object.values(corpo.errors)[0]?.[0];
-
-    return primeiro || 'O servidor recusou a consulta da agenda.';
 }

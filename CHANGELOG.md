@@ -1076,6 +1076,23 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   montado em tempo de execução (`nf-fc-t--{tom}`) é reconhecido pelo tronco, que é o contrato. A suíte
   fecha em 311 testes / 2945 asserções, Pint PASS em 175 arquivos e a varredura de navegação nos mesmos 73
   endereços GET.
+- Os dois pedidos de rede da agenda passaram a caminhar por uma estrada só: `pedido(url)` é o único lugar
+  onde cabeçalho, corpo, CSRF e a leitura do JSON existem, e a falha chega tipada — `Recusa` é o servidor
+  dizendo não com a mensagem dele, `SemConexao` é o servidor que não respondeu. Eram dois blocos de
+  `fetch` quase idênticos, com o erro escrito duas vezes.
+- A escrita por arrasto ganhou cara: o compromisso que o dedo acabou de soltar esmaece e recebe o fio do
+  próprio tom enquanto o PATCH não volta, e a classe sai no `finally`. Sucesso, recusa e conexão morta
+  apagam a marca no mesmo lugar, e a régua continua sendo o `--nf-ease` de sempre — sem tinta nova.
+- `CoerenciaVisualTest` ganhou duas provas e fecha em 6 testes / 65 asserções: a folha não pode declarar a
+  mesma propriedade duas vezes para o mesmo seletor de topo (`@media` e `@keyframes` são contexto, não
+  regra, e o fecho deles não é seletor), e a agenda tem um só `fetch` com o estado de escrita vestido. A
+  suíte fecha em 313 testes / 2969 asserções, Pint PASS em 175 arquivos e a varredura nos mesmos 73
+  endereços GET.
+- O corte das 20 declarações mortas foi provado no navegador, não na intenção: `.card`, `.nf-filters`,
+  `.nf-filters .form-label`, `.nf-list-head-titulo`, `.nf-kpi-label`, `.nf-kpi-delta`, `.nf-icon-tile`,
+  `.nf-bar-track`, `.nf-bar-fill`, `.nf-relatorio-janela-rotulo` e o cabeçalho da `.nf-table` saíram com o
+  estilo computado idêntico byte a byte em `/`, `/clientes` e `/relatorios/financeiro`, com sonda sintética
+  para as peças que a conta raiz não tem dado para desenhar.
 ### Alterado
 
 - Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de
@@ -1659,6 +1676,16 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   superfície é a variável `--nf-surface`, e o cartão já existe como `.card`) e `.nf-item-valor` (renomeada
   para `.nf-valor` na régua de dinheiro, e o nome antigo ficou na folha). A varredura do
   `CoerenciaVisualTest` passou a não permitir órfãs de novo.
+- As 20 declarações que a própria folha desmentia — o mesmo seletor de topo declarando duas vezes
+  `background`, `color`, `box-shadow`, `padding`, `border-left`, `display`, `font-size` ou
+  `letter-spacing`, com a primeira nunca pintada. Em `components.css`: a sombra antiga do `.card`, o
+  espaçamento antigo do cabeçalho da `.nf-table`, o corpo e a tração de `.nf-kpi-label` e `.nf-kpi-delta`
+  anteriores ao refino, a tinta fixa da marca no `.nf-icon-tile` (o registro de tom já resolvia) e o
+  trilho elevado da `.nf-bar-track`. Em `listings.css`: a superfície chapada do `.nf-filters`, o
+  espaçamento do rótulo do filtro, o título do cabeçalho de listagem e o par `.nf-relatorio-janela` /
+  `-rotulo` com rótulo em bloco, fio primário e janela sem recuo novo. Nenhum valor foi inventado: o que
+  estava por baixo era só contradição, e contradição é informação repetida que se desmente.
+
 ### Conhecido
 
 - O painel lê o banco e nada mais: os blocos operacionais existem, e as telas que produzem os de ordem,

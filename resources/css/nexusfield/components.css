@@ -392,7 +392,6 @@
     background-color: var(--nf-elevated);
     border: 1px solid var(--nf-line);
     border-radius: var(--bs-border-radius-lg);
-    box-shadow: var(--nf-shadow-sm);
     transition: box-shadow var(--nf-duration) var(--nf-ease),
         border-color var(--nf-duration) var(--nf-ease);
 }
@@ -1020,15 +1019,12 @@
 }
 
 .nf-kpi-label {
-    font-size: .76rem;
     font-weight: 700;
-    letter-spacing: .08em;
     text-transform: uppercase;
     color: var(--nf-text-muted);
 }
 
 .nf-kpi-delta {
-    font-size: .8rem;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
@@ -1045,8 +1041,6 @@
     width: 2.6rem;
     height: 2.6rem;
     border-radius: var(--bs-border-radius);
-    background: var(--nf-primary-soft);
-    color: var(--nf-primary);
     font-size: 1.05rem;
 }
 
@@ -1406,7 +1400,6 @@
     padding: .45rem .6rem;
     font-size: .72rem;
     font-weight: 700;
-    letter-spacing: .07em;
     text-transform: uppercase;
     color: var(--nf-text-muted);
     border-bottom: 1px solid var(--nf-line);
@@ -1437,7 +1430,6 @@
     height: .5rem;
     overflow: hidden;
     border-radius: 999px;
-    background: var(--nf-elevated);
 }
 
 .nf-bar-fill {
