@@ -249,35 +249,35 @@
                     <ul class="nf-fact-list">
                         <li>
                             <span>A receber</span>
-                            <strong class="nf-mono">{{ Formatters::money($painel['financeiro']['a_receber']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($painel['financeiro']['a_receber']) }}</strong>
                         </li>
                         <li>
                             <span>Desses, vencidos</span>
-                            <strong class="nf-mono {{ $painel['financeiro']['vencido'] > 0 ? 'nf-status-canceled' : '' }}">
+                            <strong class="nf-valor nf-mono {{ $painel['financeiro']['vencido'] > 0 ? 'nf-status-canceled' : '' }}">
                                 {{ Formatters::money($painel['financeiro']['vencido']) }}
                             </strong>
                         </li>
                         <li>
                             <span>A pagar</span>
-                            <strong class="nf-mono">{{ Formatters::money($painel['financeiro']['a_pagar']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($painel['financeiro']['a_pagar']) }}</strong>
                         </li>
                         <li>
                             <span>Desses, vencidos</span>
-                            <strong class="nf-mono {{ $painel['financeiro']['vencido_pagar'] > 0 ? 'nf-status-canceled' : '' }}">
+                            <strong class="nf-valor nf-mono {{ $painel['financeiro']['vencido_pagar'] > 0 ? 'nf-status-canceled' : '' }}">
                                 {{ Formatters::money($painel['financeiro']['vencido_pagar']) }}
                             </strong>
                         </li>
                         <li>
                             <span>Recebido no mês (pagamentos)</span>
-                            <strong class="nf-mono">{{ Formatters::money($painel['financeiro']['receita_mes']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($painel['financeiro']['receita_mes']) }}</strong>
                         </li>
                         <li>
                             <span>Despesa paga no mês</span>
-                            <strong class="nf-mono">{{ Formatters::money($painel['financeiro']['despesa_mes']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($painel['financeiro']['despesa_mes']) }}</strong>
                         </li>
                         <li>
                             <span>Saldo do mês</span>
-                            <strong class="nf-mono">
+                            <strong class="nf-valor nf-mono">
                                 {{ Formatters::money($painel['financeiro']['receita_mes'] - $painel['financeiro']['despesa_mes']) }}
                             </strong>
                         </li>
@@ -292,7 +292,7 @@
                                         {{ $lancamento->description }}
                                         <span class="nf-text-muted-2">· {{ $lancamento->client?->name ?? 'Sem cliente' }}</span>
                                     </span>
-                                    <strong class="nf-mono">
+                                    <strong class="nf-valor nf-mono">
                                         {{ Formatters::money($lancamento->saldo()) }}
                                         <span class="nf-text-muted-2">{{ Formatters::date($lancamento->due_date) }}</span>
                                     </strong>
@@ -314,7 +314,7 @@
                                                 · {{ $pagamento->user?->name ?? 'sistema' }}
                                             </span>
                                         </span>
-                                        <strong class="nf-mono">
+                                        <strong class="nf-valor nf-mono">
                                             {{ Formatters::money($pagamento->amount) }}
                                             <span class="nf-text-muted-2">{{ Formatters::date($pagamento->paid_at) }}</span>
                                         </strong>

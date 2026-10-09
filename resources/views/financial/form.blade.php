@@ -120,19 +120,19 @@
                 </li>
                 <li>
                     <span>Valor da conta</span>
-                    <strong class="nf-mono">{{ Formatters::money($lancamento->amount) }}</strong>
+                    <strong class="nf-valor nf-mono">{{ Formatters::money($lancamento->amount) }}</strong>
                 </li>
                 <li>
                     <span>Já pago</span>
-                    <strong class="nf-mono">{{ Formatters::money($lancamento->valorPago()) }}</strong>
+                    <strong class="nf-valor nf-mono">{{ Formatters::money($lancamento->valorPago()) }}</strong>
                 </li>
                 <li>
                     <span>Saldo</span>
-                    <strong class="nf-mono">{{ Formatters::money($lancamento->saldo()) }}</strong>
+                    <strong class="nf-valor nf-mono">{{ Formatters::money($lancamento->saldo()) }}</strong>
                 </li>
                 <li>
                     <span>Data da ocorrência</span>
-                    <strong class="nf-mono">{{ Formatters::date($lancamento->occurred_at) }}</strong>
+                    <strong class="nf-valor nf-mono">{{ Formatters::date($lancamento->occurred_at) }}</strong>
                 </li>
             </ul>
 

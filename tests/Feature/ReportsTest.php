@@ -597,8 +597,8 @@ class ReportsTest extends TestCase
         $this->assertStringContainsString('R$ 300,00', $hub);
         // As contagens do hub saem da mesma janela: um fato por linha, escrito pelo
         // próprio <strong> da lista de fatos — é assim que a tela desenha o número.
-        $this->assertStringContainsString('<span>Ordens concluídas</span> <strong class="nf-mono">1</strong>', $hub);
-        $this->assertStringContainsString('<span>Visitas de campo</span> <strong class="nf-mono">1</strong>', $hub);
+        $this->assertStringContainsString('<span>Ordens concluídas</span> <strong class="nf-valor nf-mono">1</strong>', $hub);
+        $this->assertStringContainsString('<span>Visitas de campo</span> <strong class="nf-valor nf-mono">1</strong>', $hub);
         $this->assertStringContainsString('<span>Chamados abertos</span> <strong class="nf-mono">1</strong>', $hub);
         $this->assertStringContainsString('<span>Movimentações de estoque</span> <strong class="nf-mono">2</strong>', $hub);
         $this->assertStringContainsString('R$ 120,00', $hub);

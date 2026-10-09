@@ -370,6 +370,13 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - Fechados com a mesma matéria: a faixa "Período fechado" traz o trilho de 2px, que passa para o tom de
   perigo quando o teto de dias corta a janela, e as abas entre os relatórios formam um seletor segmentado
   num trilho só. No celular esse trilho rola dentro da própria faixa
+- Ficha e formulário com a mesma régua: título de seção e rótulo de `<dl>` em versalete mono, linha de
+  item com luz na quina e o foco subindo do campo para a linha, valor monetário inteiro numa linha só
+  (`.nf-valor` — frase explicativa continua quebrando), e no polegar o par "Total" empilha rótulo e
+  número em vez de partir o número ao meio
+- A casca pública veste a mesma matéria: a caixa "O ciclo de um serviço" traz o trilho de 2px no lugar
+  da borda de marca, o fio entre os passos desvanece, e o cartão de login e a faixa de chamada têm a
+  luz na quina dos cartões autenticados. O auto nível do medalhão continua intocado
 - Topo e pé enxutos: 44px de altura no cabeçalho (a mesma nos dois lados da aplicação) e uma linha no
   rodapé das telas abertas
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura

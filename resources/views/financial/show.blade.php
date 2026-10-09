@@ -63,23 +63,23 @@
                 <ul class="nf-fact-list mb-0">
                     <li>
                         <span>{{ $lancamento->eReceita() ? 'Recebido' : 'Pago' }}</span>
-                        <strong class="nf-mono">{{ Formatters::money($pago) }}</strong>
+                        <strong class="nf-valor nf-mono">{{ Formatters::money($pago) }}</strong>
                     </li>
                     <li>
                         <span>{{ $cancelada ? 'Previsto (cancelado)' : 'Saldo' }}</span>
-                        <strong class="nf-mono">{{ $cancelada ? Formatters::TIME_NULL : Formatters::money($saldo) }}</strong>
+                        <strong class="nf-valor nf-mono">{{ $cancelada ? Formatters::TIME_NULL : Formatters::money($saldo) }}</strong>
                     </li>
                     <li>
                         <span>{{ $lancamento->payments->count() === 1 ? 'Pagamento registrado' : 'Pagamentos registrados' }}</span>
-                        <strong class="nf-mono">{{ $lancamento->payments->count() }}</strong>
+                        <strong class="nf-valor nf-mono">{{ $lancamento->payments->count() }}</strong>
                     </li>
                     <li>
                         <span>Vencimento previsto</span>
-                        <strong class="nf-mono">{{ Formatters::date($lancamento->due_date) }}</strong>
+                        <strong class="nf-valor nf-mono">{{ Formatters::date($lancamento->due_date) }}</strong>
                     </li>
                     <li>
                         <span>Data do fato</span>
-                        <strong class="nf-mono">{{ Formatters::date($lancamento->occurred_at) }}</strong>
+                        <strong class="nf-valor nf-mono">{{ Formatters::date($lancamento->occurred_at) }}</strong>
                     </li>
                 </ul>
 

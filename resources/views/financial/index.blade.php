@@ -84,11 +84,11 @@
                     <ul class="nf-fact-list mb-0">
                         <li>
                             <span>Valor das contas</span>
-                            <strong class="nf-mono">{{ Formatters::money($totais['bruto']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($totais['bruto']) }}</strong>
                         </li>
                         <li>
                             <span>Já mudou de mão</span>
-                            <strong class="nf-mono">{{ Formatters::money($totais['pago']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($totais['pago']) }}</strong>
                         </li>
                     </ul>
                 </div>

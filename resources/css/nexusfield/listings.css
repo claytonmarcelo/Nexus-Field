@@ -151,6 +151,10 @@
 }
 
 /* ── Formulário de cadastro ─────────────────────────────────────────────── */
+
+/* O título da seção é etiqueta de instrumento, não parágrafo: same versalete
+   mono do rótulo de KPI, com o fio gravado correndo até a borda direita. A
+   divisão entre seções continua sendo o corte no material. */
 .nf-form-grade {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
@@ -173,11 +177,22 @@
 }
 
 .nf-form-secao h2 {
-    font-size: 0.8rem;
-    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    font-family: var(--nf-font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--nf-text-muted);
+    color: var(--nf-text-faint);
     margin-bottom: 0.9rem;
+}
+
+.nf-form-secao h2::after {
+    content: "";
+    flex: 1 1 auto;
+    height: 1px;
+    background: linear-gradient(90deg, var(--nf-etch), transparent);
 }
 
 .nf-form-acoes {
@@ -217,9 +232,19 @@
     align-items: end;
     gap: 0.5rem;
     padding: 0.6rem 0.7rem;
-    background: var(--nf-bg);
+    background: linear-gradient(180deg, var(--nf-tint), transparent 60%), var(--nf-bg);
     border: 1px solid var(--nf-line);
     border-radius: var(--bs-border-radius);
+    box-shadow: inset 0 1px 0 var(--nf-sheen);
+    transition: border-color .15s var(--nf-ease), box-shadow .15s var(--nf-ease);
+}
+
+/* A linha que está sendo preenchida é a linha ativa: o foco sobe da célula para
+   a linha inteira, porque em formulário de item o olho acompanha a régua, não o
+   campo. A cor é a de quem manda (marca), não a de passagem. */
+.nf-item-linha:focus-within {
+    border-color: color-mix(in srgb, var(--nf-primary) 45%, var(--nf-line));
+    box-shadow: inset 0 1px 0 var(--nf-sheen), 0 0 0 2px var(--nf-tone-soft, color-mix(in srgb, var(--nf-primary) 12%, transparent));
 }
 
 .nf-item-linha .mb-3 {
@@ -349,6 +374,21 @@
 @media (max-width: 767.98px) {
     .nf-check-grade {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* O par total é linha, não coluna: o rótulo em cima e o número inteiro
+       logo abaixo, alinhado à direita como na mesa. No polegar, "Total a
+       cobrar" e o valor lado a lado não cabem, e o valor quebrava no meio. */
+    .nf-total-linha {
+        display: block;
+    }
+
+    .nf-total-linha dt {
+        margin-top: .45rem;
+    }
+
+    .nf-total-linha dd {
+        text-align: end;
     }
 }
 

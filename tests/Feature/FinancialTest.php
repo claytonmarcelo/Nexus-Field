@@ -131,8 +131,8 @@ class FinancialTest extends TestCase
         // — que o painel soma em "a receber".
         $ficha = $this->semEspaços($this->actingAs($admin)->get(route('financial.show', $conta))->assertOk()->getContent());
         $this->assertStringContainsString('Recebido em parte', $ficha);
-        $this->assertStringContainsString('<span>Recebido</span> <strong class="nf-mono">R$ 200,00</strong>', $ficha);
-        $this->assertStringContainsString('<span>Saldo</span> <strong class="nf-mono">R$ 300,00</strong>', $ficha);
+        $this->assertStringContainsString('<span>Recebido</span> <strong class="nf-valor nf-mono">R$ 200,00</strong>', $ficha);
+        $this->assertStringContainsString('<span>Saldo</span> <strong class="nf-valor nf-mono">R$ 300,00</strong>', $ficha);
 
         $this->recebendo($admin, $conta, ['valor' => '300.00', 'data' => '2026-10-04', 'metodo' => 'credit_card'])
             ->assertSessionHasNoErrors();
@@ -148,7 +148,7 @@ class FinancialTest extends TestCase
         $this->assertStringContainsString('PIX', $ficha);
         $this->assertStringContainsString('Cartão de crédito', $ficha);
         $this->assertStringNotContainsString('name="valor"', $ficha, 'Conta quitada não oferece lançamento a mais.');
-        $this->assertStringContainsString('<span>Pagamentos registrados</span> <strong class="nf-mono">2</strong>', $ficha);
+        $this->assertStringContainsString('<span>Pagamentos registrados</span> <strong class="nf-valor nf-mono">2</strong>', $ficha);
     }
 
     public function test_dinheiro_acima_do_saldo_conta_quitada_cancelada_e_data_fora_do_caixa_são_recusados(): void
@@ -518,8 +518,8 @@ class FinancialTest extends TestCase
 
         // Os quatro números do rodapé são a soma do conjunto exibido, e o vencido
         // obedece ao recorte a mais: em aberto com o prazo para trás.
-        $this->assertStringContainsString('<span>Valor das contas</span> <strong class="nf-mono">R$ 1.000,00</strong>', $tela);
-        $this->assertStringContainsString('<span>Já mudou de mão</span> <strong class="nf-mono">R$ 320,00</strong>', $tela);
+        $this->assertStringContainsString('<span>Valor das contas</span> <strong class="nf-valor nf-mono">R$ 1.000,00</strong>', $tela);
+        $this->assertStringContainsString('<span>Já mudou de mão</span> <strong class="nf-valor nf-mono">R$ 320,00</strong>', $tela);
         $this->assertStringContainsString('Em aberto</dt> <dd>R$ 680,00</dd>', $tela);
         $this->assertStringContainsString('Vencido <span class="nf-text-muted-2"> (1 conta) </span> </dt> <dd class="nf-status-canceled"> R$ 300,00', $tela);
 

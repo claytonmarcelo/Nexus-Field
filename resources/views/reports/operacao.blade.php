@@ -46,15 +46,15 @@
                     <ul class="nf-fact-list mb-0">
                         <li>
                             <span>Ordens concluídas</span>
-                            <strong class="nf-mono">{{ $totais['ordens'] }}</strong>
+                            <strong class="nf-valor nf-mono">{{ $totais['ordens'] }}</strong>
                         </li>
                         <li>
                             <span>Valor gerado</span>
-                            <strong class="nf-mono nf-status-done">{{ Formatters::money($totais['valor']) }}</strong>
+                            <strong class="nf-valor nf-mono nf-status-done">{{ Formatters::money($totais['valor']) }}</strong>
                         </li>
                         <li>
                             <span>Descontos dados</span>
-                            <strong class="nf-mono">{{ Formatters::money($totais['descontos']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($totais['descontos']) }}</strong>
                         </li>
                     </ul>
                 </div>

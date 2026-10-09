@@ -41,15 +41,15 @@
                     <ul class="nf-fact-list mb-0">
                         <li>
                             <span>Receita realizada</span>
-                            <strong class="nf-mono nf-status-done">{{ Formatters::money($fechamento['receita']) }}</strong>
+                            <strong class="nf-valor nf-mono nf-status-done">{{ Formatters::money($fechamento['receita']) }}</strong>
                         </li>
                         <li>
                             <span>Despesa realizada</span>
-                            <strong class="nf-mono nf-status-canceled">{{ Formatters::money($fechamento['despesa']) }}</strong>
+                            <strong class="nf-valor nf-mono nf-status-canceled">{{ Formatters::money($fechamento['despesa']) }}</strong>
                         </li>
                         <li>
                             <span>Saldo do período</span>
-                            <strong class="nf-mono {{ $fechamento['saldo'] < 0 ? 'nf-status-canceled' : '' }}">
+                            <strong class="nf-valor nf-mono {{ $fechamento['saldo'] < 0 ? 'nf-status-canceled' : '' }}">
                                 {{ Formatters::money($fechamento['saldo']) }}
                             </strong>
                         </li>
@@ -60,15 +60,15 @@
                     <ul class="nf-fact-list mb-0">
                         <li>
                             <span>Ordens concluídas</span>
-                            <strong class="nf-mono">{{ $fechamento['ordens'] }}</strong>
+                            <strong class="nf-valor nf-mono">{{ $fechamento['ordens'] }}</strong>
                         </li>
                         <li>
                             <span>Valor gerado</span>
-                            <strong class="nf-mono">{{ Formatters::money($fechamento['valor']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($fechamento['valor']) }}</strong>
                         </li>
                         <li>
                             <span>Visitas de campo</span>
-                            <strong class="nf-mono">{{ $fechamento['visitas'] }}</strong>
+                            <strong class="nf-valor nf-mono">{{ $fechamento['visitas'] }}</strong>
                         </li>
                     </ul>
                 </div>

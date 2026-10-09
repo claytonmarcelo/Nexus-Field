@@ -317,11 +317,12 @@
 }
 
 .nf-dl dt {
-    font-size: .72rem;
-    font-weight: 700;
-    letter-spacing: .08em;
+    font-family: var(--nf-font-mono);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--nf-text-muted);
+    color: var(--nf-text-faint);
 }
 
 .nf-dl dd {
@@ -597,10 +598,16 @@
     content: "";
     width: .85em;
     height: .85em;
+    flex: 0 0 auto;
     border-radius: 50%;
     border: 2px solid currentColor;
     border-right-color: transparent;
     animation: nf-spin .7s linear infinite;
+}
+
+/* O ícone estático e o spinner girando juntos são dois sinais do mesmo nada. */
+.nf-btn-spinner > i:first-child {
+    display: none;
 }
 
 @keyframes nf-spin {
@@ -1211,6 +1218,7 @@
 .nf-mono {
     font-variant-numeric: tabular-nums;
     letter-spacing: .01em;
+    overflow-wrap: anywhere;
 }
 
 .nf-text-muted-2 {
@@ -1462,7 +1470,10 @@
 
 .nf-timeline > li {
     display: grid;
-    grid-template-columns: 3.4rem 1fr;
+    /* A coluna do carimbo é pelo maior carimbo: no painel é a hora ("14:30"),
+       na ficha é a data inteira ("18/09/2026") — 3.4rem bastava para um e
+       fazia o outro invadir o texto. */
+    grid-template-columns: minmax(3.4rem, max-content) minmax(0, 1fr);
     gap: .75rem;
     align-items: baseline;
     padding-bottom: .8rem;
@@ -1475,7 +1486,9 @@
 }
 
 .nf-timeline-time {
-    font-size: .84rem;
+    font-family: var(--nf-font-mono);
+    font-size: .8rem;
+    font-variant-numeric: tabular-nums;
     color: var(--nf-text-muted);
     white-space: nowrap;
 }
@@ -1680,6 +1693,12 @@
 .nf-fact-list strong {
     font-variant-numeric: tabular-nums;
     letter-spacing: .01em;
+}
+
+/* Valor que não pode partir: "R$" numa linha e o número na outra lê como dois
+   números. A utilitária vai só no forte que carrega quantia ou contagem — o
+   forte que carrega frase explicativa precisa continuar quebrando. */
+.nf-valor {
     white-space: nowrap;
 }
 

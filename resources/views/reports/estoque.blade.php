@@ -76,11 +76,11 @@
                     <ul class="nf-fact-list mb-0">
                         <li>
                             <span>Custo do que foi consumido</span>
-                            <strong class="nf-mono">{{ Formatters::money($totais['custo_consumido']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($totais['custo_consumido']) }}</strong>
                         </li>
                         <li>
                             <span>Abaixo do ponto de reposição</span>
-                            <strong class="nf-mono {{ $totais['abaixo'] > 0 ? 'nf-status-canceled' : 'nf-status-done' }}">
+                            <strong class="nf-valor nf-mono {{ $totais['abaixo'] > 0 ? 'nf-status-canceled' : 'nf-status-done' }}">
                                 {{ $totais['abaixo'] }}
                             </strong>
                         </li>

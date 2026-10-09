@@ -1067,6 +1067,39 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   `/relatorios/chamados` em 390×1400 no claro. Medido em cada uma: trilho `2px` com borda esquerda de
   volta a `1px`, etiqueta em `ui-monospace`, trilho de abas `inline-flex` com raio 999px, aba ativa
   na cor da marca de cada tema e `transborda: false`.
+- A ficha e o formulário vestiram a mesma matéria. O título de seção de cadastro passou a versalete
+  mono com fio gravado correndo até a borda; o rótulo do `<dl>` de ficha desceu para o mesmo mono do
+  cabeçalho de tabela; e a linha de item (endereço, contato, membro) ganhou wash e luz na quina, com
+  o foco subindo da célula para a linha inteira — em formulário de item o olho acompanha a régua, não
+  o campo. O spinner de envio, que já existia em CSS, parou de brigar com o ícone estático do botão:
+  durante o carregamento o ícone sai de cena.
+- Colhido ao provar o grupo 3 e consertado aqui: o `nowrap` que impedía "R$" e o número de se
+  partir foi aplicado a todo `<strong>` de lista de fato — inclusive nos cartões de ajuda que
+  carregam frase, que estouraram a tela no celular. O `nowrap` virou a utilitária `.nf-valor` e foi
+  marcado, campo por campo, nos fortes que somam quantia ou contagem (nove telas). Quem carrega frase
+  voltou a quebrar; quem carrega número voltou a caber inteiro.
+- Também colhido na prova: o par "Total a cobrar" do `nf-total-linha` espremido a 390px quebrava o
+  valor no meio — no polegar o rótulo agora fica em cima e o número inteiro embaixo, alinhado à
+  direita; e a coluna do carimbo da linha do tempo era 3.4rem, que bastava para a hora do painel mas
+  fazia a data inteira da ficha invadir o texto, e passou a crescer pelo próprio carimbo.
+- Prova do grupo: build limpo, suíte completa verde, e as capturas de `/ordens/302` em 1440×1500 nos
+  dois temas e em 390×3600 no escuro, `/ordens/302/editar` e `/ordens/nova` em 390px,
+  `/financeiro/nova` em 1440×1100, `/relatorios/financeiro` em 390×1600 e o painel em 390×2400 — com
+  rótulo de seção e `<dl>` medidos em `ui-monospace`, valor monetário inteiro numa linha, e
+  `transborda: false` em todas depois que o detector aprendeu a respeitar o contêiner que rola de
+  propósito (`.table-responsive`, trilho de abas).
+- As telas abertas fecharam a série. A caixa "O ciclo de um serviço" na apresentação trocou a borda
+  grossa de marca pelo mesmo trilho de 2px que morre antes do fim, o fio que liga os passos agora
+  desvanece em vez de cortar, e o número de cada passo pisou no verde de texto sobre a marca
+  (`--nf-on-brand`) em vez do fundo de superfície. Cartão de login e faixa de chamada ganharam a luz
+  na quina e o wash de topo, iguais aos cartões autenticados. O auto nível da marca não foi tocado —
+  nenhuma das três animações públicas (`nf-auto-nivel`, `nf-nivelando`, `nf-acender`) mudou de
+  seletor, de chave ou de tempo.
+- Prova do grupo: capturas de `/` e `/login` em 1440×900 nos dois temas e de `/forgot-password` e
+  `/reset-password` em 390×844 — trilho da caixa de fluxo medido em `2px` com borda de volta a
+  `1px`, luz interna presente no cartão de acesso e na faixa de chamada, `transborda: false` em
+  todas, e a suíte completa verde com as asserções de markup do `<strong>` atualizadas para
+  `nf-valor nf-mono`.
 
 ### Corrigido
 

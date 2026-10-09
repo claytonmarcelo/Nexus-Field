@@ -192,15 +192,15 @@
                     <ul class="nf-fact-list mb-0">
                         <li>
                             <span>{{ $ordem->items->count() === 1 ? '1 linha cobrada' : $ordem->items->count().' linhas cobradas' }}</span>
-                            <strong class="nf-mono">{{ Formatters::money($totais['bruto']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($totais['bruto']) }}</strong>
                         </li>
                         <li>
                             <span>Desconto das linhas</span>
-                            <strong class="nf-mono">{{ Formatters::money($totais['bruto'] - $totais['liquido']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($totais['bruto'] - $totais['liquido']) }}</strong>
                         </li>
                         <li>
                             <span>Desconto da ordem</span>
-                            <strong class="nf-mono">{{ Formatters::money($ordem->discount) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($ordem->discount) }}</strong>
                         </li>
                     </ul>
 

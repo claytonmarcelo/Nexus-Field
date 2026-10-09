@@ -58,15 +58,15 @@
                     <ul class="nf-fact-list mb-0">
                         <li>
                             <span>Contas que vencem</span>
-                            <strong class="nf-mono">{{ $totais['contas'] }}</strong>
+                            <strong class="nf-valor nf-mono">{{ $totais['contas'] }}</strong>
                         </li>
                         <li>
                             <span>Valor previsto delas</span>
-                            <strong class="nf-mono">{{ Formatters::money($totais['previsto']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($totais['previsto']) }}</strong>
                         </li>
                         <li>
                             <span>Já baixado dessas contas</span>
-                            <strong class="nf-mono nf-status-done">{{ Formatters::money($totais['pago']) }}</strong>
+                            <strong class="nf-valor nf-mono nf-status-done">{{ Formatters::money($totais['pago']) }}</strong>
                         </li>
                     </ul>
                 </div>
@@ -75,11 +75,11 @@
                     <ul class="nf-fact-list mb-0">
                         <li>
                             <span>Ainda em aberto</span>
-                            <strong class="nf-mono">{{ Formatters::money($totais['em_aberto']) }}</strong>
+                            <strong class="nf-valor nf-mono">{{ Formatters::money($totais['em_aberto']) }}</strong>
                         </li>
                         <li>
                             <span>Vencidas do período</span>
-                            <strong class="nf-mono {{ $totais['vencidas'] > 0 ? 'nf-status-canceled' : '' }}">
+                            <strong class="nf-valor nf-mono {{ $totais['vencidas'] > 0 ? 'nf-status-canceled' : '' }}">
                                 {{ $totais['vencidas'] }}
                             </strong>
                         </li>
