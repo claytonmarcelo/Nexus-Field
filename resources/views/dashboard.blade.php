@@ -1,3 +1,4 @@
+@use('App\Models\Payment')
 @use('App\Support\Formatters')
 @use('App\Support\StatusCatalog')
 
@@ -244,7 +245,7 @@
     <div class="row g-3 mt-1">
         @if ($painel['financeiro'] !== [])
             <div class="col-12 col-xl">
-                <x-ui.card title="Carteira financeira" subtitle="Somas reais de lançamentos e pagamentos do mês.">
+                <x-ui.card title="Carteira financeira" subtitle="O que falta e o que mudou de mão: soma do banco, com o pagamento descontado.">
                     <ul class="nf-fact-list">
                         <li>
                             <span>A receber</span>
@@ -254,6 +255,16 @@
                             <span>Desses, vencidos</span>
                             <strong class="nf-mono {{ $painel['financeiro']['vencido'] > 0 ? 'nf-status-canceled' : '' }}">
                                 {{ Formatters::money($painel['financeiro']['vencido']) }}
+                            </strong>
+                        </li>
+                        <li>
+                            <span>A pagar</span>
+                            <strong class="nf-mono">{{ Formatters::money($painel['financeiro']['a_pagar']) }}</strong>
+                        </li>
+                        <li>
+                            <span>Desses, vencidos</span>
+                            <strong class="nf-mono {{ $painel['financeiro']['vencido_pagar'] > 0 ? 'nf-status-canceled' : '' }}">
+                                {{ Formatters::money($painel['financeiro']['vencido_pagar']) }}
                             </strong>
                         </li>
                         <li>
@@ -282,12 +293,35 @@
                                         <span class="nf-text-muted-2">· {{ $lancamento->client?->name ?? 'Sem cliente' }}</span>
                                     </span>
                                     <strong class="nf-mono">
-                                        {{ Formatters::money($lancamento->amount) }}
+                                        {{ Formatters::money($lancamento->saldo()) }}
                                         <span class="nf-text-muted-2">{{ Formatters::date($lancamento->due_date) }}</span>
                                     </strong>
                                 </li>
                             @endforeach
                         </ul>
+                    @endif
+
+                    @if ($painel['financeiro']['pagamentos']->isNotEmpty())
+                        <div class="nf-form-secao">
+                            <h2>Dinheiro que mudou de mão</h2>
+                            <ul class="nf-fact-list mb-0">
+                                @foreach ($painel['financeiro']['pagamentos'] as $pagamento)
+                                    <li>
+                                        <span>
+                                            {{ $pagamento->financialRecord?->description ?? 'Lançamento removido' }}
+                                            <span class="nf-text-muted-2">
+                                                · {{ Payment::rotuloMetodo($pagamento->method) }}
+                                                · {{ $pagamento->user?->name ?? 'sistema' }}
+                                            </span>
+                                        </span>
+                                        <strong class="nf-mono">
+                                            {{ Formatters::money($pagamento->amount) }}
+                                            <span class="nf-text-muted-2">{{ Formatters::date($pagamento->paid_at) }}</span>
+                                        </strong>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
                     @endif
                 </x-ui.card>
             </div>

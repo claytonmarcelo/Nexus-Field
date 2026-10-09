@@ -677,6 +677,122 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   cargas, zero divergência entre carga guardada e soma das movimentações, nenhum central negativo, nenhum
   tipo de técnico sem dono, nenhum consumo sem ordem. A suíte fecha em 185 testes / 1882 asserções.
 
+- FASE 17 — o financeiro não tem campo de estado. Nada nesta fase digita "Pago": `status` é a soma dos
+  pagamentos contra o valor, e o módulo inteiro foi construído sobre essa recusa. O `Payment` é o fato —
+  valor, método, data, autor e referência — e o lançamento é a expectativa: o estado vem junto conforme o
+  dinheiro entra.
+- `FinancialRecord::recalcularEstado()` é o único caminho que escreve `status` depois que a linha nasce, e só é
+  chamado dentro de `DB::transaction` com a conta travada por `lockForUpdate`. A soma volta do banco
+  (`linhaDeCaixa()`: `sum(amount)` e `max(paid_at)` na mesma consulta), nunca da tela: dois pagamentos no
+  mesmo segundo, cada um conferindo o saldo da própria leitura, fechariam uma conta de R$ 500,00 com
+  R$ 800,00 pagos — que é exatamente o quadro que ninguém consegue explicar na hora do fechamento.
+- Tolerância de `+0.005` na comparação com o valor, e nada de centavo perdido: `pending` sem pagamento,
+  `partially_paid` abaixo do valor, `paid` a partir dele. `occurred_at` é o `max(paid_at)` — lançamento sem
+  pagamento não tem data de ocorrência, porque o fato não aconteceu, e `due_date` continua previsto, sendo
+  dele o "vencido".
+- `canceled` é a única decisão digitada, e só existe sem pagamento registrado: cancelamento apaga a
+  expectativa de caixa, não o dinheiro que mudou de mão. Desfazer pagamento tem outro verbo (estorno), outra
+  permissão (`financial.approve`) e a auditoria de quem desfez, porque "pagamento negativo" não existe no
+  extrato de ninguém.
+- Rotas do módulo conferidas uma por uma no teste, inclusive pela ausência: `financial.index`, `export`,
+  `create`, `store`, `show`, `edit`, `update`, `payments.store`, `payments.destroy`, `cancel`, `reopen`,
+  `destroy` e `restore` — treze, e nenhuma delas serve para "marcar como paga". O teste que lista o quadro de
+  rotas do prefixo `financeiro`, uma por uma, é a prova estrutural de que o atalho não existe.
+- Degraus separados de propósito: registrar dinheiro é `financial.create` (o escritório digita e o estado vem
+  junto), conduzir a conta é `financial.update`, estornar, cancelar e reabrir são `financial.approve`, e
+  apagar a ficha é `financial.delete`. Supervisor fica sem a exclusão, funcionário para no registro, técnico e
+  conta de cliente recebem 403 antes de ver qualquer botão.
+- Categoria é vocabulário fechado por tipo: `FinancialRecord::CATEGORIAS` tem cinco receitas e seis despesas, e
+  o `Rule::in` é a mesma lista que o `select` mostra. O legado deixava digitar categoria livre, e em dois anos
+  "Peças", "pecas", "pç" e "Mão de obra + peças" eram quatro categorias diferentes que o relatório da fase 18
+  somaria separadas. Rótulo fora do catálogo se descreve sozinho (`rotuloCategoria`) em vez de sumir da tela.
+- Despesa não tem cliente: `client_id` que chega numa despesa é descartado no `prepare()`, não aplicado, e
+  receita sem cliente é recusada no campo — cobrar de ninguém não é conta, é distrato. Ordem e cliente precisam
+  apontar para a mesma carteira, e é `garantirMesmaCarteira()` que confere o par, porque a validação de campo
+  enxerga cada um isoladamente.
+- `cobrar()` (`ordens/{ordem}/cobranca`, com `financial.create`) recomputa o valor no banco a partir das linhas
+  e dos descontos da ordem: `valor`, `cliente_id` e `company_id` do request são ignorados. Só ordem `completed`
+  cobra, ordem sem linhas não cobra, ordem cancelada não cobra, e segunda cobrança ativa da mesma OS é recusada —
+  duplicata de cobrança não é segunda via, é conflito. O caminho de volta existe: cancelar a conta libera a
+  reemissão, e é o que o teste confere depois de medir os R$ 1.480,00 de 2×700 + 1×120 − 40.
+- Pagamento acima do saldo é recusado com o número que falta na frase ("faltam R$ 120,00 para fechar esta conta
+  de R$ 500,00"), conta quitada não recebe pagamento, conta cancelada também não, e a data tem teto de hoje e
+  piso de dois anos para trás: dinheiro que ainda não mudou de mão é previsão, e reabertura de exercício não se
+  faz por uma tela de caixa. Valor com vírgula decimal é recusado, não truncado, porque o `input type="number"`
+  do app envia ponto.
+- Estorno procura a linha dentro da conta: `financial.payments.destroy` com um `pagamento` de outra conta
+  responde 404 antes de qualquer escrita, e o teste confere que a linha do colega continua lá depois do 404.
+- Valor e tipo só se mexem enquanto não houve pagamento (`garantirContaEstavel`): mover o valor de uma conta
+  meio paga é mover a régua debaixo do dinheiro que já entrou, e a resposta aponta o caminho honesto — estornar
+  e ajustar, ou cancelar e reabrir. Descrição, vencimento, categoria e observação continuam editáveis.
+- Exclusão é caso de cadastro que nunca existiu: `financial.destroy` recusa conta com pagamento registrado,
+  porque o pagamento ficaria sem dona na hora em que o relatório somar o mês. A exclusão é lógica e
+  `?estado=excluidos` acha e restaura a linha.
+- Uma expressão SQL, três leituras: `PAGADA_SQL` — `coalesce((select sum(payments.amount) …), 0)`, sem binding e
+  sem concatenação de valor de usuário — alimenta a coluna da listagem (`scopeComPagado`), o rodapé de totais
+  (`totais()`) e o `valorPago()` da ficha. O saldo da tabela não é parecido com o da ficha: é o mesmo. `totais()`
+  devolve registros, bruto, pago, em aberto e o vencido (contado e em valor) sobre o recorte que a pessoa está
+  olhando, não sobre a empresa inteira.
+- Vencida é relação entre previsto e hoje, não coluna: `estaVencida()` e `scopeOverdue()` deixam o tempo passar
+  sem que alguém edite a linha, e `diasEmAtraso()` mede os dias corridos na leitura — a ficha do teste mostra
+  "13 dias em atraso" sem que nada tenha sido digitado.
+- Rótulo de estado segue a direção do dinheiro: receita é "A receber / Recebido em parte / Recebido", despesa é
+  "A pagar / Pago em parte / Pago", e vencida é "Vencido" nos dois lados. Dizer "Pago" numa conta que entrou
+  dinheiro é a frase que faz alguém conferir o extrato à toa.
+- Telas `financial/index.blade.php` (carteira com busca, tipo, estado — inclusive vencido e excluídos —,
+  categoria, cliente, ordem e período de vencimento, ordenação e paginação próprias, rodapé de totais e CSV),
+  `financial/form.blade.php` (create e edit sobre o mesmo formulário, com as categorias agrupadas por tipo no
+  `select` e a recusa do lado errado conferida no servidor)
+  e `financial/show.blade.php` (ficha com saldo, linha do tempo de pagamentos, formulário de registro, estorno,
+  cancelamento com motivo, reabertura e a travessia de volta para a ordem cobrada). Filtros, ordenação e
+  por-página nos `ListFilters` da casa; CSV com BOM e `;` pelo `Export`, da mesma `consulta()` da tela.
+- Ficha da ordem ganhou o cartão "Conta" — bruto, descontos e "Total a cobrar" somados no banco — com o bloco
+  "Emitir a cobrança" que só aparece em ordem concluída sem cobrança ativa, e a lista das cobranças já emitidas
+  com vencimento, valor, pago e estado. A ficha do cliente ganhou a ponte "Financeiro deste cliente", que abre a
+  carteira filtrada na carteira dele.
+- Menu de Operação ganhou "Financeiro" (`financial.index`, `financial.view`, `fa-sack-dollar`), e `Navigation` é
+  o único lugar de onde o item sai.
+- Painel: o cartão "Carteira financeira" com quatro KPIs novos — "A receber", "A pagar", "Recebido no mês" e
+  "Despesa do mês" —, todos contados pela mesma `FinancialRecord::totais()` da carteira. "A receber" e "a pagar"
+  somam o **saldo** (`em_aberto`), não o valor previsto, porque numa conta meio paga o dinheiro que já entrou não
+  pode ser contado de dois jeitos; "Recebido no mês" sai de `occurred_at` no período e traz o delta contra o mês
+  anterior; "Despesa do mês" fecha com o saldo do período. O cartão ainda lista as contas que "Vencem em até 15
+  dias" e o "Dinheiro que mudou de mão" — os cinco últimos pagamentos com valor, método, autor e data. O
+  escritório passa a contar catorze indicadores, e o `DashboardTest` foi atualizado para o quadro exato.
+- Dois defeitos do próprio módulo encontrados pelos testes e corrigidos aqui, antes do commit: a regra de cliente
+  existente tipava o `Eloquent\Builder` no fechamento do `Rule::exists(...)->where()`, e o verificador de
+  presença entrega o `Query\Builder` cru — cada conta criada com cliente devolveria 500; e `reopen()` escrevia a
+  nota, chamava `recalcularEstado()` e anunciava a conta de volta à carteira, mas a derivação se recusa a tocar
+  numa linha ainda marcada como cancelada, então o cancelamento nunca saía do banco. A reabertura agora retira a
+  decisão e deixa a soma dizer o estado, com a mensagem acompanhando o que o banco tem — inclusive a conta que
+  reabre parcial porque ainda tem dinheiro registrado.
+- `DemoSeeder::financeiro()` grava 17 contas na empresa de demonstração — dez cobranças de ordem (OS-2026-0103 a
+  0112, no valor que o próprio seeder soma das linhas), uma receita cancelada de uma ordem que foi cancelada
+  (OS-2026-0102, com o motivo na ficha) e seis despesas. As dezesseis contas vivas nascem `pending` com
+  `occurred_at` nulo — a cancelada é a única que nasce com decisão digitada — e o resto vem dos 10 pagamentos
+  gravados como linhas reais em `payments`, com método, data de caixa, autor e referência, cada um seguido de
+  `recalcularEstado()`: o seeder não escreve estado derivado, faz o que a tela faz. Uma
+  receita recebe 40% por cartão e o resto por PIX em duas linhas, e fecha quitada com a data do último dinheiro;
+  35% e 60% são as frações que deixam uma receita e uma despesa parciais; o vencimento atrasado gera "vencido"
+  sem que ninguém edite a linha, e a notificação `financial.overdue` da fase 19 já tem conta para apontar. A
+  demonstração roda em qualquer dia: `vencimento()` e `dataDeCaixa()` são relativos a hoje, para "Recebido no
+  mês" não zerar no começo do mês.
+- `tests/Feature/FinancialTest.php` (10 testes / 264 asserções) cobre a ausência de rota de "marcar como paga",
+  o request que tenta forjar estado, data do fato e empresa, o dinheiro que move a conta e a data que volta do
+  último pagamento, as recusas de saldo/tipo/categoria/cliente/data, o estorno como degrau de quem responde pelo
+  caixa com o 404 da linha alheia, a conta com dinheiro que não muda de valor nem de tipo nem se cancela nem se
+  apaga, cobrar a ordem no valor que o banco calcula (inclusive o caminho de reemissão depois do cancelamento),
+  os filtros com o CSV devolvendo o mesmo saldo da ficha, e a carteira de fora que não existe — nove verbos
+  cross-tenant como 404, técnico e conta de cliente como 403, restauração de exclusão lógica. A suíte fecha em
+  195 testes / 2149 asserções.
+- Prova ao vivo no servidor de desenvolvimento, com sessão de verdade e a senha lida do `.env` sem nunca aparecer
+  na saída: 57 verificações, zero falha. Painel com os quatro números de caixa, carteira com rodapé e filtros,
+  ficha de conta meio paga e vencida, `/financeiro/nova` sem campo de estado nem de ocorrência, cobrança emitida
+  da OS-2026-0101 no valor das linhas, recusa de duplicata, dois pagamentos fechando a conta, recusa acima do
+  saldo, dois estornos devolvendo-a a "A receber", cancelamento recusado em motivo de três letras e aceito com o
+  motivo gravado, reabertura derivando o estado de novo, CSV com BOM e `;`, e a conta de campo com 403 na
+  carteira e na ficha — com a travessia de cobrança ausente onde não há permissão.
+
 ### Alterado
 
 - A paleta "Premium Gourmet + Technology" foi harmonizada com a nova logo: a marca saiu do teal

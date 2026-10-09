@@ -58,6 +58,12 @@ class Navigation
                         'permission' => 'stock.view',
                         'icon' => 'fa-solid fa-right-left',
                     ],
+                    [
+                        'label' => 'Financeiro',
+                        'route' => 'financial.index',
+                        'permission' => 'financial.view',
+                        'icon' => 'fa-solid fa-sack-dollar',
+                    ],
                 ],
             ],
             [

@@ -32,6 +32,13 @@
                 Voltar à carteira
             </x-ui.button>
 
+            {{-- O que este cliente deve e o que ele já gerou no caixa: o link leva à
+                 listagem já filtrada por ele, com a soma que o banco faz ali. --}}
+            @can('financial.view')
+                <x-ui.button variant="ghost" size="sm" :href="route('financial.index', ['cliente' => $cliente->id])"
+                    icon="fa-solid fa-sack-dollar">Financeiro deste cliente</x-ui.button>
+            @endcan
+
             @unless ($cliente->trashed())
                 @can('clients.update')
                     <x-ui.button variant="soft-primary" size="sm" :href="route('clients.edit', $cliente)"

@@ -1,9 +1,15 @@
+@use('App\Models\FinancialRecord')
 @use('App\Support\Formatters')
 @use('App\Support\StatusCatalog')
 
 @php
     $totais = $ordem->totais();
     $encerrada = $ordem->estaEncerrada();
+
+    // Cancelada não conta como cobrança: a carteira dela foi desfeita, e emitir
+    // outra contra a mesma OS é decisão de quem responde pelo caixa, não atalho.
+    $cobrancaAtiva = $cobrancas->first(fn (FinancialRecord $conta) => $conta->status !== FinancialRecord::CANCELED);
+    $emitirCobranca = $ordem->status === 'completed' && $cobrancaAtiva === null;
     $podeEditarLinha = ! $encerrada;
     $atrasada = in_array($ordem->status, ['open', 'in_progress'], true)
         && $ordem->scheduled_ends_at !== null
@@ -204,6 +210,88 @@
                             {{ Formatters::money($totais['total']) }}
                         </dd>
                     </dl>
+                @endif
+
+                @if ($cobrancas->isNotEmpty())
+                    <div class="nf-form-secao">
+                        <h2>Cobrança desta ordem na carteira</h2>
+                        <ul class="nf-itens mb-0">
+                            @foreach ($cobrancas as $cobranca)
+                                <li class="nf-item-linha nf-item-linha-lado">
+                                    <div>
+                                        <p class="mb-0">
+                                            @can('financial.view')
+                                                <a class="fw-semibold" href="{{ route('financial.show', $cobranca) }}">
+                                                    {{ $cobranca->description }}
+                                                </a>
+                                            @else
+                                                <span class="fw-semibold">{{ $cobranca->description }}</span>
+                                            @endcan
+                                        </p>
+                                        <p class="mb-0 nf-text-muted-2 small nf-mono">
+                                            vence {{ Formatters::date($cobranca->due_date) }}
+                                            · {{ Formatters::money($cobranca->amount) }}
+                                            · pago {{ Formatters::money($cobranca->valorPago()) }}
+                                        </p>
+                                    </div>
+                                    <span class="{{ $cobranca->badgeEstado() }}">{{ $cobranca->rotuloEstado() }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                @if ($emitirCobranca)
+                    @can('financial.create')
+                    <div class="nf-form-secao">
+                        <h2>Emitir a cobrança</h2>
+
+                        @if ($totais['total'] <= 0)
+                            <p class="nf-text-muted-2 small mb-0">
+                                A ordem terminou, mas a conta fecha em {{ Formatters::money($totais['total']) }}: sem
+                                linha cobrada não há o que emitir. Registre o serviço ou o produto consumido acima.
+                            </p>
+                        @else
+                            <form method="POST" action="{{ route('orders.charge', $ordem) }}" data-nf-guard novalidate>
+                                @csrf
+
+                                <div class="nf-form-grade">
+                                    <x-ui.input label="Vencimento da cobrança" name="vencimento" type="date"
+                                        :value="now()->addDays(15)->toDateString()" required
+                                        hint="É dele que sai o “vencido” da carteira financeira." />
+
+                                    <x-ui.select label="Categoria da receita" name="categoria"
+                                        :opcoes="$categoriasCobranca" required
+                                        placeholder="Como este serviço entra no caixa"
+                                        hint="Vocabulário fechado: é por esta coluna que o relatório soma as receitas." />
+                                </div>
+
+                                <x-ui.textarea label="Observação da cobrança" name="observacao" rows="2"
+                                    class="nf-form-largo"
+                                    placeholder="Boleto em duas parcelas, combinado por telefone, nota fiscal..." />
+
+                                <div class="nf-form-acoes">
+                                    <x-ui.button type="submit" variant="primary" size="sm"
+                                        icon="fa-solid fa-file-invoice-dollar" data-loading="false">
+                                        Emitir cobrança de {{ Formatters::money($totais['total']) }}
+                                    </x-ui.button>
+
+                                    <p class="nf-text-muted-2 mb-0 small">
+                                        O valor não é digitado aqui: o servidor soma as linhas desta ordem agora e grava
+                                        o resultado. Cobrança duplicada nesta OS é recusada.
+                                    </p>
+                                </div>
+                            </form>
+                        @endif
+                    </div>
+                    @endcan
+                @elseif ($ordem->items->isNotEmpty() && ! $encerrada)
+                    @can('financial.view')
+                        <p class="nf-text-muted-2 small mb-0 mt-3">
+                            A cobrança nasce quando a ordem é <span class="fw-semibold">concluída</span>: enquanto o
+                            serviço está em aberto, o que se vê aqui é a conta prevista, não a emitida.
+                        </p>
+                    @endcan
                 @endif
             </x-ui.card>
 

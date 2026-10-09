@@ -990,82 +990,149 @@ class DemoSeeder extends Seeder
         return $this->clientes[0]->id;
     }
 
+    /**
+     * Carteira da demonstração. Nenhum estado é digitado aqui: a conta nasce em
+     * aberto, sem data de ocorrência, e é o pagamento que ela recebe que a move
+     * para meio paga ou quitada. Fixture que escreve `status` na mão é a
+     * demonstração mentindo sobre a própria regra, e o painel passaria a somar
+     * dinheiro que nunca mudou de mão.
+     *
+     * Receita: [ordem, categoria, dias até o vencimento, pagamentos]. Cada pagamento
+     * é [dia, método, fração do valor], e fração `null` é o saldo que falta — assim
+     * a conta quitada fecha no centavo em vez de arredondar para longe do valor.
+     * Uma fração menor que 1 deixa a conta parcial de propósito, para a ficha
+     * mostrar o que ainda não entrou e o painel mostrar isso em "a receber".
+     *
+     * A OS-2026-0101 fica sem cobrança de propósito: é nela que a ficha da ordem
+     * ainda oferece "Emitir cobrança", e o valor sai da soma das linhas no banco.
+     */
     private function financeiro(): void
     {
-        $contas = [
-            ['OS-2026-0112', 'paid', -1, 'revenue'],
-            ['OS-2026-0111', 'paid', -2, 'revenue'],
-            ['OS-2026-0110', 'paid', -3, 'revenue'],
-            ['OS-2026-0109', 'pending', 7, 'revenue'],
-            ['OS-2026-0108', 'paid', -5, 'revenue'],
-            ['OS-2026-0107', 'pending', 12, 'revenue'],
-            ['OS-2026-0106', 'pending', -3, 'revenue'],
-            ['OS-2026-0105', 'paid', -9, 'revenue'],
-            ['OS-2026-0104', 'pending', -6, 'revenue'],
-            ['OS-2026-0103', 'paid', -16, 'revenue'],
-            ['OS-2026-0102', 'canceled', -18, 'revenue'],
+        $receitas = [
+            ['OS-2026-0112', 'emergencia', -1, [[-1, 'pix', null]]],
+            ['OS-2026-0111', 'mao_de_obra_e_pecas', -2, [[-3, 'credit_card', 0.4], [-1, 'pix', null]]],
+            ['OS-2026-0110', 'visita_tecnica', -3, [[-2, 'pix', 0.35]]],
+            ['OS-2026-0109', 'mao_de_obra_e_pecas', 7, []],
+            ['OS-2026-0108', 'mao_de_obra_e_pecas', -5, [[-4, 'transfer', null]]],
+            ['OS-2026-0107', 'emergencia', 12, []],
+            ['OS-2026-0106', 'mao_de_obra_e_pecas', -3, []],
+            ['OS-2026-0105', 'visita_tecnica', -9, [[-9, 'debit_card', null]]],
+            ['OS-2026-0104', 'mao_de_obra_e_pecas', -6, []],
+            ['OS-2026-0103', 'contrato_mensal', -16, [[-16, 'pix', null]]],
         ];
 
-        foreach ($contas as [$numero, $status, $dia, $tipo]) {
+        foreach ($receitas as [$numero, $categoria, $vencimento, $pagamentos]) {
             $ordem = $this->ordens[$numero];
-            $valor = $this->totalDaOrdem($ordem);
 
-            $lancamento = FinancialRecord::query()->create([
+            $conta = FinancialRecord::query()->create([
                 'company_id' => $this->empresa->id,
                 'client_id' => $ordem->client_id,
                 'service_order_id' => $ordem->id,
-                'type' => $tipo,
-                'category' => 'mao_de_obra_e_pecas',
+                'type' => FinancialRecord::REVENUE,
+                'category' => $categoria,
                 'description' => 'Cobrança da '.$numero.' — '.$ordem->title,
-                'amount' => $valor,
-                'due_date' => now()->startOfDay()->addDays($dia)->toDateString(),
-                'occurred_at' => $status === 'paid' ? now()->startOfDay()->addDays($dia)->toDateString() : null,
-                'status' => $status,
-                'notes' => $status === 'canceled' ? 'Ordem cancelada, cobrança sem efeito.' : null,
+                'amount' => $this->totalDaOrdem($ordem),
+                'due_date' => $this->vencimento($vencimento),
+                'occurred_at' => null,
+                'status' => FinancialRecord::PENDING,
             ]);
 
-            if ($status === 'paid') {
-                Payment::query()->create([
-                    'company_id' => $this->empresa->id,
-                    'financial_record_id' => $lancamento->id,
-                    'user_id' => $this->usuarios['supervisor']->id,
-                    'amount' => $valor,
-                    'method' => $dia % 2 === 0 ? 'pix' : 'credit_card',
-                    'reference' => 'DEMO-'.$ordem->number,
-                    'paid_at' => now()->startOfDay()->addDays($dia)->toDateString(),
-                    'note' => 'Baixa registrada na demonstração.',
-                ]);
-            }
+            $this->baixar($conta, $pagamentos, $this->usuarios['supervisor'], $ordem->number);
         }
 
-        foreach ([
-            ['Aluguel da base operacional', 'instalacao', 2800.00, -1, 'paid'],
-            ['Combustível da semana', 'deslocamento', 640.00, -2, 'paid'],
-            ['Compra de peças do fornecedor Central Frio', 'estoque', 1850.00, -4, 'paid'],
-            ['Energia elétrica da base', 'instalacao', 910.00, 6, 'pending'],
-        ] as [$descricao, $categoria, $valor, $dia, $status]) {
-            $lancamento = FinancialRecord::query()->create([
+        // Cancelamento é a única decisão que a mão digita, e ela só é legal com zero
+        // pagamentos: cancelamento apaga a expectativa de caixa, não o dinheiro que
+        // entrou. É esta linha que faz a ficha mostrar o motivo lido pela auditoria e
+        // o botão de reabrir, em vez de um "Pago" sem extrato.
+        $cancelada = $this->ordens['OS-2026-0102'];
+
+        FinancialRecord::query()->create([
+            'company_id' => $this->empresa->id,
+            'client_id' => $cancelada->client_id,
+            'service_order_id' => $cancelada->id,
+            'type' => FinancialRecord::REVENUE,
+            'category' => 'mao_de_obra_e_pecas',
+            'description' => 'Cobrança da OS-2026-0102 — '.$cancelada->title,
+            'amount' => $this->totalDaOrdem($cancelada),
+            'due_date' => $this->vencimento(-18),
+            'occurred_at' => null,
+            'status' => FinancialRecord::CANCELED,
+            'notes' => 'Cancelamento: o cliente devolveu o equipamento e o serviço foi revertido sem custo.',
+        ]);
+
+        $despesas = [
+            ['Aluguel da base operacional', 'instalacao', 2800.00, -8, [[-8, 'transfer', null]]],
+            ['Combustível da frota da semana', 'deslocamento', 640.00, -2, [[-2, 'cash', null]]],
+            ['Compra de peças do fornecedor Central Frio', 'estoque', 1850.00, -4, [[-4, 'credit_card', 0.6]]],
+            ['Energia elétrica da base', 'instalacao', 910.00, 6, []],
+            ['Folha de pagamento da equipe', 'pessoal', 5400.00, 5, []],
+            ['ISS sobre as receitas da semana', 'impostos', 780.00, -1, []],
+        ];
+
+        foreach ($despesas as [$descricao, $categoria, $valor, $vencimento, $pagamentos]) {
+            $conta = FinancialRecord::query()->create([
                 'company_id' => $this->empresa->id,
-                'type' => 'expense',
+                'type' => FinancialRecord::EXPENSE,
                 'category' => $categoria,
                 'description' => $descricao,
                 'amount' => $valor,
-                'due_date' => now()->startOfDay()->addDays($dia)->toDateString(),
-                'occurred_at' => $status === 'paid' ? now()->startOfDay()->addDays($dia)->toDateString() : null,
-                'status' => $status,
+                'due_date' => $this->vencimento($vencimento),
+                'occurred_at' => null,
+                'status' => FinancialRecord::PENDING,
             ]);
 
-            if ($status === 'paid') {
-                Payment::query()->create([
-                    'company_id' => $this->empresa->id,
-                    'financial_record_id' => $lancamento->id,
-                    'user_id' => $this->usuarios['administrator']->id,
-                    'amount' => $valor,
-                    'method' => 'transfer',
-                    'paid_at' => now()->startOfDay()->addDays($dia)->toDateString(),
-                ]);
-            }
+            $this->baixar($conta, $pagamentos, $this->usuarios['administrator'], 'DESP-'.$conta->id);
         }
+    }
+
+    /**
+     * Registra as baixas da conta e deixa o estado ser derivado depois de cada uma,
+     * como a tela faz: duas parcelas no mesmo dia é a conta que vira quitada com a
+     * data do último dinheiro que entrou, não com a do primeiro.
+     */
+    private function baixar(FinancialRecord $conta, array $pagamentos, User $autor, string $referencia): void
+    {
+        foreach ($pagamentos as [$dia, $metodo, $fracao]) {
+            $pago = $conta->pagoNoBanco();
+            $valor = $fracao === null
+                ? round((float) $conta->amount - $pago, 2)
+                : round((float) $conta->amount * $fracao, 2);
+
+            Payment::query()->create([
+                'company_id' => $this->empresa->id,
+                'financial_record_id' => $conta->id,
+                'user_id' => $autor->id,
+                'amount' => $valor,
+                'method' => $metodo,
+                'reference' => 'DEMO-'.$referencia.'-'.($conta->payments()->count() + 1),
+                'paid_at' => $this->dataDeCaixa($dia),
+                'note' => $fracao === null
+                    ? 'Baixa registrada na demonstração, que fecha a conta.'
+                    : 'Parcela registrada na demonstração; o saldo segue em aberto.',
+            ]);
+
+            $conta->recalcularEstado();
+        }
+    }
+
+    /** Vencimento previsto, relativo a hoje: é dele que sai o "vencido", e ele não depende de pagamento. */
+    private function vencimento(int $dias): string
+    {
+        return now()->startOfDay()->addDays($dias)->toDateString();
+    }
+
+    /**
+     * A data do caixa. Diferente do vencimento, ela não pode cair fora do mês que o
+     * painel soma: a demonstração roda em qualquer dia, e um pagamento empurrado
+     * para o mês anterior deixaria "Recebido no mês" zerado no começo do mês. O
+     * teto é hoje porque dinheiro que ainda não entrou não é fato.
+     */
+    private function dataDeCaixa(int $dias): string
+    {
+        $data = now()->startOfDay()->addDays($dias);
+        $inicioDoMes = now()->startOfMonth();
+
+        return $data->lt($inicioDoMes) ? $inicioDoMes->toDateString() : $data->toDateString();
     }
 
     private function totalDaOrdem(ServiceOrder $ordem): float

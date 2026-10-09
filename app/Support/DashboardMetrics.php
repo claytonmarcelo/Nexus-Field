@@ -387,17 +387,28 @@ class DashboardMetrics
             return [];
         }
 
-        $aReceber = (float) FinancialRecord::query()->revenue()->pending()->sum('amount');
-        $vencido = (float) FinancialRecord::query()->revenue()->overdue()->sum('amount');
+        // "A receber" e "a pagar" são o que falta, não o valor previsto: numa conta
+        // meio paga o dinheiro que já mudou de mão não pode ser contado de novo. A
+        // soma é a mesma expressão SQL da carteira — o painel e a listagem respondem
+        // pelo mesmo número.
+        $receitaEmAberto = FinancialRecord::totais(
+            FinancialRecord::query()->revenue()->emAberto()
+        );
+        $despesaEmAberto = FinancialRecord::totais(
+            FinancialRecord::query()->expense()->emAberto()
+        );
 
-        $receitaMes = $this->receitaRealizada(now()->startOfMonth(), now()->endOfMonth());
-        $receitaAnterior = $this->receitaRealizada(
+        $aReceber = $receitaEmAberto['em_aberto'];
+        $aPagar = $despesaEmAberto['em_aberto'];
+        $vencido = $receitaEmAberto['vencido_valor'];
+
+        $receitaMes = $this->dinheiroRealizado(FinancialRecord::REVENUE, now()->startOfMonth(), now()->endOfMonth());
+        $receitaAnterior = $this->dinheiroRealizado(
+            FinancialRecord::REVENUE,
             now()->subMonthNoOverflow()->startOfMonth(),
             now()->subMonthNoOverflow()->endOfMonth(),
         );
-        $despesaMes = (float) FinancialRecord::query()->expense()->paid()
-            ->occurredBetween(now()->startOfMonth(), now()->endOfMonth())
-            ->sum('amount');
+        $despesaMes = $this->dinheiroRealizado(FinancialRecord::EXPENSE, now()->startOfMonth(), now()->endOfMonth());
 
         return [
             'kpis' => [
@@ -407,6 +418,13 @@ class DashboardMetrics
                     'hint' => Formatters::money($vencido).' vencidos',
                     'tone' => $vencido > 0 ? 'canceled' : 'open',
                     'icon' => 'fa-solid fa-wallet',
+                ],
+                [
+                    'label' => 'A pagar',
+                    'value' => Formatters::money($aPagar),
+                    'hint' => $despesaEmAberto['vencido'].' '.($despesaEmAberto['vencido'] === 1 ? 'conta vencida' : 'contas vencidas'),
+                    'tone' => $despesaEmAberto['vencido'] > 0 ? 'canceled' : 'waiting',
+                    'icon' => 'fa-solid fa-file-invoice-dollar',
                 ],
                 [
                     'label' => 'Recebido no mês',
@@ -425,16 +443,25 @@ class DashboardMetrics
             ],
             'dados' => [
                 'a_receber' => $aReceber,
+                'a_pagar' => $aPagar,
                 'vencido' => $vencido,
+                'vencido_pagar' => $despesaEmAberto['vencido_valor'],
                 'receita_mes' => $receitaMes,
                 'receita_anterior' => $receitaAnterior,
                 'despesa_mes' => $despesaMes,
                 'venceram' => FinancialRecord::query()
                     ->with('client')
                     ->revenue()
-                    ->pending()
+                    ->emAberto()
+                    ->comPagado()
                     ->whereBetween('due_date', [today(), today()->addDays(15)])
                     ->orderBy('due_date')
+                    ->limit(5)
+                    ->get(),
+                'pagamentos' => Payment::query()
+                    ->with(['financialRecord:id,description,type', 'user:id,name'])
+                    ->orderByDesc('paid_at')
+                    ->orderByDesc('id')
                     ->limit(5)
                     ->get(),
             ],
@@ -546,13 +573,16 @@ class DashboardMetrics
     }
 
     /**
-     * Receita realizada é o pagamento efetivo, e só contam os pagamentos de
-     * lançamentos de receita: pagamento de despesa não entra no caixa de vendas.
+     * Dinheiro que efetivamente mudou de mão no período, do lado que se pergunta.
+     * É o pagamento que responde, nunca a coluna `amount` do lançamento: o valor
+     * previsto entra na carteira no vencimento, e o que aconteceu no caixa é a soma
+     * das linhas de pagamento — receita de despesa não se mistura porque o tipo está
+     * no lançamento.
      */
-    private function receitaRealizada($inicio, $fim): float
+    private function dinheiroRealizado(string $tipo, $inicio, $fim): float
     {
         return (float) Payment::query()
-            ->whereHas('financialRecord', fn ($q) => $q->revenue())
+            ->whereHas('financialRecord', fn ($q) => $q->where('type', $tipo))
             ->whereBetween('paid_at', [$inicio, $fim])
             ->sum('amount');
     }

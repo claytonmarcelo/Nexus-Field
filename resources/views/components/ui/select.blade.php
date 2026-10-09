@@ -35,7 +35,18 @@
         @endif
 
         @foreach ($opcoes as $valor => $rotulo)
-            <option value="{{ $valor }}" @selected((string) $atual === (string) $valor)>{{ $rotulo }}</option>
+            {{-- Um array dentro das opções é grupo, não escolha: o catálogo de
+                 categoria do financeiro vem particionado por tipo, e a linha de
+                 baixo é o que o servidor aceita para o tipo de cima. --}}
+            @if (is_array($rotulo))
+                <optgroup label="{{ $valor }}">
+                    @foreach ($rotulo as $filho => $neto)
+                        <option value="{{ $filho }}" @selected((string) $atual === (string) $filho)>{{ $neto }}</option>
+                    @endforeach
+                </optgroup>
+            @else
+                <option value="{{ $valor }}" @selected((string) $atual === (string) $valor)>{{ $rotulo }}</option>
+            @endif
         @endforeach
     </select>
 

@@ -46,8 +46,12 @@ class StatusCatalog
             'inactive' => ['Inativo', 'canceled'],
         ],
         'financial' => [
-            'pending' => ['A receber', 'open'],
-            'paid' => ['Pago', 'done'],
+            // Os rótulos que a pessoa lê saem de `FinancialRecord::rotuloEstado()`,
+            // que sabe se a conta é receita ou despesa ("recebido" e "pago" são a
+            // mesma quitação em direções contrárias). Aqui fica o tom, que é só dele.
+            'pending' => ['Em aberto', 'open'],
+            'partially_paid' => ['Pagamento parcial', 'waiting'],
+            'paid' => ['Quitado', 'done'],
             'canceled' => ['Cancelado', 'canceled'],
             // Derivado da relação due_date com hoje; não é coluna da tabela.
             'overdue' => ['Vencido', 'canceled'],

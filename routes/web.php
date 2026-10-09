@@ -10,6 +10,8 @@ use App\Http\Controllers\Clients\AddressController;
 use App\Http\Controllers\Clients\ClientContactController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Finance\FinancialRecordController;
+use App\Http\Controllers\Finance\PaymentController;
 use App\Http\Controllers\Orders\CheckinController;
 use App\Http\Controllers\Orders\OrderAssignmentController;
 use App\Http\Controllers\Orders\OrderController;
@@ -81,6 +83,13 @@ Route::middleware(['auth', 'company'])->group(function () {
             Route::post('{ordem}/chegada', [CheckinController::class, 'store'])->name('checkin');
         });
 
+        // Cobrar a ordem é escrever no financeiro, não no quadro: a rota mora em
+        // `ordens/` porque o link nasce na ficha da OS, e a permissão pedida é a da
+        // conta (`financial.create`), não a de mexer em ordem.
+        Route::post('{ordem}/cobranca', [FinancialRecordController::class, 'cobrar'])
+            ->middleware('permission:financial.create')
+            ->name('charge');
+
         Route::delete('{ordem}', [OrderController::class, 'destroy'])
             ->middleware('permission:orders.delete')
             ->name('destroy');
@@ -135,6 +144,52 @@ Route::middleware(['auth', 'company'])->group(function () {
             Route::get('registrar', [MovementController::class, 'create'])->name('create');
             Route::post('/', [MovementController::class, 'store'])->name('store');
         });
+    });
+
+    /*
+     * O financeiro não tem campo de estado: `status` é a soma dos pagamentos lida do
+     * banco, então o que se roteia aqui é dinheiro e decisão, nunca "marcar como
+     * pago". Registrar o PIX é `financial.create` (o escritório digita, o estado vem
+     * junto); estornar e cancelar são `financial.approve`, porque desfazer o que já
+     * entrou no caixa é responsabilidade de outro degrau; excluir a ficha fica com o
+     * administrador, e só alcança conta sem pagamento.
+     */
+    Route::prefix('financeiro')->name('financial.')->group(function () {
+        // Literal antes de parametrizado: `financeiro/nova` e `financeiro/exportar`
+        // são telas, não a ficha do lançamento de código "nova".
+        Route::middleware('permission:financial.view')->group(function () {
+            Route::get('/', [FinancialRecordController::class, 'index'])->name('index');
+
+            Route::get('exportar', [FinancialRecordController::class, 'export'])
+                ->middleware('permission:financial.export')
+                ->name('export');
+        });
+
+        Route::middleware('permission:financial.create')->group(function () {
+            Route::get('nova', [FinancialRecordController::class, 'create'])->name('create');
+            Route::post('/', [FinancialRecordController::class, 'store'])->name('store');
+            Route::post('{registro}/pagamentos', [PaymentController::class, 'store'])->name('payments.store');
+        });
+
+        Route::middleware('permission:financial.update')->group(function () {
+            Route::get('{registro}/editar', [FinancialRecordController::class, 'edit'])->name('edit');
+            Route::put('{registro}', [FinancialRecordController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('permission:financial.approve')->group(function () {
+            Route::delete('{registro}/pagamentos/{pagamento}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+            Route::patch('{registro}/cancelar', [FinancialRecordController::class, 'cancel'])->name('cancel');
+            Route::patch('{registro}/reabrir', [FinancialRecordController::class, 'reopen'])->name('reopen');
+        });
+
+        Route::middleware('permission:financial.delete')->group(function () {
+            Route::delete('{registro}', [FinancialRecordController::class, 'destroy'])->name('destroy');
+            Route::patch('{registro}/restaurar', [FinancialRecordController::class, 'restore'])->name('restore');
+        });
+
+        Route::get('{registro}', [FinancialRecordController::class, 'show'])
+            ->middleware('permission:financial.view')
+            ->name('show');
     });
 
     Route::prefix('chamados')->name('tickets.')->group(function () {

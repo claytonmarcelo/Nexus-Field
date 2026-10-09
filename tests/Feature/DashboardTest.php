@@ -77,11 +77,11 @@ class DashboardTest extends TestCase
             'status' => 'available',
         ]);
 
-        $pendente = FinancialRecord::query()->create([
+        FinancialRecord::query()->create([
             'company_id' => $empresa->id,
             'client_id' => $cliente->id,
             'type' => 'revenue',
-            'category' => 'servico',
+            'category' => 'visita_tecnica',
             'description' => 'Cobrança da OS-01',
             'amount' => 100,
             'due_date' => '2026-10-11',
@@ -91,39 +91,70 @@ class DashboardTest extends TestCase
             'company_id' => $empresa->id,
             'client_id' => $cliente->id,
             'type' => 'revenue',
-            'category' => 'servico',
+            'category' => 'visita_tecnica',
             'description' => 'Cobrança vencida',
             'amount' => 50,
             'due_date' => '2026-10-01',
             'status' => 'pending',
         ]);
+
+        // Nenhuma destas contas nasce com o estado escrito: o que define quitada é o
+        // pagamento, e o painel soma a mesma derivação que a carteira mostra. Uma
+        // fixture que digitasse `paid` aqui estaria provando o número errado.
         $quitada = FinancialRecord::query()->create([
             'company_id' => $empresa->id,
             'client_id' => $cliente->id,
             'type' => 'revenue',
-            'category' => 'servico',
+            'category' => 'contrato_mensal',
             'description' => 'Já quitada',
             'amount' => 40,
             'due_date' => '2026-10-02',
-            'status' => 'paid',
-            'occurred_at' => '2026-10-02',
+            'status' => 'pending',
         ]);
         Payment::query()->create([
             'company_id' => $empresa->id,
             'financial_record_id' => $quitada->id,
-            'amount' => 40,
+            'amount' => 16,
             'method' => 'pix',
+            'paid_at' => '2026-10-01',
+        ]);
+        Payment::query()->create([
+            'company_id' => $empresa->id,
+            'financial_record_id' => $quitada->id,
+            'amount' => 24,
+            'method' => 'credit_card',
             'paid_at' => '2026-10-02',
         ]);
-        FinancialRecord::query()->create([
+        $quitada->recalcularEstado();
+
+        $despesa = FinancialRecord::query()->create([
             'company_id' => $empresa->id,
             'type' => 'expense',
-            'category' => 'combustivel',
+            'category' => 'deslocamento',
             'description' => 'Despesa do mês',
             'amount' => 20,
             'due_date' => '2026-10-03',
-            'status' => 'paid',
-            'occurred_at' => '2026-10-03',
+            'status' => 'pending',
+        ]);
+        Payment::query()->create([
+            'company_id' => $empresa->id,
+            'financial_record_id' => $despesa->id,
+            'amount' => 20,
+            'method' => 'cash',
+            'paid_at' => '2026-10-03',
+        ]);
+        $despesa->recalcularEstado();
+
+        // Despesa sem pagamento: é o que "A pagar" soma, e prova que o dinheiro de
+        // saída não se mistura com a receita do cartão ao lado.
+        FinancialRecord::query()->create([
+            'company_id' => $empresa->id,
+            'type' => 'expense',
+            'category' => 'instalacao',
+            'description' => 'Aluguel da base',
+            'amount' => 300,
+            'due_date' => '2026-10-20',
+            'status' => 'pending',
         ]);
 
         $produto = Product::query()->create([
@@ -163,6 +194,7 @@ class DashboardTest extends TestCase
             // inteiro.
             'Movimentações de hoje' => '0',
             'A receber' => 'R$ 150,00',
+            'A pagar' => 'R$ 300,00',
             'Recebido no mês' => 'R$ 40,00',
             'Despesa do mês' => 'R$ 20,00',
             'Notificações sem leitura' => '0',
@@ -170,6 +202,8 @@ class DashboardTest extends TestCase
 
         // O vencido é soma do que está pendente e atrasado, não um destaque fixo.
         $this->assertStringContainsString('R$ 50,00 vencidos', $html);
+        // A despesa em aberto ainda não venceu, então o cartão dela não conta atraso.
+        $this->assertStringContainsString('0 contas vencidas', $html);
         // Saldo central: compra 10 - carga 3 = 7. O consumo sai do técnico, não do centro.
         $this->assertStringContainsString('7,00</span> <span class="nf-text-muted-2">/ 8,00', $html);
         $this->assertStringNotContainsString('EL-200', $html);

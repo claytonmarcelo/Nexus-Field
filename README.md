@@ -41,8 +41,9 @@ o clique abre o arquivo no tamanho capturado. O painel de celular é fotografado
 legenda diz isso. Os painéis mostram a empresa de demonstração criada pelo `DemoSeeder` — é ela que
 tem ordens, chamados, financeiro e estoque para os indicadores calcularem; na empresa real sem dados,
 os mesmos blocos aparecem nos estados vazios. As três capturas do painel são anteriores à fase 16:
-desenham doze indicadores e hoje o escritório conta treze, porque o estoque acrescentou o cartão
-"Movimentações de hoje" e a lista "Últimas movimentações". Elas serão recapturadas quando a última
+desenham doze indicadores e hoje o escritório conta catorze, porque o estoque acrescentou o cartão
+"Movimentações de hoje" e a lista "Últimas movimentações", e o financeiro entrou com "A receber",
+"A pagar", "Recebido no mês" e "Despesa do mês". Elas serão recapturadas quando a última
 fase pousar — o painel ganha um bloco por módulo, e refazer a foto a cada fase manteria o README
 mentindo uma fase por vez.
 
@@ -129,8 +130,9 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 
 ### Painel
 
-- Doze indicadores contados no banco da empresa logada, mais a fila de ordens da semana e a
-  distribuição por estado
+- Catorze indicadores contados no banco da empresa logada, mais a fila de ordens da semana, a
+  distribuição por estado, as contas que vencem nos próximos quinze dias e os cinco últimos pagamentos
+  registrados
 - Estados de interface reais: carregando, vazio, sem permissão e erro
 - `DemoSeeder` local, que grava a demonstração numa empresa separada (`nexusfield-demo`) e recusa produção
 
@@ -282,6 +284,50 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   do colega pelo cartão
 - Filtros de tipo, produto, técnico, ordem, busca e período, paginação própria e CSV (`;`, BOM, `Export`)
   saem da mesma `consulta()`, então o que a tela filtra é o que o arquivo entrega
+- **Financeiro**: a conta não tem campo de estado. O formulário não oferece select de "Pago" e não existe
+  rota para marcar conta como paga — `status` é derivado da soma dos pagamentos contra o valor, calculado
+  pelo servidor dentro da transação que grava o dinheiro, com a linha travada por `lockForUpdate`. O teste
+  confere a lista inteira de rotas do módulo, uma por uma, para provar que o atalho não existe
+- Registrar dinheiro é o que move a conta: `payments` guarda valor, método, data, autor e referência, e o
+  lançamento passa de em aberto para recebido em parte e depois recebido conforme a soma. Dois pagamentos no
+  mesmo segundo não fecham a conta com metade do valor porque a soma volta do banco, não da tela
+- `occurred_at` é o último pagamento, não uma data digitada: lançamento sem pagamento não tem ocorrência,
+  porque o fato não aconteceu. O vencimento continua previsto, e é dele que sai o "vencido" — contado como
+  relação entre o previsto e hoje, não como coluna
+- Acima do saldo não entra, e a recusa diz quanto falta; conta quitada não recebe pagamento; pagamento em
+  conta cancelada é recusado com o convite para reabrir. Data tem teto de hoje e piso de dois anos para
+  trás, porque dinheiro que ainda não mudou de mão é previsão, e reabrir exercício não se faz por aqui
+- Estornar é degrau de quem responde pelo caixa (`financial.approve`), e o pagamento é procurado dentro da
+  conta: um id de outra conta responde 404 antes de qualquer escrita. Cancelar só existe sem pagamento
+  registrado e exige motivo — desfazer dinheiro que entrou é estorno, tem outro verbo e outra permissão
+- Reabrir devolve a conta à derivação: retira o cancelamento e deixa a soma dos pagamentos dizer o estado,
+  então uma conta reaberta que ainda tem dinheiro registrado volta como parcial, não como em aberto
+- Excluir é caso de cadastro errado: lançamento com pagamento registrado não se apaga, porque o pagamento
+  ficaria sem dona na hora em que o relatório somar o mês. A exclusão é lógica, e `?estado=excluidos` acha e
+  restaura a linha
+- Categoria é vocabulário fechado por tipo, não campo de nota (`FinancialRecord::CATEGORIAS`: cinco receitas,
+  seis despesas). O legado deixava digitar, e em dois anos "Peças", "pecas" e "pç" viraram três categorias
+  que ninguém soma — o rótulo fora do catálogo se descreve sozinho em vez de sumir da tela
+- Cliente é da receita: despesa com `client_id` no request tem o campo descartado, não aplicado, e receita sem
+  cliente é recusada. Ordem e cliente têm de apontar para a mesma carteira — a validação de campo confere cada
+  um isoladamente e é o controller que enxerga o par
+- Cobrança de ordem (`ordens/{ordem}/cobranca`) recomputa o valor no banco a partir das linhas, descontos e
+  total da OS: o `valor`, o `cliente_id` e a `empresa` que o request tenta mandar são ignorados. Só ordem
+  concluída cobra, ordem sem linhas não cobra, e segunda cobrança ativa da mesma OS é recusada — duplicata de
+  cobrança não é segunda via, é conflito
+- O rodapé de totais, a coluna de pago e a ficha somam a mesma expressão SQL (`PAGADA_SQL`), escrita uma vez
+  e sem binding: o saldo que a tabela mostra não é parecido com o da ficha, é o mesmo
+- Painel: "A receber" e "A pagar" contam o que falta, não o previsto — numa conta meio paga o dinheiro que já
+  entrou não pode ser contado de novo —, "Recebido no mês" traz o delta contra o mês anterior, e "Despesa do
+  mês" fecha com o saldo do período. Os quatro saem do mesmo `totais()` da carteira
+- A carteira (`/financeiro`) filtra por busca, tipo, estado (inclusive vencido e excluídos), categoria,
+  cliente, ordem e período de vencimento, com ordenação própria, paginação própria e CSV da mesma consulta —
+  vencimento no período, não data de cadastro, porque quem abre o mês quer as contas que vencem ali, pagas ou
+  não
+- Os degraus são diferentes de propósito: registrar o dinheiro é `financial.create` (o estado vem junto),
+  conduzir a conta é `financial.update`, estornar e cancelar são `financial.approve`, e apagar a ficha é
+  `financial.delete` — o técnico e a conta de cliente não chegam na carteira, e recebem 403 do servidor antes
+  de ver qualquer botão
 
 ### Interface
 
@@ -322,7 +368,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vêm uma fase por vez.
 | Agenda e compromissos | ✅ | ✅ | ✅ |
 | Check-in / check-out com geolocalização | ✅ | ✅ | ✅ |
 | Estoque e movimentações | ✅ | ✅ | ✅ |
-| Financeiro | ✅ | ✅ | 🚧 fase 17 |
+| Financeiro (contas a receber e a pagar) | ✅ | ✅ | ✅ |
 | Relatórios e exportações | ✅ | ✅ | 🚧 fase 18 |
 | Notificações | ✅ | ✅ | 🚧 fase 19 |
 | Usuários e papéis | ✅ | ✅ | 🚧 fase 20 |
@@ -387,15 +433,15 @@ nexusfield/
 ├── app/
 │   ├── Http/
 │   │   ├── Controllers/     → Welcome, Auth, Dashboard, Clients, Technicians, Catalog, Orders (com o
-│   │   │                      CheckinController das visitas de campo), Tickets, Agenda, Stock e os
-│   │   │                      Concerns compartilhados
+│   │   │                      CheckinController das visitas de campo), Tickets, Agenda, Stock, Finance
+│   │   │                      (lançamento e pagamento) e os Concerns compartilhados
 │   │   └── Middleware/      → ResolveCompany (tenancy) e EnsurePermission (autorização)
 │   ├── Models/              → 30 modelos do domínio: empresa e plano, usuário e RBAC, cliente com
 │   │                          contato e endereço, técnico, equipe e especialidade, catálogo, ordem
 │   │                          com linha/quadro/check-in/histórico, chamado com conversa e histórico,
-│   │                          compromisso de agenda, movimentação e carga de técnico, e as tabelas que
-│   │                          ainda só têm schema — financeiro, configuração, notificação, auditoria e
-│   │                          anexo
+│   │                          compromisso de agenda, movimentação e carga de técnico, lançamento com
+│   │                          pagamento, e as tabelas que ainda só têm schema — configuração,
+│   │                          notificação, auditoria e anexo
 │   └── Support/             → PermissionCatalog, Roles, TenantContext, StatusCatalog, Formatters,
 │                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro, Distancia e
 │                              Navigation — mais Notifier, que espera a fase 19
@@ -416,7 +462,7 @@ nexusfield/
 │   └── views/               → Blade: componentes ui/ e layouts, páginas públicas, de entrada,
 │                              de clientes, de técnicos, de equipes, de especialidades, de serviços,
 │                              de produtos, de categorias, de ordens de serviço, de chamados, de agenda,
-│                              de visitas de campo e de movimentações de estoque
+│                              de visitas de campo, de movimentações de estoque e de contas do financeiro
 ├── routes/                  → web.php
 ├── storage/                 → logs, cache e uploads (fora da raiz pública)
 ├── tests/
@@ -424,8 +470,9 @@ nexusfield/
 │   │                          autenticado, as três telas abertas de acesso, campo de senha, painel,
 │   │                          demonstração, conta raiz e a troca do e-mail dela, clientes, técnicos,
 │   │                          catálogo, ordens de serviço, chamados, agenda, check-in de campo,
-│   │                          estoque em livro-caixa, o token CSRF em todo formulário de escrita e a
-│   │                          proibição dos diálogos nativos
+│   │                          estoque em livro-caixa, financeiro com estado derivado do dinheiro, o
+│   │                          token CSRF em todo formulário de escrita e a proibição dos diálogos
+│   │                          nativos
 │   └── Unit/                → paleta dos dois temas, contrato das capturas, iniciais do usuário
 └── CHANGELOG.md             → histórico por fase
 ```
@@ -603,6 +650,7 @@ com as chaves nomeadas e nenhuma credencial preenchida.
 | Autorização | `EnsurePermission` no servidor, por permissão do catálogo; a tela não decide nada |
 | Texto rico | HTML de editor passa por `TextoSeguro` (lista fechada de tags, atributos e esquemas de URL) antes do banco; sem isso seria XSS estocado |
 | Livro-caixa | Movimentação de estoque não tem rota para editar nem apagar; `recorded_at`, `user_id` e `company_id` vêm do servidor e do contexto, nunca do request, e a conta de saldo roda em transação com o produto e a linha de carga travados por `lockForUpdate` sobre o índice único `(technician_id, product_id)` |
+| Caixa | Estado de lançamento nunca é digitado: deriva da soma de `payments` lida do banco dentro da transação, com a linha travada por `lockForUpdate`. Pagamento acima do saldo, em conta quitada ou em conta cancelada é recusado; `occurred_at` vem do último pagamento e não do formulário; estornar e cancelar pedem `financial.approve`, cancelamento não apaga dinheiro registrado, e exclusão só alcança conta sem pagamento |
 | Posição em campo | O aparelho lê a coordenada, mas quem mede a distância é o servidor, contra o endereço gravado na ordem; latitude/longitude fora de ±90/±180, com mais de sete decimais ou incompletas são recusadas antes de virar linha, e `technician_id`, `checkin_at` e a medida enviados pelo request são ignorados |
 | Tenancy | `CompanyScope` global; leitura fora da empresa exige `anyCompany()` explícito |
 | Conta raiz | `is_root` não é atribuível por request e a conta raiz resiste a exclusão, desativação, remanejamento e a perder a própria bandeira |
@@ -625,7 +673,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **185 testes / 1882 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **195 testes / 2149 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
@@ -652,8 +700,18 @@ do central e o consumo que não passa da mala devolvidos sem deixar rastro, a da
 tenta forjar e o servidor ignora, o ajuste que é de quem responde pelo inventário, as rotas que não existem
 para editar ou apagar linha, o alcance do técnico na própria mala, a ordem que o consumo exige, o aviso que
 sai no momento em que o saldo cruza o ponto, o filtro que o CSV devolve no mesmo ponto e o painel contando o
-mesmo que a listagem; e o CSRF, que varre as views e o HTML servido porque o `VerifyCsrfToken` se isenta
-durante os testes e nenhum outro teste do projeto veria o formulário sem token.
+mesmo que a listagem — e o de financeiro: o módulo que não tem rota para marcar conta como paga, conferido
+rota por rota, o dinheiro registrado que é a única coisa que move o estado e a data do fato que volta do
+último pagamento, o valor, o tipo e a empresa que o request tenta forjar, o pagamento acima do saldo, na
+conta quitada e na cancelada, a data futura e a de dois anos atrás, o estorno que é de quem responde pelo
+caixa e o id de outra conta que é 404, a conta com dinheiro que não muda de valor nem de tipo nem se cancela
+nem se apaga, o cancelamento que pede motivo e a reabertura que deriva o estado de novo, categoria que é
+vocabulário do tipo, despesa que não tem cliente, ordem e cliente que têm de ser a mesma carteira, a cobrança
+da OS que só existe com o serviço terminado e com o valor somado das linhas, a carteira que filtra no banco e
+o CSV devolvendo o mesmo saldo da ficha, e o alcance de gestor, funcionário, técnico e conta de cliente nas
+treze rotas da carteira e na cobrança que nasce na ficha da ordem; e o CSRF, que varre as views e o HTML
+servido porque o `VerifyCsrfToken` se isenta durante os testes e nenhum outro teste do projeto veria o
+formulário sem token.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -677,7 +735,12 @@ php artisan db:seed --class=DemoSeeder
 
 Os usuários criados são `admin.demo@nexusfield.local` (administrador),
 `gestor.demo@nexusfield.local` (supervisor), `campo.demo@nexusfield.local` (técnico) e
-`cliente.demo@nexusfield.local` (cliente). A senha não está neste README nem em lugar nenhum do
+`cliente.demo@nexusfield.local` (cliente). A demonstração também enche a carteira: 17 contas (11 receitas e
+6 despesas), das quais dezesseis nascem em aberto, sem data de ocorrência, e mudam de estado só pelos 10
+pagamentos gravados como linhas reais em `payments`, com método, data e autor — `recalcularEstado()` depois de
+cada um, exatamente como a tela faz. Há receita quitada, receita meio paga e vencida, despesa em aberto e
+despesa vencida, e uma receita cancelada com motivo: a única decisão digitada. Nenhum estado derivado é
+escrito à mão. A senha não está neste README nem em lugar nenhum do
 repositório: ela vem de `SEED_DEMO_PASSWORD`, que cai para `SEED_ADMIN_PASSWORD` quando não tem
 valor; sem nenhum dos dois, o seeder gera uma e mostra no console. Rodar de novo limpa a empresa de
 demonstração e regrava — é fixture de tela, não histórico de operação.
@@ -716,10 +779,16 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
   não inventarem estoque, data e autor decididos pelo servidor, recorte por `stock.adjust`, rota nenhuma para
   editar ou apagar, aviso de reposição na resposta que baixa o saldo, cartão no painel e carga do técnico na
   ficha dele, filtros, paginação própria e CSV da mesma consulta
+- [x] **Fase 17** — Financeiro: estado que ninguém digita, porque `status` é a soma dos pagamentos lida do
+  banco dentro da transação com a linha travada; registrar dinheiro é `financial.create`, estornar e cancelar
+  são `financial.approve`, e não existe rota para marcar conta como paga. Pagamento acima do saldo, em conta
+  quitada ou em conta cancelada é recusado; `occurred_at` volta do último pagamento; categoria é vocabulário
+  fechado por tipo; despesa não tem cliente; a cobrança da OS recomputa o valor nas linhas do banco, só com o
+  serviço terminado e uma vez por ordem; carteira com filtros, totais do recorte, paginação própria e CSV da
+  mesma consulta; quatro KPIs de caixa no painel somando a mesma expressão SQL da ficha
 
 ### Planejado
 
-- [ ] Fase 17 — Financeiro
 - [ ] Fase 18 — Relatórios e exportações
 - [ ] Fase 19 — Notificações
 - [ ] Fase 20 — Telas de usuários e papéis

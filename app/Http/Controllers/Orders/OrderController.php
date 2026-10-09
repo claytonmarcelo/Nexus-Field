@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\EmEdicao;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Orders\Concerns\EnxergaAOrdem;
 use App\Models\Client;
+use App\Models\FinancialRecord;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceOrder;
@@ -160,6 +161,17 @@ class OrderController extends Controller
             'visitaAberta' => $minha ?? ($usuario->hasPermission('orders.approve') ? $emCampo->first() : null),
             'podeRegistrar' => $this->podeRegistrar($ordem, $usuario),
             'raio' => ServiceOrderCheckin::raioAceito(),
+            // A ficha da ordem mostra o que virou cobrança, mas a carteira é do
+            // financeiro: quem não tem `financial.view` não chega a ter a consulta
+            // montada, e a tela continua respondendo sem esse bloco.
+            'cobrancas' => $usuario->hasPermission('financial.view')
+                ? $ordem->financialRecords()
+                    ->where('type', FinancialRecord::REVENUE)
+                    ->comPagado()
+                    ->orderBy('due_date')
+                    ->get()
+                : collect(),
+            'categoriasCobranca' => FinancialRecord::categorias(FinancialRecord::REVENUE),
         ]);
     }
 
