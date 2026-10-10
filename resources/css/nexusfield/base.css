@@ -23,6 +23,29 @@ h3,
     font-weight: 600;
 }
 
+/*
+ * Quebra de linha é decisão de leitura, não acidente de largura.
+ *
+ * `pretty` não deixa a última linha de um parágrafo cair com uma palavra solta;
+ * `balance` distribui o título em linhas de tamanho parecido, em vez de encher a
+ * primeira e jogar "cliente." sozinho na quarta. Onde o navegador ainda não
+ * conhece a palavra, a regra é ignorada e a quebra volta a ser a de sempre —
+ * nenhum layout depende dela para existir, por isso ela não tem par em JS.
+ */
+p {
+    text-wrap: pretty;
+}
+
+h1,
+h2,
+h3,
+.h1,
+.h2,
+.h3,
+.nf-display {
+    text-wrap: balance;
+}
+
 /* O display serifado aparece só onde há espaço para ele respirar. */
 .nf-display {
     font-family: var(--nf-font-display);

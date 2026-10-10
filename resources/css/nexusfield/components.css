@@ -58,6 +58,100 @@
     align-items: center;
 }
 
+/* ------------------------------------------------------------------ *
+ * Botão do menu lateral — três barras que dizem em que pé o menu está
+ *
+ * Antes era um glifo do FontAwesome solto na barra: sem moldura, sem estado e
+ * sem nenhuma pista de que o menu ao lado ia fechar. Aqui ele vira peça da casa,
+ * com o mesmo fio de borda e o mesmo fundo elevado da pílula de tema, e lê o
+ * estado de onde o AdminLTE 4 o guarda: `sidebar-collapse` no desktop,
+ * `sidebar-open` no celular. O botão obedece ao contrato do template — não
+ * existe segunda fonte de verdade, e o JavaScript só traduz isso para
+ * `aria-expanded`.
+ *
+ * Fechado, as duas barras externas se dobram sobre a do meio e a figura que
+ * sobra é uma ponta de seta: "puxe o menu", que é exatamente o que o clique faz.
+ * Aberto, as três voltam a paralelas. A troca é um número — `--nf-dobra` — e a
+ * geometria é conta, não regra repetida.
+ * ------------------------------------------------------------------ */
+.nf-nav-toggle {
+    --nf-dobra: 0;
+
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 2.35rem;
+    height: 2.15rem;
+    padding: 0 .55rem;
+    border: 1px solid var(--nf-line-strong);
+    border-radius: var(--bs-border-radius);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--nf-primary) 8%, transparent), transparent),
+        var(--nf-elevated);
+    color: var(--nf-text-muted);
+    box-shadow: var(--nf-shadow-sm);
+    cursor: pointer;
+    transition: border-color var(--nf-duration) var(--nf-ease),
+        color var(--nf-duration) var(--nf-ease);
+}
+
+.nf-nav-toggle-bar {
+    display: block;
+    height: 2px;
+    border-radius: 999px;
+    background-color: currentColor;
+    transform-origin: right center;
+    transition: transform var(--nf-duration) var(--nf-ease),
+        opacity var(--nf-duration) var(--nf-ease),
+        width var(--nf-duration) var(--nf-ease);
+}
+
+/* A barra do meio é mais curta: é o próprio menu recolhido, desenhado em miniatura. */
+.nf-nav-toggle-bar:nth-child(2) {
+    width: 62%;
+}
+
+.nf-nav-toggle:hover,
+.nf-nav-toggle:focus-visible {
+    border-color: var(--nf-primary);
+    color: var(--nf-primary);
+}
+
+.nf-nav-toggle:hover .nf-nav-toggle-bar:nth-child(2) {
+    width: 100%;
+}
+
+.nf-nav-toggle-bar:nth-child(1) {
+    transform: translateY(calc(var(--nf-dobra) * 6px)) rotate(calc(var(--nf-dobra) * 40deg));
+}
+
+.nf-nav-toggle-bar:nth-child(2) {
+    opacity: calc(1 - var(--nf-dobra));
+}
+
+.nf-nav-toggle-bar:nth-child(3) {
+    transform: translateY(calc(var(--nf-dobra) * -6px)) rotate(calc(var(--nf-dobra) * -40deg));
+}
+
+/* No desktop a coleção é a exceção: o corpo marca `sidebar-collapse`. */
+@media (min-width: 992px) {
+    body.sidebar-collapse .nf-nav-toggle {
+        --nf-dobra: 1;
+    }
+}
+
+/* No celular o menu nasce fechado, e só `sidebar-open` o abre. */
+@media (max-width: 991.98px) {
+    .nf-nav-toggle {
+        --nf-dobra: 1;
+    }
+
+    body.sidebar-open .nf-nav-toggle {
+        --nf-dobra: 0;
+    }
+}
+
 /* O usuário vira uma pílula clicável: o hover explica que o menu é dali. */
 .nf-nav-user {
     gap: .55rem;
@@ -110,7 +204,7 @@
 .nf-user-menu-name {
     font-weight: 700;
     margin-bottom: 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
 }
 
 .nf-user-menu-mail,
@@ -119,7 +213,7 @@
     font-size: .8rem;
     color: var(--nf-text-muted);
     margin-bottom: 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
 }
 
 .nf-user-menu-roles {
@@ -341,9 +435,11 @@
 
 .nf-fact-list li {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
-    gap: 1rem;
+    column-gap: 1rem;
+    row-gap: .1rem;
     padding-block: .55rem;
     border-bottom: 1px solid var(--nf-line);
     font-size: .875rem;
@@ -1009,7 +1105,7 @@
     line-height: 1.05;
     letter-spacing: -.02em;
     font-variant-numeric: tabular-nums;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
 }
 
 /* Um valor em reais tem ~11 caracteres: no corpo estreito do KPI ele quebraria
@@ -1199,7 +1295,15 @@
 .nf-mono {
     font-variant-numeric: tabular-nums;
     letter-spacing: .01em;
-    overflow-wrap: anywhere;
+    /*
+     * `break-word`, e não `anywhere`. Os dois só partem a palavra como último
+     * recurso, mas `anywhere` entra na conta do min-content: a coluna encolhe até
+     * a palavra caber partida, e "geolocalização" vira duas metades na tela. Com
+     * `break-word` a largura mínima é a da palavra inteira — quem cede espaço é o
+     * layout, nunca a palavra. A regra vale para os quatro pontos da folha onde
+     * ela aparece.
+     */
+    overflow-wrap: break-word;
 }
 
 .nf-text-muted-2 {
@@ -1681,9 +1785,18 @@
     white-space: nowrap;
 }
 
-/* Quem cede espaço é o rótulo: "R$" numa linha e o valor na outra lê como
-   dois números, e o fechado não pode ser lido errado por falta de coluna. */
+/* Quem cede a linha é o valor, nunca a palavra. O rótulo não negocia largura:
+   espremido ele parte "Janela" em duas metades, e etiqueta de fato não se quebra.
+   O valor tem folga para encolher e, se a linha não comporta os dois, desce
+   inteiro para baixo. O fechado com `.nf-valor` continua inquebrável — "R$" numa
+   linha e o número na outra lê como dois números. */
 .nf-fact-list li > span {
+    flex: 0 0 auto;
+    max-width: 100%;
+}
+
+.nf-fact-list li > strong {
+    flex: 0 1 auto;
     min-width: 0;
 }
 

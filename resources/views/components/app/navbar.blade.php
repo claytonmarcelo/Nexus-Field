@@ -2,6 +2,11 @@
      ([data-lte-toggle="sidebar"], estado no <body>), e sair é POST com CSRF:
      logout por GET é o que permite deslogar alguém com uma imagem quebrada.
 
+     As três barras são desenhadas em CSS, e não um glifo: a moldura e a dobra
+     existem para o clique ter cara de peça e o estado ter para onde ir. Quem lê o
+     `aria-expanded` é o menu.js, que só espelha a classe que o template já pôs no
+     <body> — ver resources/js/nexusfield/menu.js.
+
      O sino mora entre o toggle de tema e o menu da conta, e lê a bandeja de quem
      está logado — a consulta filtra por `user_id` antes de qualquer coisa, então
      a contagem da barra é sempre da pessoa, nunca da empresa. Ele não some para
@@ -12,15 +17,20 @@
 <nav class="app-header navbar navbar-expand">
     <div class="container-fluid nf-content">
         <ul class="navbar-nav">
-            <li class="nav-item">
+            <li class="nav-item d-flex align-items-center">
                 <button
                     type="button"
-                    class="nav-link"
+                    class="nf-nav-toggle"
                     data-lte-toggle="sidebar"
-                    aria-label="Abrir ou fechar o menu lateral"
-                    title="Abrir ou fechar o menu lateral"
+                    data-nf-menu-toggle
+                    aria-controls="navigation"
+                    aria-expanded="true"
+                    aria-label="Recolher o menu lateral"
+                    title="Recolher o menu lateral"
                 >
-                    <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                    <span class="nf-nav-toggle-bar" aria-hidden="true"></span>
+                    <span class="nf-nav-toggle-bar" aria-hidden="true"></span>
+                    <span class="nf-nav-toggle-bar" aria-hidden="true"></span>
                 </button>
             </li>
         </ul>

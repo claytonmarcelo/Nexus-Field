@@ -1093,6 +1093,21 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   `.nf-bar-track`, `.nf-bar-fill`, `.nf-relatorio-janela-rotulo` e o cabeçalho da `.nf-table` saíram com o
   estilo computado idêntico byte a byte em `/`, `/clientes` e `/relatorios/financeiro`, com sonda sintética
   para as peças que a conta raiz não tem dado para desenhar.
+- O botão do menu lateral passou a desenhar o próprio estado: três barras em CSS, uma moldura e uma única
+  variável, `--nf-dobra`, que os quebradores do template preenchem — o desktop largo com `sidebar-collapse`, o
+  celular com `sidebar-open`. Aberto, as três barras paralelas com a do meio mais curta são o menu recolhido
+  desenhado em miniatura; fechado, elas se dobram num `>` e a do meio some. O `fa-bars` saiu da navbar: um
+  glifo que vira outro glifo é a mesma informação escrita duas vezes, uma delas sempre atrasada no clique.
+- `resources/js/nexusfield/menu.js` (novo, chamado por `menu.init()` em `app.js`) não manda no menu — quem põe
+  a classe é o template. Ele espelha o `<body>` em `aria-expanded`, `aria-label` e `title`, por
+  `MutationObserver` na classe do corpo e `matchMedia` no quebrador de 992px, para o leitor de tela não seguir
+  dizendo "Expandir" depois de o menu já ter aberto.
+- `CoerenciaVisualTest` ganhou três provas e fecha em 9 testes / 126 asserções: nenhuma das seis folhas usa
+  `overflow-wrap: anywhere` e a lista de fatos para de negociar a largura do rótulo, a tela aberta tem
+  exatamente duas chamadas para entrar e nenhuma dentro do hero, e o botão do menu é a peça descrita acima,
+  vestida só com tinta dos tokens. A suíte fecha em 316 testes / 3030 asserções, Pint PASS em 175 arquivos e a
+  varredura nos mesmos 73 endereços GET — 66×200, 5×302, 1×403, 1×404, nenhum 5xx e nenhuma marca de quebra.
+
 ### Alterado
 
 - Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de
@@ -1365,6 +1380,30 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   série desenhar.
 
 ### Corrigido
+
+- A palavra se partia ao meio porque o layout cedeu antes dela.
+
+  * Quatro pontos das folhas usavam `overflow-wrap: anywhere`, que entra na conta do min-content: a coluna da
+    lista de fatos encolhia até cortar "Janela" em duas metades, e o rótulo ainda tinha `min-width: 0`
+    negociando largura com o valor. Na varredura de `/agenda`, nove rótulos apareceram partidos entre 17px e
+    42px. Agora `anywhere` não existe na casa — ficou `break-word`, o rótulo é `flex: 0 0 auto` e a folga de
+    encolher passou a ser do valor (`flex: 0 1 auto; min-width: 0`), que desce inteiro quando a linha não
+    comporta os dois.
+  * A outra ponta era a linha que sobra: `text-wrap: pretty` nos parágrafos e `balance` em `h1`/`h2`/`h3` e
+    `.nf-display`, para o título da boas-vindas parar de encher três linhas e jogar "cliente." sozinho na
+    quarta. Onde o navegador ainda não conhece a palavra-chave a regra é ignorada e nada quebra — nenhum layout
+    depende dela, por isso ela não tem par em JavaScript.
+  * A prova é a varredura de texto, não o olho: cada nó de texto dos endereços GET foi lido linha a linha em
+    1440px e 390px, atrás de linha terminando em sílaba e da seguinte continuando a palavra, com um defeito
+    sintético plantado antes para mostrar que a sonda enxerga. Eram 6 defeitos; hoje são 0 palavras partidas e
+    0 estouros horizontais nas duas larguras.
+
+- A boas-vindas tinha três portas para o mesmo endereço, e a do meio não levava a lugar nenhum novo.
+
+  * O hero repetia no corpo da página o "Acessar a plataforma" que já estava no canto superior direito, e ainda
+    somava um "Ver os módulos" que rola até uma âncora da própria tela. Saíram os dois; a âncora
+    `#modulos` ficou, porque quem chega por link externo continua achando o destino. A margem de 1.5rem que
+    separava o texto do botão foi junto — ela existia para aquele botão.
 
 - A chave de tema trocava a cara da página e deixava o navegador com a tinta antiga.
 

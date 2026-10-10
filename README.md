@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-313%20testes%20%2F%202969%20asser%C3%A7%C3%B5es-brightgreen" alt="313 testes, 2969 asserções">
+  <img src="https://img.shields.io/badge/testes-316%20testes%20%2F%203030%20asser%C3%A7%C3%B5es-brightgreen" alt="316 testes, 3030 asserções">
 </p>
 
 <p align="center">
@@ -484,7 +484,7 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - A virada de tema desliza em 200ms, e só ela: o script veste `nf-tema-virando` no `<html>` durante o
   clique e solta 260ms depois. Transição permanente faria a página subir do branco em toda recarga, e o
   cookie com o script inline do `<head>` existem justamente para o tema chegar antes da primeira pintura
-- A folha não guarda peça de vitrine: as 202 classes `nf-` dos seis arquivos de estilo são varridas em
+- A folha não guarda peça de vitrine: as 204 classes `nf-` dos seis arquivos de estilo são varridas em
   teste contra Blade, JavaScript, controller e seeder — o que ninguém veste sai da folha, porque duas
   maneiras de escrever a mesma coisa, uma delas nunca lida, é exatamente a repetição que este desenho vetou
 - A folha também não se desmente: nenhum seletor de topo declara a mesma propriedade duas vezes. Vinte
@@ -496,6 +496,20 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   jeito mais rápido de uma mensagem de rede ficar certa em um botão e errada no outro
 - A escrita por arrasto tem cara enquanto o banco não respondeu: o compromisso esmaece com o fio do
   próprio tom, e a classe sai no `finally` — gravado, recusado ou sem conexão, os três desfechos
+- A palavra não se parte porque o layout cedeu antes dela: `overflow-wrap: anywhere` não existe em nenhuma das
+  seis folhas — ele entra na conta do min-content, e a coluna encolhe até cortar o rótulo em duas metades que
+  ninguém lê como uma palavra só. Ficou `break-word`, em que quem negocia largura é o layout: o rótulo da lista
+  de fatos é `flex: 0 0 auto` e o valor tem folga (`flex: 0 1 auto; min-width: 0`) para descer inteiro. A outra
+  ponta é a linha que sobra: `text-wrap: pretty` nos parágrafos e `balance` nos títulos, porque última linha
+  com uma palavra órfã é acidente de largura, não decisão de leitura
+- A tela aberta tem uma porta de entrada, não três: o cabeçalho chama para entrar e o bloco final fecha a
+  chamada. O meio do hero não repete o endereço que já está no canto superior direito — duas portas para o
+  mesmo lugar, na mesma tela, só disputam o clique entre si
+- O botão do menu desenha o estado em vez de trocar de glifo: três barras em CSS, uma moldura e uma variável,
+  `--nf-dobra`, preenchida pelos quebradores do template (`sidebar-collapse` no desktop largo, `sidebar-open`
+  no celular). Aberto, as barras paralelas com a do meio mais curta são o menu recolhido em miniatura; fechado,
+  elas se dobram num `>`. `menu.js` não manda no menu — espelha a classe do `<body>` em `aria-expanded`,
+  `aria-label` e `title`, para o leitor de tela não continuar dizendo "Expandir" depois de o menu ter aberto
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura
 - O menu veste o tema da página: no claro ele é a superfície elevada com o verde de marca em quem está
   ativo, no escuro encosta no preto e só o fio de borda separa as duas áreas
@@ -870,7 +884,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **313 testes / 2969 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **316 testes / 3030 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, perfil próprio com chave e senha trocadas só mediante a senha atual, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
@@ -919,7 +933,10 @@ rota pedida, nome de model e stack; e a micro-visualização do painel, que amar
 que o banco devolveu no dia, cobra a régua entre o número do cartão e o período do traço, não deixa linha
 nascer onde não há série, nem anel nascer onde a ficha não tinha prazo, nem tinta nova entrar na folha dos
 componentes. A demonstração também é provada como história: a hora em que cada ordem terminou é a mesma hora
-gravada na trilha de estado, na saída da visita de campo e na liberação da comissão do técnico.
+gravada na trilha de estado, na saída da visita de campo e na liberação da comissão do técnico. E a camada de
+apresentação tem régua travada: `CoerenciaVisualTest` (9 testes / 126 asserções) varre as 204 classes `nf-`
+da folha contra a interface, não deixa o layout partir palavra no meio, conta duas — não três — chamadas para
+entrar na tela aberta e prova que o botão do menu desenha o próprio estado em CSS, com tinta só dos tokens.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -1027,10 +1044,13 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 - [x] **Fase 25** — Coerência global sem repetir informação: a folha parou de se desmentir (20 declarações
   mortas cortadas, estilo computado provado idêntico), a agenda ficou com um só caminho de rede, e a
   escrita por arrasto ganhou cara enquanto o banco não responde
+- [x] **Fase 26** — Apresentação sem ruído: a boas-vindas ficou com uma porta de entrada só, o botão do menu
+  ganhou desenho e estado próprios, e a palavra parou de se partir ao meio — `anywhere` fora das seis folhas,
+  `pretty` e `balance` nas linhas que sobravam, provado nó de texto a nó de texto em 1440px e 390px
 
 ### A seguir
 
-O plano de reconstrução fechou: da fase 1 à 25, mais a prontidão de deploy, tudo no ar. O que vem
+O plano de reconstrução fechou: da fase 1 à 26, mais a prontidão de deploy, tudo no ar. O que vem
 depois é decisão de operação, não fase: publicar numa máquina real, contratar o primeiro tenant e
 bater o martelo da licença.
 

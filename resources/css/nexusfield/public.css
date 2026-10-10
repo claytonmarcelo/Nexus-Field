@@ -80,7 +80,9 @@
 
 .nf-hero-text {
     max-width: 58ch;
-    margin-bottom: 1.5rem;
+    /* O bloco termina aqui. O respiro até a próxima faixa é do hero, não do
+       parágrafo: os 1.5rem existiam para separar o texto do botão que saiu. */
+    margin-bottom: 0;
     color: var(--nf-text-muted);
     font-size: 1.025rem;
     line-height: 1.65;

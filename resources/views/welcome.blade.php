@@ -29,14 +29,10 @@
                                 conversando entre si. Cada tela mostra apenas o que o papel do usuário pode ver, e o
                                 servidor recusa o resto.
                             </p>
-                            <div class="d-flex flex-column flex-sm-row gap-2">
-                                <x-ui.button href="{{ route('login') }}" variant="primary" size="lg" icon="fa-solid fa-key">
-                                    Acessar a plataforma
-                                </x-ui.button>
-                                <x-ui.button href="#modulos" variant="ghost" size="lg">
-                                    Ver os módulos
-                                </x-ui.button>
-                            </div>
+                            {{-- Nenhuma porta de entrada no meio da página. Ela já
+                                 existe no canto superior direito, e a chamada fecha
+                                 lá embaixo: duas portas para o mesmo endereço, na
+                                 mesma tela, só disputam o clique entre si. --}}
                         </div>
                         <div class="col-12 col-lg-5">
                             {{-- O medalhão pendurado no próprio eixo: balança com

@@ -8,12 +8,14 @@ use Tests\TestCase;
 
 /**
  * O briefing "Premium Gourmet" fecha na camada de apresentação, e apresentação que
- * ninguém veste é entropia. Estas provas amarram o global em cinco pontas: a espera
+ * ninguém veste é entropia. Estas provas amarram o global em oito pontas: a espera
  * real da agenda tem esqueleto em vez de silêncio, a virada de tema desliza em
  * duzentos milissegundos sem pintar a recarga, nenhum caminho de rede é escrito duas
  * vezes na mesma tela, a folha não declara a mesma propriedade para o mesmo seletor
- * (o primeiro valor nunca é pintado), e nenhuma classe `nf-` fica esperando uso de
- * uma interface que não existe.
+ * (o primeiro valor nunca é pintado), nenhuma classe `nf-` fica esperando uso de uma
+ * interface que não existe, nenhuma palavra se parte ao meio porque o layout cedeu
+ * antes dela, a tela aberta oferece uma só porta de entrada, e o botão do menu
+ * desenha o próprio estado em vez de trocar de glifo.
  */
 class CoerenciaVisualTest extends TestCase
 {
@@ -207,6 +209,172 @@ class CoerenciaVisualTest extends TestCase
         $bloco = substr($css, $inicio, strpos($css, '}', $inicio) - $inicio);
         $this->assertMatchesRegularExpression('/var\(--nf-/', $bloco, 'O estado de escrita pinta fora do registro de tokens.');
         $this->assertDoesNotMatchRegularExpression('/#[0-9a-fA-F]{3,8}|rgb\(/', $bloco, 'O estado de escrita trouxe tinta nova.');
+    }
+
+    /**
+     * A régua de legibilidade da casa: o meio da palavra não se parte porque o layout
+     * precisou ceder espaço. `overflow-wrap: anywhere` entra na conta do min-content,
+     * então a coluna encolhe até cortar o rótulo em duas metades que ninguém lê como
+     * uma palavra só. `break-word` fica fora dessa conta — quem cede é o layout, e
+     * partir a palavra volta a ser o último recurso que sempre foi.
+     */
+    public function test_a_palavra_nunca_parte_no_meio_por_causa_do_layout(): void
+    {
+        foreach (self::FOLHAS as $folha) {
+            $this->assertStringNotContainsString(
+                'overflow-wrap: anywhere',
+                $this->semComentario($this->folha($folha)),
+                $folha.'.css voltou a deixar a largura partir a palavra.'
+            );
+        }
+
+        $base = $this->folha('base');
+
+        // Título e parágrafo decidem a linha antes de o leitor chegar: sem as duas
+        // palavras-chave a última linha cai com uma palavra solta.
+        $this->assertMatchesRegularExpression('/text-wrap:\s*pretty/', $this->bloco($base, 'p'),
+            'O parágrafo voltou a terminar com uma palavra órfã na última linha.');
+        $this->assertMatchesRegularExpression(
+            '/text-wrap:\s*balance/',
+            $this->bloco($base, 'h1, h2, h3, .h1, .h2, .h3, .nf-display'),
+            'O título enche a primeira linha e joga o resto sozinho na seguinte.'
+        );
+
+        $componentes = $this->folha('components');
+        $linha = $this->bloco($componentes, '.nf-fact-list li');
+        $this->assertMatchesRegularExpression('/flex-wrap/', $linha,
+            'Sem a linha voltar, o valor não desce inteiro: ele é espremido até partir.');
+
+        $rotulo = $this->bloco($componentes, '.nf-fact-list li > span');
+        $this->assertStringContainsString('flex: 0 0 auto', $rotulo);
+        $this->assertStringNotContainsString('min-width', $rotulo,
+            'Rótulo que negocia largura é rótulo que se parte no meio.');
+
+        $valor = $this->bloco($componentes, '.nf-fact-list li > strong');
+        $this->assertStringContainsString('flex: 0 1 auto', $valor);
+        $this->assertStringContainsString('min-width: 0', $valor,
+            'Quem tem folga para encolher é o valor, nunca a etiqueta.');
+    }
+
+    /**
+     * A tela aberta tem uma porta só por altura de página: o canto superior direito
+     * chama para entrar e o bloco final fecha a chamada. Um terceiro botão no meio do
+     * hero não leva a lugar novo nenhum — só disputa o clique com os outros dois.
+     */
+    public function test_a_boas_vindas_abre_uma_soa_porta_em_vez_de_tres(): void
+    {
+        $html = $this->get(route('welcome'))->assertOk()->getContent();
+
+        $this->assertSame(2, substr_count($html, 'class="btn btn-'),
+            'A página aberta voltou a oferecer mais de uma chamada para entrar.');
+
+        $hero = $this->recorte($html, 'class="nf-hero"', '</section>');
+        $this->assertStringNotContainsString('class="btn', $hero,
+            'O meio da página chamou o clique de novo: a porta é do cabeçalho.');
+        $this->assertStringNotContainsString('Acessar a plataforma', $html);
+        $this->assertStringNotContainsString('Ver os módulos', $html);
+
+        // O que saiu foi o botão, não o destino: a âncora da vitrine continua lá
+        // para quem chega por um link externo.
+        $this->assertStringContainsString('id="modulos"', $html);
+        $this->assertStringContainsString('href="'.route('login').'"', $html);
+    }
+
+    /**
+     * O botão do menu não troca de glifo: ele dobra. Três barras desenhadas em CSS e
+     * uma única propriedade, `--nf-dobra`, contam se o menu está aberto ou recolhido —
+     * o glifo de biblioteca não tem para onde ir, e um ícone que vira outro é a
+     * mesma informação escrita duas vezes, uma delas sempre atrasada no clique.
+     */
+    public function test_o_botao_do_menu_desenha_o_estado_em_vez_de_trocar_de_glifo(): void
+    {
+        $navbar = file_get_contents(base_path('resources/views/components/app/navbar.blade.php'));
+
+        $this->assertStringNotContainsString('fa-bars', $navbar,
+            'O hambúrguer voltou a ser glifo de biblioteca: ícone não tem estado.');
+        $this->assertStringContainsString('data-lte-toggle="sidebar"', $navbar,
+            'Quem manda no menu continua sendo o contrato do AdminLTE, não um script próprio.');
+        $this->assertStringContainsString('data-nf-menu-toggle', $navbar);
+        $this->assertStringContainsString('aria-controls="navigation"', $navbar,
+            'O botão precisa dizer ao leitor de tela qual região ele governa.');
+        $this->assertSame(3, substr_count($navbar, 'class="nf-nav-toggle-bar"'),
+            'As três barras são o desenho da peça: faltou barra.');
+
+        $componentes = $this->folha('components');
+
+        $botao = $this->bloco($componentes, '.nf-nav-toggle');
+        $this->assertStringContainsString('--nf-dobra: 0', $botao,
+            'O estado abre a folha como variável, e não como classe de tinta.');
+        $this->assertMatchesRegularExpression('/var\(--nf-/', $botao);
+        $this->assertDoesNotMatchRegularExpression('/#[0-9a-fA-F]{3,8}|rgb\(/', $botao,
+            'A peça trouxe tinta fora dos dois temas que a casa já registra.');
+
+        $barra = $this->bloco($componentes, '.nf-nav-toggle-bar');
+        $this->assertStringContainsString('background-color: currentColor', $barra,
+            'A barra herda a tinta do botão: uma propriedade só, sem jogo de classe.');
+        $this->assertStringContainsString('transform-origin: right center', $barra);
+
+        foreach (['.nf-nav-toggle-bar:nth-child(1)', '.nf-nav-toggle-bar:nth-child(3)'] as $seletor) {
+            $this->assertMatchesRegularExpression('/calc\(var\(--nf-dobra\)/', $this->bloco($componentes, $seletor),
+                $seletor.' não acompanha a dobra do menu.');
+        }
+
+        // Os dois quebradores do template são os únicos donos do estado: largo com o
+        // corpo recolhido, estreito com o corpo aberto.
+        $this->assertMatchesRegularExpression(
+            '/@media \(min-width: 992px\)[\s\S]{0,140}body\.sidebar-collapse \.nf-nav-toggle \{\s*--nf-dobra: 1/',
+            $componentes
+        );
+        $this->assertMatchesRegularExpression(
+            '/@media \(max-width: 991\.98px\)[\s\S]{0,200}body\.sidebar-open \.nf-nav-toggle \{\s*--nf-dobra: 0/',
+            $componentes
+        );
+
+        $menu = base_path('resources/js/nexusfield/menu.js');
+        $this->assertFileExists($menu);
+        $js = file_get_contents($menu);
+
+        $this->assertStringContainsString("document.querySelectorAll('[data-nf-menu-toggle]')", $js);
+        $this->assertStringContainsString("attributeFilter: ['class']", $js,
+            'O espelho lê a classe do corpo: sem observer o rótulo ficaria para trás.');
+        $this->assertStringContainsString("setAttribute('aria-expanded'", $js);
+        $this->assertStringNotContainsString('classList.toggle', $js,
+            'O script não manda no menu; ele só conta o que o template já decidiu.');
+
+        $app = file_get_contents(base_path('resources/js/app.js'));
+        $this->assertStringContainsString("import * as menu from './nexusfield/menu';", $app);
+        $this->assertStringContainsString('menu.init();', $app);
+    }
+
+    /**
+     * Corpo de um bloco de topo, procurado pelo seletor normalizado. A prova fala com
+     * a regra, não com o arquivo inteiro: um `assertStringContainsString` solto acharia
+     * a palavra dentro de um comentário e declararia vestida uma peça que não existe.
+     */
+    private function bloco(string $css, string $seletor): string
+    {
+        foreach ($this->blocosNivelUm($css) as $bloco) {
+            if ($bloco['seletor'] === $seletor) {
+                return $bloco['corpo'];
+            }
+        }
+
+        $this->fail('Seletor de topo não encontrado na folha: '.$seletor);
+    }
+
+    /**
+     * Recorte entre um marcador e o primeiro fecho que vem depois dele, para a prova
+     * poder dizer "dentro do hero" em vez de "em algum lugar da página".
+     */
+    private function recorte(string $html, string $abre, string $fecha): string
+    {
+        $inicio = strpos($html, $abre);
+        $this->assertNotFalse($inicio, 'O recorte não achou a abertura: '.$abre);
+
+        $fim = strpos($html, $fecha, $inicio);
+        $this->assertNotFalse($fim, 'O recorte não achou o fecho: '.$fecha);
+
+        return substr($html, $inicio, $fim - $inicio);
     }
 
     /**
