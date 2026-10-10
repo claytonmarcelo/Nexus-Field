@@ -9,6 +9,8 @@ use App\Models\ServiceOrder;
 use App\Models\Technician;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Services\Agenda\AgendamentoDeCompromisso;
+use App\Services\Recusa;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,6 +34,12 @@ use Illuminate\View\View;
  * vê o que é do cliente dela, e o escritório vê a empresa. Isso vale para o JSON do
  * calendário tanto quanto vale para a ficha — o feed filtra antes de montar
  * qualquer evento, então não existe lista escondida por CSS.
+ *
+ * A caneta é de `App\Services\Agenda\AgendamentoDeCompromisso`: agendar, alterar, conduzir
+ * estado, mover a janela do arraste e apagar. Sobram aqui o que só a tela sabe — o alcance
+ * de leitura, a regra de campo e as duas naturezas que o quadro desenha numa chamada só.
+ * A recusa também é do serviço, e aqui ela apenas ganha idioma: 302 com flash para quem
+ * preencheu o formulário, 422 com `mensagem` para quem arrastou o bloco.
  */
 class AgendaController extends Controller
 {
@@ -49,6 +57,8 @@ class AgendaController extends Controller
      * @var array<int, string>
      */
     private const ORDENS_AGENDADAS = ['open', 'in_progress', 'on_hold', 'completed'];
+
+    public function __construct(private readonly AgendamentoDeCompromisso $agenda) {}
 
     public function index(Request $request): View
     {
@@ -126,7 +136,7 @@ class AgendaController extends Controller
         $usuario = $request->user();
         $dados = $request->validate($this->regras($request, $usuario), $this->mensagens());
 
-        $compromisso = Appointment::create($this->normaliza($dados, $usuario));
+        $compromisso = $this->agenda->agendar($dados, $usuario);
 
         return redirect()
             ->route('agenda.show', $compromisso)
@@ -142,7 +152,7 @@ class AgendaController extends Controller
 
         return view('agenda.show', [
             'compromisso' => $compromisso,
-            'proximosEstados' => $this->proximosEstados($compromisso, $usuario),
+            'proximosEstados' => $this->agenda->proximosEstados($compromisso, $usuario),
             'podeEditar' => $usuario->hasPermission('agenda.update') && ! $compromisso->estaTravado(),
         ]);
     }
@@ -152,8 +162,12 @@ class AgendaController extends Controller
         $usuario = $request->user();
         $this->garantirVisivel($compromisso, $usuario);
 
-        if ($compromisso->estaTravado()) {
-            return back()->with('erro', 'Compromisso concluído é fato passado: a janela dele não se edita mais.');
+        // A mesma porta do `update()`: o formulário não abre prometendo uma escrita
+        // que o serviço já recusou.
+        try {
+            $this->agenda->garantirEditavel($compromisso);
+        } catch (Recusa $recusa) {
+            return back()->with($recusa->tom(), $recusa->getMessage());
         }
 
         return view('agenda.form', $this->dadosDaFicha($compromisso, $usuario) + [
@@ -166,13 +180,15 @@ class AgendaController extends Controller
         $usuario = $request->user();
         $this->garantirVisivel($compromisso, $usuario);
 
-        if ($compromisso->estaTravado()) {
-            return back()->with('erro', 'Compromisso concluído é fato passado: a janela dele não se edita mais.');
+        try {
+            $this->agenda->alterar(
+                $compromisso,
+                $request->validate($this->regras($request, $usuario), $this->mensagens()),
+                $usuario
+            );
+        } catch (Recusa $recusa) {
+            return back()->with($recusa->tom(), $recusa->getMessage());
         }
-
-        $compromisso->update($this->normaliza(
-            $request->validate($this->regras($request, $usuario), $this->mensagens()), $usuario
-        ));
 
         return redirect()
             ->route('agenda.show', $compromisso)
@@ -180,8 +196,9 @@ class AgendaController extends Controller
     }
 
     /**
-     * Único caminho que muda o estado do compromisso. Sem trilha à parte: o que
-     * mudou fica na auditoria, com autor e hora, como no resto do domínio.
+     * Único caminho que muda o estado do compromisso, e a travessia é do serviço. Sem
+     * trilha à parte: o que mudou fica na auditoria, com autor e hora, como no resto do
+     * domínio. Aqui a fachada traduz os dois lados da passagem em frase de tela.
      */
     public function mudarStatus(Request $request, Appointment $compromisso): RedirectResponse
     {
@@ -192,81 +209,38 @@ class AgendaController extends Controller
             'estado' => ['required', Rule::in(array_keys(StatusCatalog::options('appointment')))],
         ]);
 
-        $destino = $validado['estado'];
-
-        if (! $compromisso->podeMudarPara($destino)) {
-            return back()->with('erro', sprintf(
-                'O compromisso está “%s” e não pode ir para “%s”: o fluxo da agenda é o que vale.',
-                StatusCatalog::label('appointment', $compromisso->status),
-                StatusCatalog::label('appointment', $destino),
-            ));
+        try {
+            $passagem = $this->agenda->mudarStatus($compromisso, $usuario, $validado['estado']);
+        } catch (Recusa $recusa) {
+            return back()->with($recusa->tom(), $recusa->getMessage());
         }
-
-        if (! array_key_exists($destino, $this->proximosEstados($compromisso, $usuario))) {
-            return back()->with('erro', 'Esta conta não conduz o estado de um compromisso da agenda.');
-        }
-
-        $origem = StatusCatalog::label('appointment', $compromisso->status);
-        $compromisso->update(['status' => $destino]);
 
         return back()->with('status', sprintf(
             'Compromisso “%s”: %s → %s.',
             $compromisso->title,
-            $origem,
-            StatusCatalog::label('appointment', $destino),
+            StatusCatalog::label('appointment', $passagem['de']),
+            StatusCatalog::label('appointment', $passagem['para']),
         ));
     }
 
     /**
-     * Arrastar e soltar no calendário. É a rota que o JavaScript chama, e ela não
-     * confia no que a tela desenhou: confere o alcance, o estado e a janela antes
-     * de escrever qualquer hora.
+     * Arrastar e soltar no calendário. É a rota que o JavaScript chama, e o que ela
+     * aceita ou recusa mora em `AgendamentoDeCompromisso::reagendar()`: a janela torta,
+     * o dia inteiro que se desloca por dias e o fato passado que não muda mais. Aqui a
+     * recusa ganha o idioma do quadro — 422 com a mensagem curta, sem recarregar nada.
      */
     public function reagendar(Request $request, Appointment $compromisso): JsonResponse
     {
         $usuario = $request->user();
         $this->garantirVisivel($compromisso, $usuario);
 
-        if ($compromisso->estaTravado()) {
-            return response()->json([
-                'mensagem' => 'Compromisso concluído não muda mais de janela.',
-            ], 422);
-        }
-
-        $validado = $request->validate([
-            'inicio' => ['required', 'date'],
-            'fim' => ['nullable', 'date'],
-        ], [
-            'fim.after' => 'A janela terminou antes de começar: arraste de novo.',
-        ]);
-
-        $novoInicio = Carbon::parse($validado['inicio']);
-
-        if ($compromisso->all_day) {
-            // Um compromisso de dia inteiro não tem hora a mover: o que o arraste
-            // diz é em que dia ele cai. Desloca a janela inteira pelos dias de
-            // diferença, preservando a duração que já estava gravada. O `copy()` não
-            // é ornamento: sem ele a hora original seria zerada na própria modelo.
-            $dias = $compromisso->starts_at->copy()->startOfDay()
-                ->diffInDays($novoInicio->copy()->startOfDay(), false);
-
-            $compromisso->update([
-                'starts_at' => $compromisso->starts_at->copy()->addDays((int) $dias),
-                'ends_at' => $compromisso->ends_at->copy()->addDays((int) $dias),
-            ]);
-        } else {
-            // O arraste simples manda só o novo início; a duração fica a que estava
-            // gravada. O resize manda os dois lados da janela.
-            $fimBruto = $validado['fim'] ?? null;
-            $novoFim = $fimBruto !== null
-                ? Carbon::parse($fimBruto)
-                : $novoInicio->copy()->addMinutes($compromisso->minutos());
-
-            if (! $novoFim->greaterThan($novoInicio)) {
-                return response()->json(['mensagem' => 'A janela terminou antes de começar: arraste de novo.'], 422);
-            }
-
-            $compromisso->update(['starts_at' => $novoInicio, 'ends_at' => $novoFim]);
+        try {
+            $compromisso = $this->agenda->reagendar($compromisso, $request->validate([
+                'inicio' => ['required', 'date'],
+                'fim' => ['nullable', 'date'],
+            ]));
+        } catch (Recusa $recusa) {
+            return response()->json(['mensagem' => $recusa->getMessage()], 422);
         }
 
         return response()->json([
@@ -285,7 +259,7 @@ class AgendaController extends Controller
         $this->garantirVisivel($compromisso, $usuario);
 
         $titulo = $compromisso->title;
-        $compromisso->delete();
+        $this->agenda->apagar($compromisso);
 
         return redirect()
             ->route('agenda.index')
@@ -438,20 +412,6 @@ class AgendaController extends Controller
         ];
     }
 
-    /**
-     * @return array<string, string> slug => rótulo
-     */
-    private function proximosEstados(Appointment $compromisso, User $usuario): array
-    {
-        if (! $usuario->hasPermission('agenda.update')) {
-            return [];
-        }
-
-        return collect(Appointment::FLUXO[$compromisso->status] ?? [])
-            ->mapWithKeys(fn (string $destino) => [$destino => StatusCatalog::label('appointment', $destino)])
-            ->all();
-    }
-
     private function garantirVisivel(Appointment $compromisso, User $usuario): void
     {
         abort_unless(
@@ -498,31 +458,6 @@ class AgendaController extends Controller
                         ->whereIn('id', Ticket::query()->visiveisPara($usuario)->select('id'));
                 })],
         ];
-    }
-
-    /**
-     * O que a tela não decide, o servidor decide: o cliente herdado daquilo que o
-     * compromisso prende e a carteira de quem escreve. A empresa entra pela trait,
-     * e o estado não passa por aqui — mover estado é botão da ficha.
-     *
-     * @param  array<string, mixed>  $dados
-     * @return array<string, mixed>
-     */
-    private function normaliza(array $dados, User $usuario): array
-    {
-        if ($usuario->client_id !== null) {
-            $dados['client_id'] = $usuario->client_id;
-        }
-
-        // Prender o compromisso a uma ordem ou a um chamado sem levar o cliente
-        // junto deixaria a agenda dizer uma coisa e a ficha dizer outra.
-        if (! empty($dados['service_order_id'])) {
-            $dados['client_id'] = ServiceOrder::query()->findOrFail($dados['service_order_id'])->client_id;
-        } elseif (! empty($dados['ticket_id'])) {
-            $dados['client_id'] = Ticket::query()->findOrFail($dados['ticket_id'])->client_id;
-        }
-
-        return $dados;
     }
 
     /** @return array<string, string> */

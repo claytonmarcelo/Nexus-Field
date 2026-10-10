@@ -231,9 +231,10 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - Duas naturezas no mesmo quadro: o compromisso, que se cria, edita, move e apaga, e a janela marcada na
   ordem de serviço, desenhada tracejada e somente-leitura — mover a ordem é na ficha dela, onde o motivo
   do remanejamento fica registrado
-- Arrastar é escrita no banco: a rota confere alcance, permissão, estado e janela antes de gravar hora e,
-  se recusa, o evento volta ao lugar de onde saiu com o motivo no aviso. Calendário que aceita o que o
-  banco não aceitou é a maneira mais rápida de mentir para quem lê a escala
+- Arrastar é escrita no banco, e a caneta é de `AgendamentoDeCompromisso`: a rota confere o alcance de
+  leitura, o serviço confere permissão, estado e janela antes de gravar hora e, se recusa, o evento volta ao
+  lugar de onde saiu com o motivo no aviso. Calendário que aceita o que o banco não aceitou é a maneira mais
+  rápida de mentir para quem lê a escala
 - Compromisso concluído é fato passado: não se arrasta, não se edita, e o quadro nem oferece o gesto.
   O estado anda só pelo fluxo `agendado → concluído|cancelado` e `cancelado → agendado` — remarcar é
   exatamente o que a agenda serve para fazer
@@ -603,6 +604,7 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 | `LancamentoDeEstoque` | A escrita do estoque: os dois saldos travados na mesma transação, nenhum saldo negativo, e livro-caixa que não se edita nem se apaga |
 | `LancamentoDeConta` | A escrita da conta: ela nasce em aberto porque ninguém digita o que se deriva, a cobrança da ordem vale o que as linhas somam no banco, e ordem e cliente têm de ser da mesma carteira |
 | `RegistroDePagamento` | A escrita do dinheiro: a linha é travada antes de somar, o estado volta da soma do caixa, a data do fato é a do último pagamento, e acima do saldo não entra |
+| `AgendamentoDeCompromisso` | A escrita da agenda: a janela nasce agendada porque estado não se digita, o cliente vem daquilo que o compromisso prende, o arraste preserva a duração gravada e o dia inteiro se desloca por dias inteiros |
 | `Recusa` | A porta pela qual o domínio diz não: salto que o fluxo não tem, ou passo sem permissão, volta como mensagem na tela (`erro` ou `aviso`) em vez de 500 |
 | `PermissionCatalog` | Módulos e ações de permissão em um único lugar, lidos por seeder, menu e middleware |
 | `Roles` | Os cinco papéis de sistema e seus rótulos em português, para o seeder real e o de demonstração não divergirem |
@@ -643,8 +645,8 @@ nexusfield/
 │   │                          notificação, auditoria e anexo
 │   ├── Services/            → FluxoDeOrdem, RegistroDePresenca, FluxoDeChamado,
 │   │                          ConversaDeChamado, LancamentoDeEstoque, LancamentoDeConta,
-│   │                          RegistroDePagamento e Recusa: a escrita de cada módulo,
-│   │                          entre a tela e o banco
+│   │                          RegistroDePagamento, AgendamentoDeCompromisso e Recusa: a
+│   │                          escrita de cada módulo, entre a tela e o banco
 │   └── Support/             → PermissionCatalog, Roles, TenantContext, StatusCatalog, Formatters,
 │                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro,
 │                              Distancia, Navigation, Notifier, Settings, SettingsCatalog,
@@ -1147,12 +1149,17 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
   passos que atravessa a página e desemboca na cobrança, o texto ganhou o segundo fôlego (quem está na rua e
   quem fica dentro), e o hífen parou de cortar palavra nas telas abertas. 826px de hero em 1440px com as duas
   colunas a 56px uma da outra, 0 palavras partidas e 0 estouros em cinco larguras
+- [x] **Camada de Serviços** — a escrita dos domínios de operação saiu do controller: `FluxoDeOrdem` e
+  `RegistroDePresenca` nas ordens e na chegada de campo, `FluxoDeChamado` e `ConversaDeChamado` nos chamados,
+  `LancamentoDeEstoque` no estoque, `LancamentoDeConta` e `RegistroDePagamento` no financeiro,
+  `AgendamentoDeCompromisso` na agenda. Transação, trava de saldo, estado derivado, carimbo de auditoria e sino
+  têm um dono só; à tela ficam o alcance de leitura, a regra de campo e o idioma da resposta
 
 ### A seguir
 
-O plano de reconstrução fechou: da fase 1 à 27, mais a prontidão de deploy, tudo no ar. O que vem
-depois é decisão de operação, não fase: publicar numa máquina real, contratar o primeiro tenant e
-bater o martelo da licença.
+O plano de reconstrução fechou: da fase 1 à 27, mais a prontidão de deploy e a camada de serviços,
+tudo no ar. O que vem depois é decisão de operação, não fase: publicar numa máquina real, contratar o
+primeiro tenant e bater o martelo da licença.
 
 ---
 

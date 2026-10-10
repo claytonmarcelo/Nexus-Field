@@ -1193,6 +1193,25 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   fato, a nota carimbada e a trilha. A prova da fachada lê agora os sete controllers: nenhum deles abre
   transação, cria a linha, trava o saldo, deriva o estado, grava a auditoria ou lança `ValidationException`. A
   suíte fecha em 330 testes / 3209 asserções e o Pint está PASS em 180 arquivos.
+- A agenda foi o último domínio de operação sem caneta própria, e com ela a camada fecha:
+  `App\Services\Agenda\AgendamentoDeCompromisso` passa a ser dono de a janela nascer, ser reescrita, conduzir
+  estado, mudar de lugar no arraste e sair da escala. O controller perdeu 65 linhas e ficou com o que só a tela
+  sabe — o alcance de leitura, a regra de campo e as duas naturezas que o quadro desenha numa chamada só.
+- O estado de entrada é escrito pelo serviço, não pelo padrão da coluna, e `alterar()` não toca em estado:
+  condução tem régua, e a régua é a dupla que sempre existiu na tela — o fluxo (`agendado → concluído|cancelado`,
+  `cancelado → agendado`, concluído terminal) e a permissão (`agenda.update`). `proximosEstados()` mora no
+  serviço de propósito: é a mesma lista que desenha os botões da ficha, então a régua que oferece o passo é a
+  que barra o atalho digitado na URL.
+- As duas línguas da recusa continuaram as duas, porque a agenda é a única tela da casa que escreve em ambas:
+  302 com flash para quem preencheu o formulário, 422 com `mensagem` para quem arrastou o bloco. Nenhuma frase
+  mudou de palavra — incluindo as duas que dizem "concluído" de jeitos diferentes, uma para o cadastro e outra,
+  curta, para o quadro. No caminho saiu uma mensagem de validação órfã (`fim.after`), escrita para uma regra
+  que nunca existiu.
+- `CamadaDeServicosTest` foi a 22 testes / 235 asserções: quatro provas novas escrevem compromisso, conduzem
+  estado, arrastam janela com hora e dia inteiro, recusam a janela torta e apagam a janela sem passar por HTTP,
+  conferindo o cliente herdado, a carteira que não se compra pelo payload, a duração preservada e a trilha. A
+  prova da fachada lê agora os oito controllers. A suíte fecha em 334 testes / 3252 asserções, o Pint está PASS
+  em 181 arquivos e a varredura de navegação nos 73 endereços GET voltou com os desvios de sempre e nenhum 500.
 
 ### Alterado
 

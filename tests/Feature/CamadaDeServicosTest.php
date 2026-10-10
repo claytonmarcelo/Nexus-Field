@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Appointment;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\FinancialRecord;
@@ -18,6 +19,7 @@ use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\TicketStatusHistory;
 use App\Models\User;
+use App\Services\Agenda\AgendamentoDeCompromisso;
 use App\Services\Finance\LancamentoDeConta;
 use App\Services\Finance\RegistroDePagamento;
 use App\Services\Orders\FluxoDeOrdem;
@@ -479,6 +481,7 @@ class CamadaDeServicosTest extends TestCase
         $notas = File::get(base_path('app/Http/Controllers/Tickets/TicketCommentController.php'));
         $contas = File::get(base_path('app/Http/Controllers/Finance/FinancialRecordController.php'));
         $dinheiro = File::get(base_path('app/Http/Controllers/Finance/PaymentController.php'));
+        $escala = File::get(base_path('app/Http/Controllers/Agenda/AgendaController.php'));
 
         // Nenhum dos dois abre transação, cria linha, grava passagem de estado,
         // toca sino nem escreve na trilha: quem faz isso é o serviço, e a tela só
@@ -520,6 +523,15 @@ class CamadaDeServicosTest extends TestCase
             $this->assertStringNotContainsString($proibida, $dinheiro, "A escrita {$proibida} voltou para o controller de pagamentos.");
         }
 
+        // O mesmo corte na agenda: criar a linha, mover a janela, conduzir o estado e
+        // conferir a máquina de estados estão em `AgendamentoDeCompromisso`. O que sobra
+        // na tela é o que só a tela sabe — o alcance de leitura, a regra de campo e o
+        // idioma da recusa: 302 com flash para quem preencheu o formulário, 422 com
+        // `mensagem` para quem arrastou o bloco no quadro.
+        foreach (['Appointment::create', 'Appointment::query()->create', '$compromisso->update(', '$compromisso->delete()', 'Appointment::FLUXO', 'podeMudarPara(', 'DB::transaction', 'Auditor::gravar'] as $proibida) {
+            $this->assertStringNotContainsString($proibida, $escala, "A escrita {$proibida} voltou para o controller de agenda.");
+        }
+
         $this->assertStringContainsString('FluxoDeOrdem', $ordens);
         $this->assertStringContainsString('RegistroDePresenca', $chegadas);
         $this->assertStringContainsString('LancamentoDeEstoque', $estoque);
@@ -527,6 +539,7 @@ class CamadaDeServicosTest extends TestCase
         $this->assertStringContainsString('ConversaDeChamado', $notas);
         $this->assertStringContainsString('LancamentoDeConta', $contas);
         $this->assertStringContainsString('RegistroDePagamento', $dinheiro);
+        $this->assertStringContainsString('AgendamentoDeCompromisso', $escala);
     }
 
     public function test_a_conta_nasce_do_servico_em_aberto_e_o_que_chega_de_fora_nao_entra(): void
@@ -909,6 +922,280 @@ class CamadaDeServicosTest extends TestCase
         } finally {
             TenantContext::forget();
         }
+    }
+
+    public function test_a_janela_nasce_agendada_pelo_servico_e_o_cliente_de_quem_prende_manda(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $outra = $this->makeCompany('bravo');
+
+        $padaria = $this->cliente($empresa, 'Padaria Sant’Anna');
+        $ordem = $this->ordem($empresa, 'OS-2026-0701', 'Instalação de vitrine', ['client_id' => $padaria->id]);
+
+        $agenda = app(AgendamentoDeCompromisso::class);
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            $compromisso = $agenda->agendar([
+                'title' => 'Vistoria pós-instalação',
+                'type' => 'order',
+                'starts_at' => now()->addDay()->startOfDay()->addHours(14),
+                'ends_at' => now()->addDay()->startOfDay()->addHours(16),
+                'service_order_id' => $ordem->id,
+                'all_day' => false,
+                // Estado e carteira tentados por fora: a tela não tem esses campos, e o
+                // serviço não deixa que entrem pela porta dos fundos.
+                'status' => 'completed',
+                'company_id' => $outra->id,
+            ], $admin);
+
+            $this->assertSame('scheduled', $compromisso->status, 'Janela recém-marcada não nasce fato passado.');
+            $this->assertSame($empresa->id, (int) $compromisso->company_id, 'A carteira é do login, nunca do payload.');
+            $this->assertSame($padaria->id, (int) $compromisso->client_id, 'Prender à ordem traz o cliente da ordem, não o que a tela desenhou.');
+            $this->assertNull($compromisso->technician_id, 'Sem técnico escolhido, a janela fica sem dono explícito.');
+            $this->assertSame(120, $compromisso->minutos(), 'A duração é medida da janela gravada, não digitada.');
+
+            // Solta, sem ordem nem chamado presos, o cliente que vem é o da ficha.
+            $soltura = $agenda->agendar([
+                'title' => 'Reunião de escala da semana',
+                'type' => 'custom',
+                'client_id' => $padaria->id,
+                'starts_at' => now()->addDays(2)->startOfDay()->addHours(8),
+                'ends_at' => now()->addDays(2)->startOfDay()->addHours(9),
+                'all_day' => false,
+            ], $admin);
+
+            $this->assertSame($padaria->id, (int) $soltura->client_id);
+            $this->assertSame('scheduled', $soltura->status);
+        } finally {
+            TenantContext::forget();
+        }
+
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $empresa->id,
+            'entity_type' => 'Appointment',
+            'entity_id' => (string) $compromisso->id,
+            'action' => 'criado',
+            'user_id' => $admin->id,
+        ]);
+    }
+
+    public function test_a_passagem_de_estado_e_a_porta_do_cadastro_sao_reguas_do_servico(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $agenda = app(AgendamentoDeCompromisso::class);
+
+        $este = $this->janela($empresa, ['title' => 'Revisão de soveladeira']);
+        $cancelado = $this->janela($empresa, ['title' => 'Visita que não aconteceu', 'status' => 'canceled']);
+        $concluido = $this->janela($empresa, ['title' => 'Manutenção concluída — Bica Quente', 'status' => 'completed']);
+
+        TenantContext::set($empresa->id);
+        $campo = $this->makeUser('technician', $empresa, 'campo@test.local');
+        TenantContext::forget();
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            // A régua que desenha o botão da ficha é a mesma que barra o atalho pela URL.
+            $this->assertSame(['completed', 'canceled'], array_keys($agenda->proximosEstados($este, $admin)));
+            $this->assertSame([], $agenda->proximosEstados($concluido, $admin), 'Concluído é terminal: nenhum passo sai dele.');
+            $this->assertSame(['scheduled'], array_keys($agenda->proximosEstados($cancelado, $admin)), 'Remarcar é exatamente o que uma agenda serve para fazer.');
+
+            $passagem = $agenda->mudarStatus($este, $admin, 'completed');
+            $this->assertSame(['de' => 'scheduled', 'para' => 'completed'], $passagem, 'O serviço devolve vocabulário cru: rótulo é da apresentação.');
+            $this->assertSame('completed', $este->fresh()->status);
+
+            try {
+                $agenda->mudarStatus($cancelado, $admin, 'completed');
+                $this->fail('O serviço deixou um cancelado virar concluído sem voltar a agendado.');
+            } catch (Recusa $recusa) {
+                $this->assertSame('O compromisso está “Cancelado” e não pode ir para “Concluído”: o fluxo da agenda é o que vale.', $recusa->getMessage());
+            }
+
+            $this->assertSame('canceled', $cancelado->fresh()->status, 'Recusa no serviço não escreve estado.');
+
+            try {
+                $agenda->garantirEditavel($concluido);
+                $this->fail('O formulário abriu prometendo editar um fato passado.');
+            } catch (Recusa $recusa) {
+                $this->assertSame('Compromisso concluído é fato passado: a janela dele não se edita mais.', $recusa->getMessage());
+            }
+
+            try {
+                $agenda->alterar($concluido, [
+                    'title' => 'Reescrevendo um fato passado',
+                    'type' => 'visit',
+                    'starts_at' => $concluido->starts_at,
+                    'ends_at' => $concluido->ends_at,
+                ], $admin);
+                $this->fail('O cadastro de um compromisso concluído foi reescrito.');
+            } catch (Recusa $recusa) {
+                $this->assertSame('Compromisso concluído é fato passado: a janela dele não se edita mais.', $recusa->getMessage());
+            }
+
+            $this->assertSame('Manutenção concluída — Bica Quente', $concluido->fresh()->title);
+        } finally {
+            TenantContext::forget();
+        }
+
+        // Quem lê a escala não a conduz: sem `agenda.update` não há passo oferecido e o
+        // POST pela rota do estado volta como recusa, não como escrita silenciosa.
+        $esta = $this->janela($empresa, ['title' => 'Visita de vistoria']);
+
+        $this->actingAs($campo);
+        $this->assertSame([], $agenda->proximosEstados($esta, $campo));
+
+        TenantContext::set($empresa->id);
+        try {
+            try {
+                $agenda->mudarStatus($esta, $campo, 'completed');
+                $this->fail('O técnico conduziu o estado de um compromisso da escala.');
+            } catch (Recusa $recusa) {
+                $this->assertSame('Esta conta não conduz o estado de um compromisso da agenda.', $recusa->getMessage());
+            }
+        } finally {
+            TenantContext::forget();
+        }
+
+        $this->assertSame('scheduled', $esta->fresh()->status);
+    }
+
+    public function test_o_arraste_do_servico_move_a_janela_preservando_o_que_a_tela_nao_manda(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $agenda = app(AgendamentoDeCompromisso::class);
+
+        $comHora = $this->janela($empresa, ['title' => 'Coleta de equipamento para bancada']);
+        $diaInteiro = $this->janela($empresa, [
+            'title' => 'Escala da semana — equipe Centro',
+            'all_day' => true,
+            'starts_at' => now()->startOfDay()->addDay(),
+            'ends_at' => now()->startOfDay()->addDays(3)->addHours(8),
+        ]);
+        $concluido = $this->janela($empresa, ['title' => 'Manutenção concluída', 'status' => 'completed']);
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            $novo = now()->startOfDay()->addDays(6)->addHours(15);
+
+            $movida = $agenda->reagendar($comHora, ['inicio' => $novo->format('Y-m-d\TH:i:s')]);
+            $this->assertSame($novo->toDateTimeString(), $movida->starts_at->toDateTimeString());
+            $this->assertSame($novo->copy()->addHours(2)->toDateTimeString(), $movida->ends_at->toDateTimeString(),
+                'Sem fim na requisição, a duração gravada continua mandando: o arraste move, não encolhe.');
+
+            $redonda = $agenda->reagendar($movida, [
+                'inicio' => $novo->format('Y-m-d\TH:i:s'),
+                'fim' => $novo->copy()->addMinutes(45)->format('Y-m-d\TH:i:s'),
+            ]);
+            $this->assertSame(45, $redonda->minutos(), 'O resize manda os dois lados da janela.');
+
+            $inicioAntes = $diaInteiro->starts_at->copy();
+            $fimAntes = $diaInteiro->ends_at->copy();
+            $queda = now()->startOfDay()->addDays(9)->addHours(13);
+
+            $deslocada = $agenda->reagendar($diaInteiro, ['inicio' => $queda->format('Y-m-d\TH:i:s')]);
+            $dias = $inicioAntes->copy()->startOfDay()->diffInDays($queda->copy()->startOfDay(), false);
+
+            $this->assertSame($inicioAntes->copy()->addDays((int) $dias)->toDateTimeString(), $deslocada->starts_at->toDateTimeString(),
+                'Dia inteiro se move por dias inteiros: a madrugada gravada continua de pé, e não a hora do mouse.');
+            $this->assertSame($fimAntes->copy()->addDays((int) $dias)->toDateTimeString(), $deslocada->ends_at->toDateTimeString(),
+                'A duração que estava gravada acompanha o deslocamento inteiro.');
+
+            $antesInicio = $redonda->starts_at->toDateTimeString();
+            $antesFim = $redonda->ends_at->toDateTimeString();
+
+            try {
+                $agenda->reagendar($redonda, [
+                    'inicio' => $novo->format('Y-m-d\TH:i:s'),
+                    'fim' => $novo->copy()->subHour()->format('Y-m-d\TH:i:s'),
+                ]);
+                $this->fail('O serviço gravou uma janela que termina antes de começar.');
+            } catch (Recusa $recusa) {
+                $this->assertSame('A janela terminou antes de começar: arraste de novo.', $recusa->getMessage());
+            }
+
+            $this->assertSame($antesInicio, $redonda->fresh()->starts_at->toDateTimeString(), 'Janela torta não escreve nada.');
+            $this->assertSame($antesFim, $redonda->fresh()->ends_at->toDateTimeString());
+
+            try {
+                $agenda->reagendar($concluido, ['inicio' => now()->addDays(4)->format('Y-m-d\TH:i:s')]);
+                $this->fail('O serviço moveu a janela de um compromisso concluído.');
+            } catch (Recusa $recusa) {
+                $this->assertSame('Compromisso concluído não muda mais de janela.', $recusa->getMessage(),
+                    'A frase curta do 422 do quadro não é a mesma do 302 do cadastro, e não deveria ser.');
+            }
+
+            $this->assertSame('completed', $concluido->fresh()->status);
+        } finally {
+            TenantContext::forget();
+        }
+    }
+
+    public function test_apagar_a_janela_do_servico_deixa_a_ordem_e_a_janela_dela_no_lugar(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $agenda = app(AgendamentoDeCompromisso::class);
+
+        $ordem = $this->ordem($empresa, 'OS-2026-0702', 'Manutenção da câmara fria', [
+            'scheduled_starts_at' => now()->startOfDay()->addDays(2)->addHours(14),
+            'scheduled_ends_at' => now()->startOfDay()->addDays(2)->addHours(16),
+        ]);
+        $compromisso = $this->janela($empresa, [
+            'title' => 'Janela que vai sair da escala',
+            'service_order_id' => $ordem->id,
+        ]);
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            $agenda->apagar($compromisso);
+        } finally {
+            TenantContext::forget();
+        }
+
+        $this->assertFalse(Appointment::anyCompany()->whereKey($compromisso->id)->exists(), 'O recado saiu do calendário.');
+        $this->assertNotNull($ordem->fresh()->scheduled_starts_at,
+            'Apagar um compromisso da agenda nunca foi verbo de operação: a ordem e a janela dela continuam onde estavam.');
+
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $empresa->id,
+            'entity_type' => 'Appointment',
+            'entity_id' => (string) $compromisso->id,
+            'action' => 'excluido',
+            'user_id' => $admin->id,
+        ]);
+    }
+
+    /**
+     * A janela como o modelo a guarda, para os testes que provam a escrita do serviço sem
+     * passar pela tela. Os extras entram por cima porque cada teste precisa de um estado,
+     * uma duração ou um vínculo diferente.
+     *
+     * @param  array<string, mixed>  $extras
+     */
+    private function janela(Company $empresa, array $extras = []): Appointment
+    {
+        TenantContext::set($empresa->id);
+
+        $janela = Appointment::query()->create($extras + [
+            'company_id' => $empresa->id,
+            'title' => 'Janela escrita pelo serviço',
+            'type' => 'visit',
+            'status' => 'scheduled',
+            'starts_at' => now()->addDay()->startOfDay()->addHours(9),
+            'ends_at' => now()->addDay()->startOfDay()->addHours(11),
+            'all_day' => false,
+        ]);
+
+        TenantContext::forget();
+
+        return $janela;
     }
 
     /**
