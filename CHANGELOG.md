@@ -1212,6 +1212,21 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   conferindo o cliente herdado, a carteira que não se compra pelo payload, a duração preservada e a trilha. A
   prova da fachada lê agora os oito controllers. A suíte fecha em 334 testes / 3252 asserções, o Pint está PASS
   em 181 arquivos e a varredura de navegação nos 73 endereços GET voltou com os desvios de sempre e nenhum 500.
+- **Ficha com histórico real** (`App\Support\FichaHistorico`): a régua de leitura que cliente e
+  técnico passaram a compartilhar — as seis linhas mais recentes de um domínio, as quatro janelas de
+  agenda que ainda vêm mais a última que já passou, e a trilha de auditoria gravada sobre aquela linha
+  exata. Nada aqui escreve: cada domínio continua dono do que grava, e a ficha só conta o que o banco já
+  sabe. A ficha de cliente e a de técnico ganharam os cartões dos domínios — ordens, chamados, agenda,
+  carga, check-ins, a receita lançada no nome do cliente e a trilha da própria linha — e perderam o
+  cartão que só somava.
+- `FichasComHistoricoTest`: 10 testes / 72 asserções escrevendo o trabalho no banco e abrindo a ficha
+  pela HTTP. As ordens que aparecem são as que têm aquele `client_id`; o serviço da tabela vem somado
+  das linhas de duas ordens diferentes (3 × 350 = R$ 1.050,00 numa linha só); a janela de amanhã está na
+  frente e a de cinco dias atrás é citada como a última; quem só tem janela passada recebe o aviso, não
+  a tela limpa; oito ordens no banco viram seis na tela com o oito escrito no subtítulo; a trilha conta
+  os atos desta ficha e não os da vizinha; e os cartões de caixa e auditoria não nascem para o técnico
+  de campo, que abre a mesma URL. A suíte fecha em 344 testes / 3324 asserções, o Pint está PASS em 183
+  arquivos e a varredura de navegação nos 73 endereços GET voltou com os desvios de sempre e nenhum 500.
 
 ### Alterado
 
@@ -1483,6 +1498,19 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   de uma carteira e conta da base, pagas no dia em que teriam sido pagas) mais duas baixas datadas de hoje,
   fechando em 29 contas (17 receitas, 12 despesas) e 22 pagamentos com dinheiro real em seis meses para a
   série desenhar.
+- A ficha parou de repetir número. O cartão "O que este cliente já gerou" e o "O que este técnico já
+  gerou" saíram de cena: a contagem agora mora dentro do cartão do domínio que a possui — "Ordens de
+  serviço · 8 ordens registradas", "Chamados · 2 chamados registrados", "Agenda · 1 janela reservada" —
+  e o link de cada cartão leva justamente à listagem filtrada (`?cliente=`, `?tecnico=`), que é a mesma
+  consulta que o cartão acabara de podar em seis linhas. `historico()` ficou nos dois controllers, mas
+  como regra de exclusão: apagar cadastro que já gerou trabalho é recusado no servidor, e isso não é
+  número de tela.
+- Toda leitura de ficha passou por `visiveisPara()` antes de virar linha, incluindo o `DB::table` que
+  soma os serviços: as ordens visíveis de quem abre a tela é que mandam no conjunto. Um técnico com
+  `clients.view` que abre a ficha de um cliente vê a ordem dele — não a carteira da empresa, nem o
+  serviço que a ordem do colega cobrou. Caixa e trilha obedecem aos degraus `financial.view` e
+  `audit.view`, e o botão "Financeiro deste cliente" do cabeçalho saiu de cena porque o cartão novo já
+  é o financeiro filtrado nele.
 
 ### Corrigido
 

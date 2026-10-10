@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Technicians;
 
 use App\Http\Controllers\Concerns\EmEdicao;
 use App\Http\Controllers\Controller;
+use App\Models\Appointment;
+use App\Models\ServiceOrder;
 use App\Models\Specialty;
 use App\Models\Technician;
+use App\Models\Ticket;
 use App\Models\User;
+use App\Support\FichaHistorico;
 use App\Support\ListFilters;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
@@ -21,6 +25,10 @@ use Illuminate\View\View;
  * empresa aberta na sessão; a localização que aparece aqui é a última medida de
  * verdade (coluna `latitude`/`longitude` com `last_location_at`), gravada pelo
  * check-in da fase 15 — nunca um ponto desenhado na tela.
+ *
+ * A ficha também é o que ele já fez: as ordens e os chamados no nome dele, a
+ * janela que a agenda reservou, a carga que ele carrega e a trilha da própria
+ * linha. Nada disso é digitado aqui — cada cartão lê o domínio que o grava.
  */
 class TechnicianController extends Controller
 {
@@ -68,13 +76,42 @@ class TechnicianController extends Controller
             ->with('status', "Técnico “{$tecnico->name}” cadastrado.");
     }
 
+    /**
+     * O cadastro e o trabalho: ordens no nome dele, chamados que ele puxou, as
+     * janelas que a agenda ainda reserva para ele, a carga que está na mão dele,
+     * os últimos check-ins medidos e a trilha da própria linha.
+     *
+     * "Ordem com ele" é exatamente a coluna que a listagem filtra por `?tecnico=`,
+     * então o cartão e a lista mostram o mesmo conjunto — e o link do cartão leva
+     * justamente àquela lista. O alcance de quem abre a tela entra antes da
+     * contagem: a ficha não é uma porta para o quadro de outro técnico.
+     */
     public function show(Request $request, Technician $tecnico): View
     {
         $tecnico->load(['specialties', 'teams', 'addresses', 'user']);
+        $usuario = $request->user();
+
+        $ordens = ServiceOrder::query()->visiveisPara($usuario)->where('technician_id', $tecnico->id);
+        $chamados = Ticket::query()->visiveisPara($usuario)->where('technician_id', $tecnico->id);
 
         return view('technicians.show', [
             'tecnico' => $tecnico,
-            'historico' => $this->historico($tecnico),
+            'totalOrdens' => (clone $ordens)->count(),
+            'ordens' => (clone $ordens)
+                ->with(['client:id,name', 'service:id,name'])
+                ->orderByDesc('scheduled_starts_at')
+                ->limit(FichaHistorico::REGISTROS_NA_FICHA)
+                ->get(),
+            'totalChamados' => (clone $chamados)->count(),
+            'chamados' => (clone $chamados)
+                ->with(['client:id,name'])
+                ->latest('opened_at')
+                ->limit(FichaHistorico::REGISTROS_NA_FICHA)
+                ->get(),
+            'agenda' => FichaHistorico::janelas(
+                Appointment::query()->visiveisPara($usuario)->where('technician_id', $tecnico->id),
+            ),
+            'trilha' => $usuario->hasPermission('audit.view') ? FichaHistorico::trilha($tecnico) : null,
             'situacoes' => StatusCatalog::options('technician'),
             'tiposDeEndereco' => StatusCatalog::options('address'),
             'especialidades' => $tecnico->specialties->pluck('name')->all(),
@@ -171,7 +208,13 @@ class TechnicianController extends Controller
         return ListFilters::relacionado($query, $request, 'especialidade', 'specialties');
     }
 
-    /** @return array<int, array{singular: string, plural: string, total: int}> */
+    /**
+     * A regra de exclusão, contada no banco. A ficha não repete esta soma num
+     * cartão de contagens: cada número já vive no cartão do domínio que o exibe,
+     * e a frase de recusa continua dizendo tudo.
+     *
+     * @return array<int, array{singular: string, plural: string, total: int}>
+     */
     private function historico(Technician $tecnico): array
     {
         return [

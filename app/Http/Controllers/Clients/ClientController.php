@@ -5,14 +5,22 @@ namespace App\Http\Controllers\Clients;
 use App\Http\Controllers\Concerns\EmEdicao;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
+use App\Models\Appointment;
 use App\Models\Client;
+use App\Models\FinancialRecord;
+use App\Models\ServiceOrder;
+use App\Models\Ticket;
+use App\Models\User;
 use App\Support\Export;
+use App\Support\FichaHistorico;
 use App\Support\ListFilters;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -21,6 +29,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * Cadastro de clientes da empresa aberta na sessão. A consulta, o filtro e a
  * página vêm do MySQL desta empresa — o escopo global de tenant garante isso, e
  * nenhuma lista ou exportação atravessa para a empresa ao lado.
+ *
+ * A ficha não é só o cadastro: ela devolve o trabalho que aquele cliente já
+ * gerou, lido do banco na hora e pelo alcance de quem abriu a tela. É por isso
+ * que cada número mora no cartão do domínio dele — nenhum cartão de contagens
+ * soltas, nenhum valor digitado na tela.
  */
 class ClientController extends Controller
 {
@@ -62,13 +75,48 @@ class ClientController extends Controller
             ->with('status', "Cliente “{$cliente->name}” cadastrado.");
     }
 
+    /**
+     * A ficha: o cadastro, os contatos, os endereços e o que ele já gerou —
+     * ordens, chamados, as janelas que ainda vêm no calendário, os serviços que
+     * saíram das ordens dele, o caixa no nome dele e a trilha da própria linha.
+     *
+     * O alcance entra antes de tudo: um técnico com `clients.view` aberto nesta
+     * ficha vê as ordens e os chamados dele próprio neste cliente, não a carteira
+     * inteira da empresa. Os dois cartões de gestão (financeiro e trilha) só
+     * existem para quem tem o degrau de leitura deles, e por isso o controller
+     * devolve `null` quando a conta não tem — a tela não decide sozinha o que o
+     * banco já decidiu.
+     */
     public function show(Request $request, Client $cliente): View
     {
         $cliente->load(['contacts', 'addresses']);
+        $usuario = $request->user();
+
+        $ordens = ServiceOrder::query()->visiveisPara($usuario)->where('client_id', $cliente->id);
+        $chamados = Ticket::query()->visiveisPara($usuario)->where('client_id', $cliente->id);
 
         return view('clients.show', [
             'cliente' => $cliente,
-            'historico' => $this->historico($cliente),
+            'totalOrdens' => (clone $ordens)->count(),
+            'ordens' => (clone $ordens)
+                ->with(['technician:id,name', 'service:id,name'])
+                // A mesma régua de ordenação da listagem: a ficha mostra o que a
+                // lista mostraria por cima.
+                ->orderByDesc('scheduled_starts_at')
+                ->limit(FichaHistorico::REGISTROS_NA_FICHA)
+                ->get(),
+            'totalChamados' => (clone $chamados)->count(),
+            'chamados' => (clone $chamados)
+                ->with(['technician:id,name'])
+                ->latest('opened_at')
+                ->limit(FichaHistorico::REGISTROS_NA_FICHA)
+                ->get(),
+            'agenda' => FichaHistorico::janelas(
+                Appointment::query()->visiveisPara($usuario)->where('client_id', $cliente->id),
+            ),
+            'servicos' => $this->servicosUsados($cliente, $usuario),
+            'financas' => $usuario->hasPermission('financial.view') ? $this->financas($cliente) : null,
+            'trilha' => $usuario->hasPermission('audit.view') ? FichaHistorico::trilha($cliente) : null,
             'situacoes' => StatusCatalog::options('client'),
             'tiposDeEndereco' => StatusCatalog::options('address'),
             'contatoEmEdicao' => $this->emEdicao($request, 'editar_contato', $cliente->contacts),
@@ -183,7 +231,14 @@ class ClientController extends Controller
             : $query->whereHas('addresses', fn (Builder $endereco) => $endereco->where('city', $cidade));
     }
 
-    /** @return array<int, array{singular: string, plural: string, total: int}> */
+    /**
+     * A regra de exclusão, contada no banco. A ficha não expõe esta soma num
+     * cartão próprio: cada um destes números vive no cartão do domínio que o
+     * mostra, e a frase de recusa continua dizendo tudo — a informação existe uma
+     * vez, não duas.
+     *
+     * @return array<int, array{singular: string, plural: string, total: int}>
+     */
     private function historico(Client $cliente): array
     {
         return [
@@ -208,6 +263,58 @@ class ClientController extends Controller
                 'total' => $cliente->financialRecords()->count(),
             ],
         ];
+    }
+
+    /**
+     * Os serviços que saíram das ordens deste cliente, somados no MySQL: em
+     * quantas ordens entraram, quantas unidades e quanto isso já virou de conta.
+     * Não existe cadastro de "serviços do cliente" — o que ele usa é o que as
+     * linhas das ordens dele cobram, e é de lá que o número vem.
+     *
+     * `DB::table` não passa pelo escopo global de tenant, então o recorte vem dos
+     * ids das ordens que aquele usuário enxerga neste cliente: a mesma consulta
+     * que a listagem de ordens faria. Linha de produto (sem `service_id`) fica
+     * fora por construção do `join`, e um serviço retirado do catálogo depois
+     * continua na conta que ele já gerou.
+     *
+     * @return Collection<int, object>
+     */
+    private function servicosUsados(Client $cliente, User $usuario): Collection
+    {
+        $ordens = ServiceOrder::query()
+            ->visiveisPara($usuario)
+            ->where('client_id', $cliente->id)
+            ->select('id');
+
+        return DB::table('service_order_items')
+            ->join('services', 'services.id', '=', 'service_order_items.service_id')
+            ->whereIn('service_order_items.service_order_id', $ordens)
+            ->selectRaw('services.name as servico, '
+                .'count(distinct service_order_items.service_order_id) as ordens, '
+                .'sum(service_order_items.quantity) as quantidade, '
+                .'sum(service_order_items.quantity * service_order_items.unit_price - service_order_items.discount) as valor')
+            ->groupBy('services.id', 'services.name')
+            ->orderByDesc('valor')
+            ->limit(FichaHistorico::REGISTROS_NA_FICHA)
+            ->get();
+    }
+
+    /**
+     * O caixa no nome deste cliente, somado pela mesma expressão da listagem
+     * financeira (`FinancialRecord::totais`): a ficha não tem régua própria, e o
+     * que ela mostra é o que a lista mostra filtrada nele.
+     *
+     * Receita, porque é o que ele deve; despesa da empresa por causa dele não é
+     * dívida dele, e misturar os dois num cartão intitulado "o que ele deve"
+     * seria a conta errada com o número certo.
+     *
+     * @return array{registros: int, bruto: float, pago: float, em_aberto: float, vencido: int, vencido_valor: float}
+     */
+    private function financas(Client $cliente): array
+    {
+        return FinancialRecord::totais(
+            FinancialRecord::query()->where('client_id', $cliente->id)->revenue(),
+        );
     }
 
     /** Cidades que realmente aparecem nos endereços desta empresa. */

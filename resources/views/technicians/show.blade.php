@@ -6,6 +6,26 @@
         'type' => 'service',
         'is_primary' => $tecnico->addresses->isEmpty(),
     ]);
+
+    // Um substantivo com dois números, no singular ou no plural, como a casa faz
+    // desde a fase 10: a tela concorda com o banco em vez de dizer "1 ordens".
+    $contagem = fn (int $total, string $singular, string $plural) => $total === 1 ? "1 {$singular}" : "{$total} {$plural}";
+
+    $resumoOrdens = match (true) {
+        $totalOrdens === 0 => 'Nenhuma ordem apontada para ele ainda.',
+        $totalOrdens === 1 => 'Uma ordem no nome dele — ela está aqui.',
+        default => $contagem($totalOrdens, 'ordem no nome dele', 'ordens no nome dele').' — as mais recentes primeiro.',
+    };
+
+    $resumoChamados = match (true) {
+        $totalChamados === 0 => 'Nenhum chamado com ele.',
+        $totalChamados === 1 => 'Um chamado no nome dele — ele está aqui.',
+        default => $contagem($totalChamados, 'chamado no nome dele', 'chamados no nome dele').' — os mais recentes primeiro.',
+    };
+
+    $resumoAgenda = $agenda['total'] === 0
+        ? 'Nenhuma janela reservada para ele.'
+        : $contagem($agenda['total'], 'janela reservada', 'janelas reservadas').' — as que ainda vêm estão aqui.';
 @endphp
 
 <x-layouts.app
@@ -108,24 +128,7 @@
         </div>
 
         <div class="col-12 col-xl-5">
-            <x-ui.card title="O que este técnico já gerou" subtitle="Contagem contada no banco, agora.">
-                <ul class="nf-fact-list mb-0">
-                    @foreach ($historico as $linha)
-                        <li>
-                            <span>{{ $linha['total'] === 1 ? $linha['singular'] : $linha['plural'] }}</span>
-                            <strong class="nf-mono">{{ $linha['total'] }}</strong>
-                        </li>
-                    @endforeach
-                </ul>
-
-                @if (array_sum(array_column($historico, 'total')) > 0)
-                    <p class="nf-text-muted-2 small mb-0 mt-2">
-                        Enquanto houver qualquer um destes registros, a ficha não pode ser excluída — inative o técnico.
-                    </p>
-                @endif
-            </x-ui.card>
-
-            <x-ui.card title="Especialidades" subtitle="O que a ficha diz que ele resolve." class="mt-3">
+            <x-ui.card title="Especialidades" subtitle="O que a ficha diz que ele resolve.">
                 @if ($especialidades === [])
                     <x-ui.state tone="empty" title="Nenhuma especialidade marcada"
                         text="A ordem de serviço pode ser distribuída, mas o filtro por competência não vai encontrar este técnico." />
@@ -267,10 +270,207 @@
         </div>
     </div>
 
+    <div class="row g-3 mt-1">
+        @can('orders.view')
+            <div class="col-12 col-xl-7">
+                <x-ui.card title="Ordens com ele" :subtitle="$resumoOrdens">
+                    <x-slot:tools>
+                        <a class="nf-text-muted-2" href="{{ route('orders.index', ['tecnico' => $tecnico->id]) }}">
+                            Ver todas as ordens dele
+                        </a>
+                    </x-slot:tools>
+
+                    @if ($ordens->isEmpty())
+                        <x-ui.state tone="empty" title="Nenhuma ordem no nome dele"
+                            text="Enquanto a escala não apontar uma ordem para este técnico, não há o que medir de execução no nome dele." />
+                    @else
+                        <ul class="nf-itens mb-0">
+                            @foreach ($ordens as $ordem)
+                                <li class="nf-item-linha nf-item-linha-lado">
+                                    <div>
+                                        <p class="mb-0">
+                                            <a class="fw-semibold nf-mono" href="{{ route('orders.show', $ordem) }}">
+                                                {{ $ordem->number }}
+                                            </a>
+                                        </p>
+                                        <p class="mb-0 nf-text-muted-2 small">{{ $ordem->title }}</p>
+                                        <p class="mb-0 nf-text-muted-2 small">
+                                            @if ($ordem->scheduled_starts_at)
+                                                <span class="nf-mono">{{ Formatters::dateTime($ordem->scheduled_starts_at) }}</span>
+                                            @else
+                                                sem janela marcada
+                                            @endif
+                                            · {{ $ordem->client?->name ?? 'cliente removido do cadastro' }}
+                                        </p>
+                                    </div>
+
+                                    <span class="{{ StatusCatalog::badge('order', $ordem->status) }}">
+                                        {{ StatusCatalog::label('order', $ordem->status) }}
+                                    </span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </x-ui.card>
+            </div>
+        @endcan
+
+        @can('agenda.view')
+            <div class="col-12 col-xl-5">
+                <x-ui.card title="Agenda dele" :subtitle="$resumoAgenda">
+                    <x-slot:tools>
+                        <a class="nf-text-muted-2" href="{{ route('agenda.index', ['tecnico' => $tecnico->id]) }}">
+                            Abrir o calendário dele
+                        </a>
+                    </x-slot:tools>
+
+                    @if ($agenda['total'] === 0)
+                        <x-ui.state tone="empty" title="Nenhuma janela reservada para ele"
+                            text="A agenda é o que combina a visita antes de ela acontecer; sem compromisso, a ordem dele é executada quando a central chamar." />
+                    @else
+                        @if ($agenda['proximas']->isNotEmpty())
+                            <ul class="nf-itens mb-0">
+                                @foreach ($agenda['proximas'] as $janela)
+                                    <li class="nf-item-linha nf-item-linha-lado">
+                                        <div>
+                                            <p class="mb-0">
+                                                <a class="fw-semibold" href="{{ route('agenda.show', $janela) }}">
+                                                    {{ $janela->title }}
+                                                </a>
+                                            </p>
+                                            <p class="mb-0 nf-text-muted-2 small nf-mono">
+                                                {{ $janela->all_day
+                                                    ? Formatters::date($janela->starts_at).' · dia inteiro'
+                                                    : Formatters::dateTime($janela->starts_at).' → '.Formatters::time($janela->ends_at) }}
+                                            </p>
+                                            <p class="mb-0 nf-text-muted-2 small">
+                                                {{ StatusCatalog::label('appointment_type', $janela->type) }}
+                                                @if ($janela->client)
+                                                    · {{ $janela->client->name }}
+                                                @endif
+                                                @if ($janela->serviceOrder)
+                                                    · <span class="nf-mono">{{ $janela->serviceOrder->number }}</span>
+                                                @endif
+                                            </p>
+                                        </div>
+
+                                        <span class="{{ StatusCatalog::badge('appointment', $janela->status) }}">
+                                            {{ StatusCatalog::label('appointment', $janela->status) }}
+                                        </span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @else
+                            <p class="nf-text-muted-2 small mb-0">
+                                Nenhuma janela por vir: o que está registrado já passou ou foi cancelado.
+                            </p>
+                        @endif
+
+                        @if ($agenda['passada'])
+                            <p class="nf-text-muted-2 small mb-0 mt-2">
+                                Última janela no nome dele:
+                                <span class="nf-mono">{{ Formatters::dateTime($agenda['passada']->starts_at) }}</span>
+                                · {{ StatusCatalog::label('appointment', $agenda['passada']->status) }}.
+                            </p>
+                        @endif
+                    @endif
+                </x-ui.card>
+            </div>
+        @endcan
+    </div>
+
+    <div class="row g-3 mt-1">
+        @can('tickets.view')
+            <div class="col-12 col-xl-7">
+                <x-ui.card title="Chamados com ele" :subtitle="$resumoChamados">
+                    <x-slot:tools>
+                        <a class="nf-text-muted-2" href="{{ route('tickets.index', ['tecnico' => $tecnico->id]) }}">
+                            Ver todos os chamados dele
+                        </a>
+                    </x-slot:tools>
+
+                    @if ($chamados->isEmpty())
+                        <x-ui.state tone="empty" title="Nenhum chamado no nome dele"
+                            text="Chamado com técnico apontado é o que mede a resposta dele depois que uma ordem concluída quebra de novo." />
+                    @else
+                        <ul class="nf-itens mb-0">
+                            @foreach ($chamados as $chamado)
+                                <li class="nf-item-linha nf-item-linha-lado">
+                                    <div>
+                                        <p class="mb-0">
+                                            <a class="fw-semibold nf-mono" href="{{ route('tickets.show', $chamado) }}">
+                                                {{ $chamado->protocol }}
+                                            </a>
+                                        </p>
+                                        <p class="mb-0 nf-text-muted-2 small">{{ $chamado->subject }}</p>
+                                        <p class="mb-0 nf-text-muted-2 small">
+                                            <span class="nf-mono">{{ Formatters::dateTime($chamado->opened_at) }}</span>
+                                            · {{ StatusCatalog::label('priority', $chamado->priority) }}
+                                            · {{ $chamado->client?->name ?? 'cliente removido do cadastro' }}
+                                        </p>
+                                    </div>
+
+                                    <span class="{{ StatusCatalog::badge('ticket', $chamado->status) }}">
+                                        {{ StatusCatalog::label('ticket', $chamado->status) }}
+                                    </span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </x-ui.card>
+            </div>
+        @endcan
+
+        @if ($trilha !== null)
+            <div class="col-12 col-xl-5">
+                <x-ui.card title="Trilha desta ficha" subtitle="Os últimos atos gravados sobre esta linha da escala.">
+                    <x-slot:tools>
+                        <a class="nf-text-muted-2" href="{{ route('audit.index', ['entidade' => 'Technician']) }}">
+                            Auditoria de técnicos
+                        </a>
+                    </x-slot:tools>
+
+                    @if ($trilha->isEmpty())
+                        <x-ui.state tone="empty" title="Nenhum ato registrado nesta ficha"
+                            text="Ficha criada por carga inicial não tem autor de tela: a trilha começa a contar a partir da primeira edição feita aqui." />
+                    @else
+                        <ul class="nf-itens mb-0">
+                            @foreach ($trilha as $ato)
+                                <li class="nf-item-linha nf-item-linha-lado">
+                                    <div>
+                                        <p class="mb-0">
+                                            <span class="nf-status nf-status-draft">{{ $ato->action }}</span>
+                                        </p>
+                                        <p class="mb-0 nf-text-muted-2 small">
+                                            <span class="nf-mono">{{ Formatters::dateTime($ato->created_at) }}</span>
+                                            · {{ $ato->user_name ?: 'sem autor' }}
+                                        </p>
+                                        @if ($ato->description)
+                                            <p class="mb-0 nf-text-muted-2 small">{{ $ato->description }}</p>
+                                        @endif
+                                    </div>
+
+                                    <x-ui.button variant="ghost" size="sm" :href="route('audit.show', $ato)"
+                                        icon="fa-solid fa-eye">Abrir</x-ui.button>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </x-ui.card>
+            </div>
+        @endif
+    </div>
+
     @can('stock.view')
         <div class="row g-3 mt-1">
             <div class="col-12">
                 <x-ui.card title="Carga no nome dele" subtitle="Estado material da mala, somado das movimentações que passaram por este técnico.">
+                    <x-slot:tools>
+                        <a class="nf-text-muted-2" href="{{ route('movements.index', ['tecnico' => $tecnico]) }}">
+                            Ver as movimentações dele
+                        </a>
+                    </x-slot:tools>
+
                     @if ($carga->isEmpty())
                         <x-ui.state tone="empty" title="Nenhuma unidade carregada">
                             Nada saiu do estoque central para este técnico — ou tudo o que foi levado já
@@ -319,12 +519,6 @@
                             unidades.
                         </p>
                     @endif
-
-                    <x-slot:tools>
-                        <a class="nf-text-muted-2" href="{{ route('movements.index', ['tecnico' => $tecnico]) }}">
-                            Ver as movimentações dele
-                        </a>
-                    </x-slot:tools>
                 </x-ui.card>
             </div>
         </div>

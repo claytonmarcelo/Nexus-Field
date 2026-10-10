@@ -153,11 +153,15 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 ### Cadastros
 
 - **Clientes**: lista com busca, situação e cidade, paginação própria e exportação CSV; ficha com
-  contatos e endereços cadastrados em linha; exclusão lógica com restauração, e o servidor recusa
-  excluir quem já gerou ordem, chamado ou lançamento
+  contatos e endereços cadastrados em linha, as ordens e os chamados mais recentes dele, as janelas
+  de agenda que ainda vêm, os serviços somados das linhas das ordens, a receita lançada no nome dele
+  e a trilha da própria linha — cada número no cartão do domínio que o possui, nenhum repetido;
+  exclusão lógica com restauração, e o servidor recusa excluir quem já gerou ordem, chamado ou
+  lançamento
 - **Técnicos**: escala com busca, situação, região e especialidade; ficha com especialidades, equipes
-  (com data de entrada e de saída), base de trabalho com endereços e os últimos check-ins medidos em
-  campo, contados na tabela de check-in
+  (com data de entrada e de saída), base de trabalho com endereços, as ordens e os chamados no nome
+  dele, as janelas que a agenda ainda reserva, a carga medida na mala, os últimos check-ins contados
+  na tabela de check-in e a trilha da própria linha
 - **Equipes**: quadro com líder, entrada e saída de membro gravadas na tabela intermediária — a
   passagem anterior continua histórica —, as ordens que a equipe tem em aberto e exclusão só permitida
   com quadro vazio
@@ -610,6 +614,7 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 | `Roles` | Os cinco papéis de sistema e seus rótulos em português, para o seeder real e o de demonstração não divergirem |
 | `TenantContext` / `CompanyScope` / `ResolveCompany` | Isolamento por empresa em toda query |
 | `DashboardMetrics` | As contagens do painel, todas em SQL contra a empresa logada |
+| `FichaHistorico` | A régua de leitura da ficha: as linhas mais recentes de um domínio, as janelas de agenda que ainda vêm com a última que passou, e a trilha gravada sobre aquela linha — cliente e técnico medidos pela mesma mão |
 | `StatusCatalog` / `Formatters` | Estados e formatações (dinheiro, decimal, data, hora, duração e unidade) num único lugar |
 | `ListFilters` | Busca, filtro por coluna, ordenação e por-página lidos do query string |
 | `Export` | CSV com BOM e separador `;`, escrito a partir da mesma consulta da tela |
@@ -650,7 +655,7 @@ nexusfield/
 │   └── Support/             → PermissionCatalog, Roles, TenantContext, StatusCatalog, Formatters,
 │                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro,
 │                              Distancia, Navigation, Notifier, Settings, SettingsCatalog,
-│                              Relatorio e MotivoErro
+│                              Relatorio, MotivoErro e FichaHistorico
 ├── bootstrap/               → inicialização e registro de rotas
 ├── config/                  → banco, sessão, filesystem, temas
 ├── database/
@@ -1154,6 +1159,11 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
   `LancamentoDeEstoque` no estoque, `LancamentoDeConta` e `RegistroDePagamento` no financeiro,
   `AgendamentoDeCompromisso` na agenda. Transação, trava de saldo, estado derivado, carimbo de auditoria e sino
   têm um dono só; à tela ficam o alcance de leitura, a regra de campo e o idioma da resposta
+- [x] **Fichas com histórico** — a ficha de cliente e a de técnico pararam de ser formulário com resumo:
+  `FichaHistorico` é a régua compartilhada de leitura (as seis linhas mais recentes de um domínio, as
+  quatro janelas que ainda vêm mais a última que passou, e a trilha da própria linha), cada número foi
+  morar no cartão do domínio que o possui, e toda leitura passa por `visiveisPara()` antes de virar
+  linha — inclusive o `DB::table` que soma os serviços cobrados
 
 ### A seguir
 
