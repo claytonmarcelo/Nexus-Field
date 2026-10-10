@@ -1,6 +1,6 @@
 <x-auth-shell
     title="Recuperar acesso"
-    subtitle="Informe o e-mail da sua conta. Enviaremos um link de redefinição."
+    subtitle="Informe o e‑mail da sua conta. Enviaremos um link de redefinição."
     :with-login="true"
 >
     <form method="POST" action="{{ route('password.email') }}" data-nf-guard novalidate>

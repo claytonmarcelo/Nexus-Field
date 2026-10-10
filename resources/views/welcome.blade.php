@@ -22,12 +22,18 @@
                         <div class="col-12 col-lg-7">
                             <p class="nf-label">Gestão de operações em campo</p>
                             <h1 class="nf-display nf-hero-title">
-                                A operação externa inteira em um só lugar — do chamado aberto até a assinatura do cliente.
+                                A operação externa inteira em um só lugar — do chamado aberto à assinatura do cliente.
                             </h1>
                             <p class="nf-hero-text">
-                                Ordens de serviço, chamados, agenda, check-in com geolocalização, estoque e financeiro
-                                conversando entre si. Cada tela mostra apenas o que o papel do usuário pode ver, e o
-                                servidor recusa o resto.
+                                Quem está na rua registra uma vez. Quem acompanha de dentro vê o mesmo fato no
+                                instante em que ele acontece — a ordem, a posição do técnico, a peça que saiu do
+                                estoque e o custo que ela levou. Uma ficha só, sem planilha paralela para
+                                conciliar no fim do mês.
+                            </p>
+                            <p class="nf-hero-text">
+                                Para quem está na rua, a visita se registra no celular e fecha com a
+                                assinatura. Para quem fica, o painel abre mostrando o que venceu prazo, o
+                                que está em campo e o que vence nos próximos dias.
                             </p>
                             {{-- Nenhuma porta de entrada no meio da página. Ela já
                                  existe no canto superior direito, e a chamada fecha
@@ -37,7 +43,10 @@
                         <div class="col-12 col-lg-5">
                             {{-- O medalhão pendurado no próprio eixo: balança com
                                  amplitude cada vez menor e assenta nivelado, que é
-                                 o que a plataforma faz com a operação do cliente. --}}
+                                 o que a plataforma faz com a operação do cliente.
+                                 Ele é a única coisa nesta coluna: o ciclo desceu
+                                 para a faixa própria, e as duas metades da abertura
+                                 pesam a mesma coisa. --}}
                             <div class="nf-brand-stage">
                                 <img
                                     class="nf-brand-stage-logo"
@@ -48,23 +57,36 @@
                                 />
                                 <span class="nf-brand-stage-nivel" aria-hidden="true"></span>
                             </div>
-
-                            <div class="nf-flow-panel">
-                                <p class="nf-label">O ciclo de um serviço</p>
-                                <ol class="nf-flow">
-                                    @foreach ([
-                                        'Chamado registrado',
-                                        'Ordem de serviço aberta',
-                                        'Técnico designado e agendado',
-                                        'Check-in no local, com posição',
-                                        'Consumo de estoque lançado',
-                                        'Aceite do cliente e histórico',
-                                    ] as $passo)
-                                        <li>{{ $passo }}</li>
-                                    @endforeach
-                                </ol>
-                            </div>
                         </div>
+                    </div>
+
+                    {{-- O ciclo fecha a abertura em faixa larga. Ele morava embaixo
+                         do medalhão, numa coluna estreita, e era isso que deixava o
+                         lado do texto sem chão: tirado de lá, o hero ganha base e a
+                         esteira passa a ser lida na ordem em que ela acontece. --}}
+                    <div class="nf-flow-panel nf-hero-ciclo">
+                        <p class="nf-label">O ciclo de um serviço</p>
+                        <ol class="nf-flow">
+                            @foreach ([
+                                'Chamado aberto com prioridade e prazo',
+                                'Ordem de serviço emitida e sequenciada',
+                                'Técnico designado, janela na agenda',
+                                'Check‑in no endereço, dentro do raio',
+                                'Peça baixada do estoque na ordem',
+                                'Assinatura colhida, histórico fechado',
+                            ] as $passo)
+                                <li>{{ $passo }}</li>
+                            @endforeach
+                        </ol>
+
+                        {{-- A esteira desemboca em algum lugar, e o lugar é o caixa: a
+                             casa não cobra por botão, cobra pelo serviço terminado, no
+                             valor que as próprias linhas do serviço somam no banco. --}}
+                        <p class="nf-text-muted-2 mt-3 mb-0">
+                            Cada passo alimenta o seguinte. O serviço assinado é o que abre
+                            a cobrança da ordem, e o que ela cobra é o valor que as linhas
+                            do próprio serviço somam.
+                        </p>
                     </div>
                 </div>
             </section>
@@ -75,8 +97,8 @@
                         <p class="nf-label">Módulos integrados</p>
                         <h2 class="nf-display nf-section-title">Um módulo alimenta o outro</h2>
                         <p class="nf-section-text">
-                            A mesma base de clientes, técnicos, itens e ordens serve ao operacional e ao financeiro.
-                            Nada é digitado duas vezes, nada é informado à mão.
+                            A mesma base de clientes, técnicos, itens e ordens serve ao operacional e ao
+                            financeiro. Cada cartão abaixo é uma tela do sistema, com rota e permissão próprias.
                         </p>
                     </header>
 
@@ -85,7 +107,7 @@
                             ['fa-solid fa-clipboard-list', 'Ordens de serviço', 'Abertura, designação, execução e aceite, com estados controlados e histórico completo.'],
                             ['fa-solid fa-headset', 'Chamados', 'Fila priorizada por urgência e prazo, com vínculo direto à ordem que a resolve.'],
                             ['fa-solid fa-calendar-days', 'Agenda', 'Calendário por técnico, equipe e cliente, arrastando da demanda para a janela real.'],
-                            ['fa-solid fa-location-crosshairs', 'Check-in em campo', 'Entrada e saída do local com posição registrada, comprovando o que foi executado.'],
+                            ['fa-solid fa-location-crosshairs', 'Check‑in em campo', 'Entrada e saída do local com posição registrada, comprovando o que foi executado.'],
                             ['fa-solid fa-boxes-stacked', 'Estoque', 'Saldo somado das movimentações, carga do técnico e consumo lançado na ordem que o gastou.'],
                             ['fa-solid fa-chart-line', 'KPIs e relatórios', 'SLA, custo, produtividade e faturamento calculados sobre o que está no banco.'],
                         ] as [$icone, $titulo, $texto])
@@ -141,7 +163,7 @@
                                     <h2 class="nf-section-title">Entrar e sair sem rastro</h2>
                                     <p class="card-text">
                                         Troca de identificador da sessão após o login, tentativa limitada por
-                                        e-mail e endereço, sessão invalidada e token renovado no logout, e senha
+                                        e‑mail e endereço, sessão invalidada e token renovado no logout, e senha
                                         somente com hash.
                                     </p>
                                 </div>
@@ -169,8 +191,8 @@
                         <div>
                             <h2 class="nf-display nf-cta-title">Comece pela operação que já existe</h2>
                             <p class="nf-cta-text mb-0">
-                                Entre com a conta da sua empresa e monte clientes, técnicos, agenda e ordens a partir
-                                do primeiro acesso.
+                                A conta chega pela sua empresa: quem administra o ambiente cria o usuário e mede o
+                                alcance de cada papel. Não há cadastro aberto para esta plataforma.
                             </p>
                         </div>
                         <x-ui.button href="{{ route('login') }}" variant="primary" size="lg" icon="fa-solid fa-arrow-right">

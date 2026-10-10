@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-316%20testes%20%2F%203030%20asser%C3%A7%C3%B5es-brightgreen" alt="316 testes, 3030 asserções">
+  <img src="https://img.shields.io/badge/testes-318%20testes%20%2F%203050%20asser%C3%A7%C3%B5es-brightgreen" alt="318 testes, 3050 asserções">
 </p>
 
 <p align="center">
@@ -484,7 +484,7 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - A virada de tema desliza em 200ms, e só ela: o script veste `nf-tema-virando` no `<html>` durante o
   clique e solta 260ms depois. Transição permanente faria a página subir do branco em toda recarga, e o
   cookie com o script inline do `<head>` existem justamente para o tema chegar antes da primeira pintura
-- A folha não guarda peça de vitrine: as 204 classes `nf-` dos seis arquivos de estilo são varridas em
+- A folha não guarda peça de vitrine: as 205 classes `nf-` dos seis arquivos de estilo são varridas em
   teste contra Blade, JavaScript, controller e seeder — o que ninguém veste sai da folha, porque duas
   maneiras de escrever a mesma coisa, uma delas nunca lida, é exatamente a repetição que este desenho vetou
 - A folha também não se desmente: nenhum seletor de topo declara a mesma propriedade duas vezes. Vinte
@@ -510,6 +510,15 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   no celular). Aberto, as barras paralelas com a do meio mais curta são o menu recolhido em miniatura; fechado,
   elas se dobram num `>`. `menu.js` não manda no menu — espelha a classe do `<body>` em `aria-expanded`,
   `aria-label` e `title`, para o leitor de tela não continuar dizendo "Expandir" depois de o menu ter aberto
+- A abertura fecha em faixa própria, não em vão: a esteira do ciclo é irmã do row e atravessa a página
+  inteira — seis passos numerados, o fio que nasce de um disco e morre no seguinte, e um fecho que diz onde ela
+  desemboca. O serviço assinado é o que abre a cobrança da ordem, no valor que as próprias linhas somam: a
+  mesma régua que o financeiro aplica quando a ordem ainda não terminou. No meio-tablet a faixa vira duas
+  colunas e no celular, uma lista vertical
+- Hífen não é corte na casca pública: o quebra-linhas trata o traço comum como oportunidade de quebra, e "e-"
+  numa linha com "mail" na seguinte é a mesma palavra que ninguém lê de uma vez. Nos termos que correm em
+  parágrafo, título ou item das telas abertas a casa escreve o hífen que não quebra (U+2011) — `e‑mail`,
+  `Check‑in`. Etiqueta de formulário e nome da marca seguem com o traço de sempre: palavra sozinha não parte
 - Tema claro/escuro persistido em `localStorage` e em cookie, aplicado antes da primeira pintura
 - O menu veste o tema da página: no claro ele é a superfície elevada com o verde de marca em quem está
   ativo, no escuro encosta no preto e só o fio de borda separa as duas áreas
@@ -944,7 +953,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **316 testes / 3030 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **318 testes / 3050 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, perfil próprio com chave e senha trocadas só mediante a senha atual, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
@@ -994,9 +1003,11 @@ que o banco devolveu no dia, cobra a régua entre o número do cartão e o perí
 nascer onde não há série, nem anel nascer onde a ficha não tinha prazo, nem tinta nova entrar na folha dos
 componentes. A demonstração também é provada como história: a hora em que cada ordem terminou é a mesma hora
 gravada na trilha de estado, na saída da visita de campo e na liberação da comissão do técnico. E a camada de
-apresentação tem régua travada: `CoerenciaVisualTest` (9 testes / 126 asserções) varre as 204 classes `nf-`
-da folha contra a interface, não deixa o layout partir palavra no meio, conta duas — não três — chamadas para
-entrar na tela aberta e prova que o botão do menu desenha o próprio estado em CSS, com tinta só dos tokens.
+apresentação tem régua travada: `CoerenciaVisualTest` (11 testes / 146 asserções) varre as 205 classes `nf-`
+da folha contra a interface, não deixa o layout partir palavra no meio nem o hífen cortá-la no meio da frase,
+conta duas — não três — chamadas para entrar na tela aberta, prova que o botão do menu desenha o próprio estado
+em CSS com tinta só dos tokens, e prende a abertura da boas-vindas na faixa que a fecha: seis passos, fora da
+coluna do medalhão, desembocando na cobrança.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -1107,10 +1118,14 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 - [x] **Fase 26** — Apresentação sem ruído: a boas-vindas ficou com uma porta de entrada só, o botão do menu
   ganhou desenho e estado próprios, e a palavra parou de se partir ao meio — `anywhere` fora das seis folhas,
   `pretty` e `balance` nas linhas que sobravam, provado nó de texto a nó de texto em 1440px e 390px
+- [x] **Fase 27** — A abertura fecha em faixa própria: o ciclo desceu do medalhão para uma esteira de seis
+  passos que atravessa a página e desemboca na cobrança, o texto ganhou o segundo fôlego (quem está na rua e
+  quem fica dentro), e o hífen parou de cortar palavra nas telas abertas. 826px de hero em 1440px com as duas
+  colunas a 56px uma da outra, 0 palavras partidas e 0 estouros em cinco larguras
 
 ### A seguir
 
-O plano de reconstrução fechou: da fase 1 à 26, mais a prontidão de deploy, tudo no ar. O que vem
+O plano de reconstrução fechou: da fase 1 à 27, mais a prontidão de deploy, tudo no ar. O que vem
 depois é decisão de operação, não fase: publicar numa máquina real, contratar o primeiro tenant e
 bater o martelo da licença.
 

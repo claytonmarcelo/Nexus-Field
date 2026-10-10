@@ -9,7 +9,7 @@
     :subtitle="$motivo !== '' ? $motivo : 'O endereço cobrado não existe — ou o registro saiu da casa.'"
 >
     <p class="nf-auth-subtitle">
-        Nada foi inventado para responder aqui. Se o link veio de um e-mail antigo ou de um
+        Nada foi inventado para responder aqui. Se o link veio de um e‑mail antigo ou de um
         registro excluído, volte para a lista do módulo e procure de novo: a busca da plataforma
         acha o que está vivo.
     </p>

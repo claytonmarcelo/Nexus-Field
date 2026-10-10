@@ -8,14 +8,15 @@ use Tests\TestCase;
 
 /**
  * O briefing "Premium Gourmet" fecha na camada de apresentação, e apresentação que
- * ninguém veste é entropia. Estas provas amarram o global em oito pontas: a espera
+ * ninguém veste é entropia. Estas provas amarram o global ponta a ponta: a espera
  * real da agenda tem esqueleto em vez de silêncio, a virada de tema desliza em
  * duzentos milissegundos sem pintar a recarga, nenhum caminho de rede é escrito duas
  * vezes na mesma tela, a folha não declara a mesma propriedade para o mesmo seletor
  * (o primeiro valor nunca é pintado), nenhuma classe `nf-` fica esperando uso de uma
  * interface que não existe, nenhuma palavra se parte ao meio porque o layout cedeu
- * antes dela, a tela aberta oferece uma só porta de entrada, e o botão do menu
- * desenha o próprio estado em vez de trocar de glifo.
+ * antes dela, a tela aberta oferece uma só porta de entrada, o botão do menu desenha
+ * o próprio estado em vez de trocar de glifo, a abertura da boas-vindas fecha em
+ * faixa própria em vez de vão, e o hífen da casca pública não vira quebra de palavra.
  */
 class CoerenciaVisualTest extends TestCase
 {
@@ -278,6 +279,76 @@ class CoerenciaVisualTest extends TestCase
         // para quem chega por um link externo.
         $this->assertStringContainsString('id="modulos"', $html);
         $this->assertStringContainsString('href="'.route('login').'"', $html);
+    }
+
+    /**
+     * A abertura não pode terminar no meio do próprio texto. A esteira do ciclo morava
+     * embaixo do medalhão, numa coluna de cinco doze avos, e o lado da letra ficava sem
+     * chão: tirada de lá, ela virou faixa larga irmã do row, e o hero passa a fechar no
+     * conteúdo que atravessa a página inteira.
+     */
+    public function test_a_abertura_da_boas_vindas_fecha_em_faixa_propria(): void
+    {
+        $html = $this->get(route('welcome'))->assertOk()->getContent();
+        $hero = $this->recorte($html, 'class="nf-hero"', '</section>');
+
+        $medalhao = $this->recorte($hero, 'class="col-12 col-lg-5"', '</div>');
+        $this->assertStringContainsString('nf-brand-stage-logo', $medalhao);
+        $this->assertStringNotContainsString('nf-flow-panel', $medalhao,
+            'A esteira voltou a morar embaixo do medalhão: era ela que abria o vão na coluna do texto.');
+
+        $painel = $this->recorte($hero, 'nf-flow-panel', '</div>');
+        $this->assertSame(6, substr_count($painel, '<li>'),
+            'O ciclo é a esteira da casa: seis passos, na ordem em que eles acontecem.');
+        $this->assertMatchesRegularExpression('/<\/ol>\s*<p class="nf-text-muted-2/', $painel,
+            'A faixa precisa dizer onde desemboca: sem fecho, a esteira é só uma lista de desejos.');
+
+        $publica = $this->folha('public');
+        $this->assertMatchesRegularExpression('/margin-top/', $this->bloco($publica, '.nf-hero-ciclo'),
+            'A faixa sem respiro próprio cola na letra que fecha o hero.');
+        $this->assertMatchesRegularExpression('/margin-top/', $this->bloco($publica, '.nf-hero-text + .nf-hero-text'),
+            'Os dois fôlegos do bloco de texto voltaram a ser digitados um em cima do outro.');
+    }
+
+    /**
+     * Hífen comum é oportunidade de quebra para o quebra-linhas: "e-" no fim de uma
+     * linha e "mail" na seguinte é a mesma palavra que ninguém lê como uma só. Na
+     * prosa das telas abertas a casa escreve esses termos com o hífen que não quebra
+     * (U+2011). O nome da marca fica fora da régua — ele é escrito com o traço do
+     * registro em todo lugar, e uma etiqueta de formulário sozinha nunca parte.
+     */
+    public function test_o_hifen_da_casca_publica_nao_vira_quebra_de_palavra(): void
+    {
+        $paginas = [
+            route('welcome') => 'boas-vindas',
+            route('login') => 'entrada',
+            route('password.request') => 'recuperação',
+            '/endereco-que-nao-existe' => 'não encontrada',
+        ];
+
+        foreach ($paginas as $url => $rotulo) {
+            $html = preg_replace('/<!--[\s\S]*?-->/', '', $this->get($url)->getContent());
+
+            $esta = [];
+
+            // Só o que corre em parágrafo, título ou item: é aí que a linha se enche
+            // e o traço vira corte.
+            preg_match_all('/<(p|h[1-3]|li)\b[^>]*>(.*?)<\/\1>/s', $html, $blocos);
+
+            foreach ($blocos[2] as $trecho) {
+                preg_match_all('/[\p{L}]+-[\p{L}]+/u', trim(strip_tags($trecho)), $acertos);
+
+                foreach ($acertos[0] as $palavra) {
+                    if ($palavra !== 'NEXUS-FIELD' && $palavra !== 'Nexus-Field') {
+                        $esta[] = $palavra;
+                    }
+                }
+            }
+
+            $this->assertSame([], array_unique($esta),
+                "A página {$rotulo} voltou a oferecer um hífen que quebra a palavra: "
+                    .implode(', ', array_unique($esta)));
+        }
     }
 
     /**

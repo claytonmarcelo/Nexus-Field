@@ -1107,6 +1107,25 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   exatamente duas chamadas para entrar e nenhuma dentro do hero, e o botão do menu é a peça descrita acima,
   vestida só com tinta dos tokens. A suíte fecha em 316 testes / 3030 asserções, Pint PASS em 175 arquivos e a
   varredura nos mesmos 73 endereços GET — 66×200, 5×302, 1×403, 1×404, nenhum 5xx e nenhuma marca de quebra.
+- O ciclo de um serviço virou faixa própria da abertura. A esteira morava embaixo do medalhão, numa coluna de
+  cinco doze avos, e o lado da letra ficava sem chão. Agora ela é irmã do row e atravessa a página inteira:
+  seis passos numerados, o fio que nasce de um disco e morre no seguinte, e um fecho que diz onde a esteira
+  desemboca — o serviço assinado é o que abre a cobrança da ordem, e o que ela cobra é o valor que as linhas
+  do próprio serviço somam, a mesma régua que o financeiro aplica quando a ordem ainda não terminou
+  (`ORDEM_COBRAVEL`). No meio-tablet a faixa vira duas colunas e no celular, uma lista vertical com o fio
+  voltando ao eixo do disco.
+- A abertura ganhou o segundo fôlego do texto: quem está na rua registra a visita no celular e fecha com a
+  assinatura; quem fica dentro abre o painel e vê o que venceu prazo, o que está em campo e o que vence nos
+  próximos dias — as três leituras que o painel entrega hoje, não uma promessa de módulo. O medalhão subiu de
+  teto em `clamp()` (320px → 360px) para pesar o mesmo que a letra ao lado, e os seis passos foram reescritos
+  no mesmo tamanho de frase, cada um com o artefato que produz: "dentro do raio" é o raio que a empresa
+  configura em Configurações, não um número de vitrine.
+- `CoerenciaVisualTest` ganhou duas provas e fecha em 11 testes / 146 asserções: a esteira não pode voltar a
+  morar dentro da coluna do medalhão, a faixa tem de fechar em seis passos com parágrafo de desemboque, e o
+  texto que corre em parágrafo, título ou item das quatro telas abertas (boas-vindas, entrada, recuperação e
+  404) não pode oferecer um hífen que o quebra-linhas use como corte. A suíte fecha em 318 testes / 3050
+  asserções, Pint PASS em 175 arquivos e a varredura nos mesmos 73 endereços GET — 66×200, 5×302, 1×403,
+  1×404, nenhum 5xx.
 
 ### Alterado
 
@@ -1380,6 +1399,23 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   série desenhar.
 
 ### Corrigido
+
+- A boas-vindas abriu um vão onde antes havia um botão, e uma palavra continuou se partindo no hífen.
+
+  * Tirados os três chamados do meio do hero, a coluna da letra ficou sem nada embaixo: o row centralizava
+    duas metades de alturas diferentes e a esteira, presa embaixo do medalhão, não alcançava o lado do texto.
+    A faixa desceu para irmã do row, o texto ganhou o segundo fôlego e o medalhão subiu de teto: o hero fecha
+    em 826px em 1440px com as duas colunas a 56px uma da outra, e o vão embaixo da letra virou respiro dividido
+    entre as duas metades. 0 estouros horizontais em 1440, 1280, 1024, 768 e 390.
+  * Faltava uma segunda família de quebra, e ela não é do `overflow-wrap`: o quebra-linhas do navegador trata
+    o hífen comum como oportunidade de corte, então "e-mail" chegou a pintar "e-" no fim de uma linha e
+    "mail" na seguinte dentro do cartão de Sessão. Nos termos que correm em parágrafo, título ou item das
+    telas abertas a casa passou a escrever o hífen que não quebra (U+2011): `e‑mail`, `Check‑in`. Etiqueta de
+    formulário e nome da marca ficaram com o traço de sempre — palavra sozinha em linha nunca parte, e a
+    marca é escrita com o traço do registro em todo lugar.
+  * A prova é a mesma varredura nó a nó de texto, agora em cinco larguras mais o retrato do celular, com o
+    Chrome headless confirmando `transborda: false` nos dois temas: 0 palavras partidas, 0 estouros, e as
+    duas regras presas em `CoerenciaVisualTest`.
 
 - A palavra se partia ao meio porque o layout cedeu antes dela.
 
