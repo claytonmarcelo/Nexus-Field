@@ -4,7 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Client;
 use App\Models\Company;
+use App\Models\FinancialRecord;
+use App\Models\Payment;
 use App\Models\Product;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderCheckin;
 use App\Models\ServiceOrderStatusHistory;
@@ -15,6 +18,8 @@ use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\TicketStatusHistory;
 use App\Models\User;
+use App\Services\Finance\LancamentoDeConta;
+use App\Services\Finance\RegistroDePagamento;
 use App\Services\Orders\FluxoDeOrdem;
 use App\Services\Orders\RegistroDePresenca;
 use App\Services\Recusa;
@@ -472,6 +477,8 @@ class CamadaDeServicosTest extends TestCase
         $estoque = File::get(base_path('app/Http/Controllers/Stock/MovementController.php'));
         $chamados = File::get(base_path('app/Http/Controllers/Tickets/TicketController.php'));
         $notas = File::get(base_path('app/Http/Controllers/Tickets/TicketCommentController.php'));
+        $contas = File::get(base_path('app/Http/Controllers/Finance/FinancialRecordController.php'));
+        $dinheiro = File::get(base_path('app/Http/Controllers/Finance/PaymentController.php'));
 
         // Nenhum dos dois abre transação, cria linha, grava passagem de estado,
         // toca sino nem escreve na trilha: quem faz isso é o serviço, e a tela só
@@ -500,11 +507,466 @@ class CamadaDeServicosTest extends TestCase
             $this->assertStringNotContainsString($proibida, $notas, "A escrita {$proibida} voltou para o controller de notas.");
         }
 
+        // O mesmo corte no financeiro. Aqui a lista é dupla porque são duas fachadas:
+        // a conta (`LancamentoDeConta`) e o dinheiro (`RegistroDePagamento`). Travar a
+        // linha, somar no banco, derivar o estado, escrever a linha e gravar a trilha
+        // estão fora das duas — e `recalcularEstado()` fora das duas é o que impede o
+        // select de "Pago" de voltar para a tela.
+        foreach (['DB::transaction', 'Auditor::gravar', 'FinancialRecord::query()->create', 'Payment::query()->create', 'lockForUpdate', 'recalcularEstado', '$registro->update(', '$registro->delete()', 'ValidationException'] as $proibida) {
+            $this->assertStringNotContainsString($proibida, $contas, "A escrita {$proibida} voltou para o controller de contas.");
+        }
+
+        foreach (['DB::transaction', 'Auditor::gravar', 'Payment::query()->create', 'FinancialRecord::query()->create', 'lockForUpdate', 'recalcularEstado', 'ValidationException', 'Formatters::money'] as $proibida) {
+            $this->assertStringNotContainsString($proibida, $dinheiro, "A escrita {$proibida} voltou para o controller de pagamentos.");
+        }
+
         $this->assertStringContainsString('FluxoDeOrdem', $ordens);
         $this->assertStringContainsString('RegistroDePresenca', $chegadas);
         $this->assertStringContainsString('LancamentoDeEstoque', $estoque);
         $this->assertStringContainsString('FluxoDeChamado', $chamados);
         $this->assertStringContainsString('ConversaDeChamado', $notas);
+        $this->assertStringContainsString('LancamentoDeConta', $contas);
+        $this->assertStringContainsString('RegistroDePagamento', $dinheiro);
+    }
+
+    public function test_a_conta_nasce_do_servico_em_aberto_e_o_que_chega_de_fora_nao_entra(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $padaria = $this->cliente($empresa, 'Padaria Sant’Anna');
+        $contas = app(LancamentoDeConta::class);
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            $receita = $contas->criar($this->formularioDeConta([
+                'descricao' => 'Contrato de manutenção de outubro',
+                'valor' => '850.00',
+                'vencimento' => '2026-11-10',
+                'cliente_id' => $padaria->id,
+                'observacao' => 'Cobre a câmara fria e as vitrines da frente.',
+                // Ninguém digita estado nem data do fato: o serviço nem olha para aqui.
+                'status' => FinancialRecord::PAID,
+                'occurred_at' => '2026-10-01',
+            ]));
+
+            $despesa = $contas->criar($this->formularioDeConta([
+                'tipo' => FinancialRecord::EXPENSE,
+                'categoria' => 'deslocamento',
+                'descricao' => 'Combustível da semana',
+                'valor' => 120,
+                'vencimento' => '2026-10-20',
+                'cliente_id' => $padaria->id,
+            ]));
+        } finally {
+            TenantContext::forget();
+        }
+
+        $this->assertSame(FinancialRecord::PENDING, $receita->status, 'O estado nasce em aberto: conta quitada sem dinheiro é número inventado.');
+        $this->assertNull($receita->occurred_at, 'Sem pagamento não há data do fato: nada aconteceu ainda.');
+        $this->assertSame($empresa->id, (int) $receita->company_id);
+        $this->assertSame(850.00, (float) $receita->amount);
+        $this->assertSame($padaria->id, (int) $receita->client_id);
+        $this->assertSame('Contrato de manutenção de outubro', $receita->description);
+        $this->assertSame('contrato_mensal', $receita->category);
+
+        // Despesa tem fornecedor, e fornecedor não está no schema desta casa: a
+        // carteira que chegar junto é descartada, não aplicada.
+        $this->assertSame(FinancialRecord::EXPENSE, $despesa->type);
+        $this->assertNull($despesa->client_id);
+        $this->assertSame(120.00, (float) $despesa->amount);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'entity_type' => 'FinancialRecord',
+            'entity_id' => (string) $receita->id,
+            'action' => 'lançamento financeiro',
+            'user_id' => $admin->id,
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'entity_type' => 'FinancialRecord',
+            'entity_id' => (string) $receita->id,
+            'action' => 'criado',
+        ]);
+    }
+
+    public function test_a_ordem_de_outro_cliente_e_a_conta_meio_paga_que_muda_de_valor_sao_recusadas_no_servico(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $padaria = $this->cliente($empresa, 'Padaria Sant’Anna');
+        $vinha = $this->cliente($empresa, 'Vinha d’Uva');
+        $ordem = $this->ordem($empresa, 'OS-2026-0501', 'Câmara fria da Padaria', ['client_id' => $padaria->id]);
+
+        $contas = app(LancamentoDeConta::class);
+        $dinheiro = app(RegistroDePagamento::class);
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            // A validação de campo confere cada um sozinho e não enxerga o par: é o
+            // serviço que barra a cobrança da Vinha contra a ordem da Padaria.
+            try {
+                $contas->criar($this->formularioDeConta([
+                    'descricao' => 'Cobrança que trocou de cliente',
+                    'cliente_id' => $vinha->id,
+                    'ordem_id' => $ordem->id,
+                ]));
+                $this->fail('A conta de um cliente ficou presa à ordem de outro.');
+            } catch (ValidationException $falha) {
+                $this->assertArrayHasKey('ordem_id', $falha->errors());
+                $this->assertStringContainsString('pertence a', strval($falha->errors()['ordem_id'][0]));
+            }
+
+            $conta = $contas->criar($this->formularioDeConta([
+                'descricao' => 'Mensalidade da vitrine da Padaria',
+                'valor' => '500.00',
+                'cliente_id' => $padaria->id,
+            ]));
+
+            $dinheiro->registrar($conta, $admin, ['valor' => '200.00', 'metodo' => 'pix', 'data' => '2026-10-02']);
+
+            try {
+                $contas->alterar($conta->fresh(), $this->formularioDeConta([
+                    'descricao' => 'Mensalidade da vitrine da Padaria',
+                    'valor' => '900.00',
+                    'cliente_id' => $padaria->id,
+                ]));
+                $this->fail('O valor de uma conta meio paga foi mexido.');
+            } catch (ValidationException $falha) {
+                $this->assertArrayHasKey('valor', $falha->errors());
+                $this->assertStringContainsString('mover a régua', strval($falha->errors()['valor'][0]));
+            }
+
+            try {
+                $contas->alterar($conta->fresh(), $this->formularioDeConta([
+                    'tipo' => FinancialRecord::EXPENSE,
+                    'categoria' => 'estoque',
+                    'descricao' => 'Mensalidade que virou compra',
+                    // O valor é o da conta: o que muda aqui é o lado da moeda, e a
+                    // régua tem de acusar o campo `tipo`, não o número que ficou igual.
+                    'valor' => '500.00',
+                ]));
+                $this->fail('Uma receita meio recebida virou despesa.');
+            } catch (ValidationException $falha) {
+                $this->assertArrayHasKey('tipo', $falha->errors());
+            }
+
+            // O que não mexe em valor nem tipo passa: acertar vencimento e descrição é
+            // do dia a dia, e o estado continua sendo o que a soma diz.
+            $ajustada = $contas->alterar($conta->fresh(), $this->formularioDeConta([
+                'descricao' => 'Mensalidade da vitrine — acertada na tela',
+                'valor' => '500.00',
+                'vencimento' => '2026-12-05',
+                'cliente_id' => $padaria->id,
+            ]));
+
+            $this->assertSame('Mensalidade da vitrine — acertada na tela', $ajustada->description);
+            $this->assertSame(FinancialRecord::PARTIAL, $ajustada->status, 'A alteração não tocou no estado derivado.');
+            $this->assertSame(200.00, (float) $ajustada->valorPago());
+        } finally {
+            TenantContext::forget();
+        }
+
+        $this->assertSame(0, FinancialRecord::query()->where('description', 'Cobrança que trocou de cliente')->count());
+    }
+
+    public function test_o_dinheiro_registrado_pelo_servico_movimento_estado_data_do_fato_e_trilha(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $padaria = $this->cliente($empresa, 'Padaria Sant’Anna');
+        $contas = app(LancamentoDeConta::class);
+        $dinheiro = app(RegistroDePagamento::class);
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            $conta = $contas->criar($this->formularioDeConta([
+                'descricao' => 'Mensalidade da vitrine',
+                'valor' => '500.00',
+                'vencimento' => '2026-10-20',
+                'cliente_id' => $padaria->id,
+            ]));
+
+            $primeiro = $dinheiro->registrar($conta, $admin, [
+                'valor' => '200.00',
+                'metodo' => 'pix',
+                'data' => '2026-10-02',
+                'referencia' => 'Pix 02/10 da recepção',
+            ]);
+
+            $this->assertSame(FinancialRecord::PARTIAL, $primeiro['estado']);
+            $this->assertSame(200.00, (float) $primeiro['conta']->valorPago());
+            $this->assertStringContainsString('faltam R$ 300,00', $primeiro['resumo']);
+            $this->assertSame('Pix 02/10 da recepção', $primeiro['pagamento']->reference);
+
+            // A data do fato é a do último pagamento registrado, e não a de hoje.
+            $this->assertSame('2026-10-02', $conta->fresh()->occurred_at->toDateString());
+
+            // Acima do saldo não entra: a resposta devolve quanto falta.
+            try {
+                $dinheiro->registrar($conta->fresh(), $admin, ['valor' => '900.00', 'metodo' => 'pix', 'data' => '2026-10-03']);
+                $this->fail('A conta aceitou R$ 900 quando faltavam R$ 300.');
+            } catch (ValidationException $falha) {
+                $this->assertStringContainsString('Faltam R$ 300,00', strval($falha->errors()['valor'][0]));
+            }
+
+            $ultimo = $dinheiro->registrar($conta->fresh(), $admin, [
+                'valor' => '300.00',
+                'metodo' => 'credit_card',
+                'data' => '2026-10-04',
+            ]);
+
+            $this->assertSame(FinancialRecord::PAID, $ultimo['estado']);
+            $this->assertStringContainsString('recebido — R$ 500,00 de R$ 500,00', $ultimo['resumo']);
+            $this->assertSame('2026-10-04', $conta->fresh()->occurred_at->toDateString(), 'O último pagamento é o que dá a data do fato.');
+
+            try {
+                $dinheiro->registrar($conta->fresh(), $admin, ['valor' => '10.00', 'metodo' => 'cash', 'data' => '2026-10-05']);
+                $this->fail('Conta quitada recebeu pagamento.');
+            } catch (ValidationException $falha) {
+                $this->assertStringContainsString('já está quitada', strval($falha->errors()['valor'][0]));
+            }
+
+            // Estorno devolve o estado que a soma forma sem a linha desfeita.
+            $estorno = $dinheiro->estornar($conta->fresh(), $ultimo['pagamento'], $admin);
+
+            $this->assertSame(FinancialRecord::PARTIAL, $estorno['estado']);
+            $this->assertStringContainsString('estornado', $estorno['resumo']);
+            $this->assertSame(1, Payment::query()->where('financial_record_id', $conta->id)->count());
+            $this->assertSame(200.00, (float) $conta->fresh()->valorPago());
+
+            // Cancelar conta com dinheiro dentro é recusado no campo do motivo: o
+            // cancelamento apagaria a expectativa de caixa, não o que mudou de mão.
+            try {
+                $contas->cancelar($conta->fresh(), 'Não dava para cancelar com entrada.');
+                $this->fail('Uma conta com pagamento foi cancelada.');
+            } catch (ValidationException $falha) {
+                $this->assertArrayHasKey('motivo', $falha->errors());
+                $this->assertStringContainsString('Estorne o pagamento antes', strval($falha->errors()['motivo'][0]));
+            }
+
+            $this->assertDatabaseHas('audit_logs', [
+                'entity_type' => 'FinancialRecord',
+                'entity_id' => (string) $conta->id,
+                'action' => 'pagamento de conta',
+                'user_id' => $admin->id,
+            ]);
+            $this->assertDatabaseHas('audit_logs', [
+                'entity_type' => 'FinancialRecord',
+                'entity_id' => (string) $conta->id,
+                'action' => 'estorno de pagamento',
+            ]);
+        } finally {
+            TenantContext::forget();
+        }
+    }
+
+    public function test_cancelar_reabrir_e_apagar_andam_pelo_servico_com_o_motivo_carimbado_na_nota(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $contas = app(LancamentoDeConta::class);
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            $conta = $contas->criar($this->formularioDeConta(['descricao' => 'Conta que foi cancelada', 'valor' => '200.00']));
+
+            try {
+                $contas->reabrir($conta);
+                $this->fail('Reabriu conta que nunca foi cancelada.');
+            } catch (Recusa $recusa) {
+                $this->assertSame('erro', $recusa->tom());
+                $this->assertStringContainsString('Só se reabre', $recusa->getMessage());
+            }
+
+            $contas->cancelar($conta, 'Emitida com a categoria errada.');
+
+            $cancelada = $conta->fresh();
+            $this->assertSame(FinancialRecord::CANCELED, $cancelada->status);
+            $this->assertNull($cancelada->occurred_at);
+            $this->assertStringContainsString('] Cancelamento: Emitida com a categoria errada.', strval($cancelada->notes));
+
+            try {
+                $contas->cancelar($cancelada, 'De novo, sem necessidade.');
+                $this->fail('A conta já cancelada foi cancelada outra vez.');
+            } catch (Recusa $recusa) {
+                $this->assertStringContainsString('já está cancelada', $recusa->getMessage());
+            }
+
+            // Pagamento em conta cancelada não aparece em carteira nenhuma.
+            try {
+                app(RegistroDePagamento::class)->registrar($cancelada, $admin, ['valor' => '50.00', 'metodo' => 'pix', 'data' => '2026-10-06']);
+                $this->fail('Dinheiro entrou em conta cancelada.');
+            } catch (ValidationException $falha) {
+                $this->assertStringContainsString('está cancelada', strval($falha->errors()['valor'][0]));
+            }
+
+            $estado = $contas->reabrir($cancelada);
+            $this->assertSame(FinancialRecord::PENDING, $estado);
+            $this->assertStringContainsString('] Reabertura: Conta devolvida à carteira.', strval($cancelada->fresh()->notes));
+
+            // Apagar é o verbo do cadastro que nunca existiu, e a exclusão suave deixa
+            // restaurar com o rastro dos dois atos.
+            $errada = $contas->criar($this->formularioDeConta(['descricao' => 'Cadastro repetido por engano']));
+            $contas->apagar($errada);
+            $this->assertSoftDeleted('financial_records', ['id' => $errada->id]);
+            $this->assertNull($contas->restaurar($errada->id)->fresh()->deleted_at);
+
+            $this->assertDatabaseHas('audit_logs', ['action' => 'cancelamento de conta', 'entity_id' => (string) $conta->id]);
+            $this->assertDatabaseHas('audit_logs', ['action' => 'reabertura de conta', 'entity_id' => (string) $conta->id]);
+            $this->assertDatabaseHas('audit_logs', ['action' => 'excluido suavemente', 'entity_id' => (string) $errada->id]);
+            $this->assertDatabaseHas('audit_logs', ['action' => 'restaurado', 'entity_id' => (string) $errada->id]);
+        } finally {
+            TenantContext::forget();
+        }
+    }
+
+    public function test_a_cobranca_emitida_pelo_servico_soma_as_linhas_da_ordem_e_recusa_segunda_via(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $padaria = $this->cliente($empresa, 'Padaria Sant’Anna');
+        $fora = $this->cliente($empresa, 'Cliente de fora');
+        $contas = app(LancamentoDeConta::class);
+
+        $ordem = $this->ordem($empresa, 'OS-2026-0502', 'Câmara fria da Padaria', [
+            'status' => 'completed',
+            'client_id' => $padaria->id,
+            'discount' => 40,
+        ]);
+        $this->linhasDaOrdem($ordem, [
+            ['servico', 'Manutenção da câmara fria', 2, 700],
+            ['produto', 'Válvula expansionista', 1, 120],
+        ]);
+
+        // As outras três ordens são o lado de fora do fluxo: inacabada, sem linha e
+        // desfeita. Todas nascem antes do contexto, porque cada helper de fixture abre
+        // e fecha o próprio tenant.
+        $aberta = $this->ordem($empresa, 'OS-2026-0503', 'Coifa em aberto', ['client_id' => $padaria->id]);
+        $this->linhasDaOrdem($aberta, [['servico', 'Limpeza da coifa', 1, 200]]);
+        $semLinhas = $this->ordem($empresa, 'OS-2026-0504', 'Visita sem registro', ['status' => 'completed', 'client_id' => $padaria->id]);
+        $desfeita = $this->ordem($empresa, 'OS-2026-0505', 'Instalação desfeita', ['status' => 'canceled', 'client_id' => $padaria->id]);
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            $cobranca = $contas->emitirCobranca($ordem, [
+                'vencimento' => '2026-11-05',
+                'categoria' => 'mao_de_obra_e_pecas',
+                // O request não tem valor nem cliente: o que chegar aqui é ignorado.
+                'valor' => '900.00',
+                'cliente_id' => $fora->id,
+                'observacao' => 'Boleto enviado por e-mail.',
+            ]);
+
+            $this->assertSame(1480.00, (float) $cobranca->amount, 'Duas linhas de 700 mais 120, menos os 40 de desconto da ordem.');
+            $this->assertSame($padaria->id, (int) $cobranca->client_id);
+            $this->assertSame($ordem->id, (int) $cobranca->service_order_id);
+            $this->assertSame(FinancialRecord::REVENUE, $cobranca->type);
+            $this->assertSame(FinancialRecord::PENDING, $cobranca->status);
+            $this->assertSame('Cobrança da OS-2026-0502 — Câmara fria da Padaria', $cobranca->description);
+            $this->assertStringContainsString('Boleto enviado', strval($cobranca->notes));
+
+            try {
+                $contas->emitirCobranca($ordem, ['vencimento' => '2026-12-05', 'categoria' => 'visita_tecnica']);
+                $this->fail('A segunda cobrança da mesma OS passou.');
+            } catch (Recusa $recusa) {
+                $this->assertStringContainsString('já tem a cobrança', $recusa->getMessage());
+            }
+
+            // Cancelar a cobrança libera emitir outra: cancelamento não é duplicata.
+            $contas->cancelar($cobranca, 'Categoria errada na primeira via.');
+            $segunda = $contas->emitirCobranca($ordem, ['vencimento' => '2026-12-01', 'categoria' => 'visita_tecnica']);
+            $this->assertSame(1480.00, (float) $segunda->amount);
+            $this->assertSame('visita_tecnica', $segunda->category);
+
+            // Ordem inacabada, ordem sem linhas e ordem cancelada não fecham conta.
+            try {
+                $contas->emitirCobranca($aberta, ['vencimento' => '2026-11-05', 'categoria' => 'visita_tecnica']);
+                $this->fail('Cobrança saiu de ordem que não terminou.');
+            } catch (Recusa $recusa) {
+                $this->assertStringContainsString('ainda não terminou', $recusa->getMessage());
+            }
+
+            try {
+                $contas->emitirCobranca($semLinhas, ['vencimento' => '2026-11-05', 'categoria' => 'visita_tecnica']);
+                $this->fail('Nasceu conta de R$ 0,00.');
+            } catch (Recusa $recusa) {
+                $this->assertStringContainsString('não tem o que cobrar', $recusa->getMessage());
+            }
+
+            try {
+                $contas->emitirCobranca($desfeita, ['vencimento' => '2026-11-05', 'categoria' => 'visita_tecnica']);
+                $this->fail('Ordem cancelada virou cobrança.');
+            } catch (Recusa $recusa) {
+                $this->assertStringContainsString('foi cancelada', $recusa->getMessage());
+            }
+
+            $this->assertSame(0, FinancialRecord::query()->where('description', 'like', 'Cobrança da OS-2026-0504%')->count());
+            $this->assertDatabaseHas('audit_logs', ['action' => 'cobrança de ordem', 'entity_id' => (string) $segunda->id]);
+        } finally {
+            TenantContext::forget();
+        }
+    }
+
+    /**
+     * A conta como o formulário do financeiro a entrega: tipo, categoria, valor,
+     * vencimento e as ponteiras de relação. Os extras entram por cima porque cada
+     * teste precisa de uma descrição, um valor ou uma carteira diferente.
+     *
+     * @param  array<string, mixed>  $extras
+     * @return array<string, mixed>
+     */
+    private function formularioDeConta(array $extras = []): array
+    {
+        return $extras + [
+            'tipo' => FinancialRecord::REVENUE,
+            'categoria' => 'contrato_mensal',
+            'descricao' => 'Conta escrita pelo serviço',
+            'valor' => '100.00',
+            'vencimento' => '2026-10-20',
+            'cliente_id' => null,
+            'ordem_id' => null,
+            'observacao' => null,
+        ];
+    }
+
+    /**
+     * As linhas do serviço: uma cobrança soma exatamente estas linhas, então linha
+     * sem origem cadastrada seria conta mentirosa.
+     *
+     * @param  array<int, array{0: string, 1: string, 2: float, 3: float}>  $linhas  [servico|produto, nome, quantidade, unitário]
+     */
+    private function linhasDaOrdem(ServiceOrder $ordem, array $linhas): void
+    {
+        foreach ($linhas as [$tipo, $nome, $quantidade, $unitario]) {
+            $ehServico = $tipo === 'servico';
+
+            $origem = $ehServico
+                ? $this->servico($ordem->company, $nome, ['price' => $unitario])
+                : $this->produto($ordem->company, $nome, ['price' => $unitario]);
+
+            TenantContext::set($ordem->company_id);
+            $ordem->items()->create([
+                $ehServico ? 'service_id' : 'product_id' => $origem->id,
+                'description' => $nome,
+                'quantity' => $quantidade,
+                'unit_price' => $unitario,
+            ]);
+            TenantContext::forget();
+        }
+    }
+
+    /** @param  array<string, mixed>  $extras */
+    private function servico(Company $empresa, string $nome, array $extras = []): Service
+    {
+        TenantContext::set($empresa->id);
+        $servico = Service::query()->create($extras + ['name' => $nome, 'price' => 100, 'status' => 'active']);
+        TenantContext::forget();
+
+        return $servico;
     }
 
     /** @return array{0: Company, 1: User} */

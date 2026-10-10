@@ -7,7 +7,8 @@ use App\Http\Controllers\Orders\Concerns\EnxergaAOrdem;
 use App\Models\Client;
 use App\Models\FinancialRecord;
 use App\Models\ServiceOrder;
-use App\Support\Auditor;
+use App\Services\Finance\LancamentoDeConta;
+use App\Services\Recusa;
 use App\Support\Export;
 use App\Support\Formatters;
 use App\Support\ListFilters;
@@ -18,37 +19,25 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * As contas que a empresa tem a receber e a pagar.
  *
- * O que manda nesta tela é uma coisa só: o estado do lançamento não se digita.
- * `status` é derivado da soma dos pagamentos contra o valor, calculado pelo
- * servidor dentro da transação que grava o pagamento, e é por isso que não existe
- * select de "Pago" no formulário — existe o registro do dinheiro, que puxa o
- * estado junto. Um lançamento nasce em aberto e só existe pago depois de haver
- * pagamento.
+ * Esta é a fachada: alcance de leitura, regra de campo, vocabulário de categoria e
+ * a cara da resposta. A caneta é de `App\Services\Finance\LancamentoDeConta` — a
+ * linha que nasce, é alterada, cancelada, reaberta, apagada, restaurada e emitida
+ * da ordem — e de `App\Services\Finance\RegistroDePagamento` para o dinheiro que
+ * mudou de mão. Nenhum dos dois estados digitáveis existe aqui: `status` é derivado
+ * da soma dos pagamentos, e um select de "Pago" no formulário seria a conta
+ * quitada sem um real no extrato.
  *
- * **Categoria é vocabulário, não campo de nota.** O catálogo é fechado por tipo
- * (`FinancialRecord::CATEGORIAS`) porque a soma de fase 18 vai agrupar por ela, e
- * "Peças" com inicial maiúscula ao lado de "pecas" são duas categorias que ninguém
- * soma.
- *
- * **Cliente é da receita.** Despesa tem fornecedor, e fornecedor não está no
- * schema desta casa — um `client_id` que chegar numa despesa é descartado, não
- * aplicado. Receita, ao contrário, existe para cobrar alguém: sem cliente não há
- * a quem cobrar.
- *
- * **Ordem e cliente têm de ser o mesmo cliente.** A cobrança de uma OS da Padaria
- * aberta contra o cliente de fora é o tipo de erro que só aparece quando o
- * escritório reclama do boleto.
- *
- * O valor de uma ordem não entra pelo request: `cobrar()` recomputa a conta no
- * banco (itens, descontos e o da ordem) e recusa se a ordem já tem cobrança ativa,
- * porque cobrar duas vezes a mesma OS não é duplicata, é conflito.
+ * O que a tela ainda decide é o que só a tela sabe: quais categorias existem por
+ * tipo (`FinancialRecord::CATEGORIAS`, vocabulário fechado porque o relatório soma
+ * por ela), quais ordens aparecem no select de origem e qual estado está sendo
+ * filtrado. Carteira, valor, data do fato e o que muda de mão saem do banco, dentro
+ * do serviço.
  */
 class FinancialRecordController extends Controller
 {
@@ -58,8 +47,7 @@ class FinancialRecordController extends Controller
 
     private const FILTROS = ['busca', 'tipo', 'estado', 'categoria', 'cliente', 'ordem', 'inicio', 'fim'];
 
-    /** Ordens que podem virar cobrança: a conta fecha quando o serviço terminou. */
-    private const ORDEM_COBRAVEL = 'completed';
+    public function __construct(private readonly LancamentoDeConta $conta) {}
 
     public function index(Request $request): View
     {
@@ -103,22 +91,8 @@ class FinancialRecordController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validado = $request->validate($this->regras($request), $this->mensagens());
-        $dados = $this->prepare($validado, $request);
 
-        $lancamento = FinancialRecord::query()->create($dados);
-
-        Auditor::gravar(
-            'lançamento financeiro',
-            $lancamento,
-            [],
-            sprintf(
-                '%s de %s — %s, vencendo em %s.',
-                $lancamento->eReceita() ? 'Receita' : 'Despesa',
-                Formatters::money($lancamento->amount),
-                $lancamento->description,
-                Formatters::date($lancamento->due_date),
-            ),
-        );
+        $lancamento = $this->conta->criar($validado);
 
         return redirect()
             ->route('financial.show', $lancamento)
@@ -155,21 +129,16 @@ class FinancialRecordController extends Controller
     }
 
     /**
-     * Altera a conta. Valor e tipo só se mexem enquanto não houve pagamento: mudar
-     * o valor de uma conta meio paga é mover a régua debaixo do dinheiro que já
-     * entrou, e o estorno é o caminho honesto para isso.
+     * O formulário de conta é o mesmo do cadastro, então as regras de campo são as
+     * mesmas; o que só a alteração tem — a conta não mudar de tamanho nem de lado
+     * depois de haver dinheiro dentro — é lido pelo serviço, com a linha na mão.
      */
     public function update(Request $request, FinancialRecord $registro): RedirectResponse
     {
         $validado = $request->validate($this->regras($request, $registro), $this->mensagens());
-
-        if ($registro->temPagamento()) {
-            $this->garantirContaEstavel($registro, $validado);
-        }
-
-        $mudancas = $this->prepare($validado, $request, $registro);
         $antes = $registro->description;
-        $registro->update($mudancas);
+
+        $this->conta->alterar($registro, $validado);
 
         return redirect()
             ->route('financial.show', $registro)
@@ -177,10 +146,8 @@ class FinancialRecordController extends Controller
     }
 
     /**
-     * Cancelar é dizer que a conta nunca passou a existir para o caixa. Só acontece
-     * sem pagamento registrado — desfazer dinheiro que entrou é estorno, tem outro
-     * verbo e outra permissão — e exige o motivo, que é o que a auditoria e quem
-     * abre a ficha depois vão ler.
+     * O verbo é `LancamentoDeConta::cancelar()`; aqui só está o motivo obrigatório,
+     * que é campo de formulário, e a resposta que a ficha lê.
      */
     public function cancel(Request $request, FinancialRecord $registro): RedirectResponse
     {
@@ -191,57 +158,25 @@ class FinancialRecordController extends Controller
             'motivo.min' => 'Diga o motivo com pelo menos cinco caracteres.',
         ]);
 
-        if ($registro->temPagamento()) {
-            throw ValidationException::withMessages([
-                'motivo' => sprintf(
-                    'Esta conta tem %s de %s registrado. Estorne o pagamento antes de cancelar: '
-                    .'cancelamento apaga a expectativa de caixa, não o dinheiro que mudou de mão.',
-                    $registro->payments()->count() === 1 ? 'um pagamento' : $registro->payments()->count().' pagamentos',
-                    Formatters::money($registro->valorPago()),
-                ),
-            ]);
+        try {
+            $this->conta->cancelar($registro, strval($validado['motivo']));
+        } catch (Recusa $recusa) {
+            return back()->with($recusa->tom(), $recusa->getMessage());
         }
-
-        if ($registro->status === FinancialRecord::CANCELED) {
-            return back()->with('erro', 'Esta conta já está cancelada.');
-        }
-
-        $registro->update([
-            'status' => FinancialRecord::CANCELED,
-            'occurred_at' => null,
-            'notes' => $this->anotar(strval($registro->notes), 'Cancelamento', $validado['motivo']),
-        ]);
-
-        Auditor::gravar('cancelamento de conta', $registro, [], sprintf(
-            '%s cancelada: %s',
-            $registro->description,
-            $validado['motivo'],
-        ));
 
         return redirect()
             ->route('financial.show', $registro)
             ->with('status', sprintf('Conta "%s" cancelada.', $registro->description));
     }
 
-    /** Reabrir devolve a conta à derivação: sem pagamento, ela nasce em aberto de novo. */
+    /** Reabrir devolve a conta à derivação da soma; o passo fora da ordem volta como recusa. */
     public function reopen(FinancialRecord $registro): RedirectResponse
     {
-        if ($registro->status !== FinancialRecord::CANCELED) {
-            return back()->with('erro', 'Só se reabre uma conta que foi cancelada.');
+        try {
+            $estado = $this->conta->reabrir($registro);
+        } catch (Recusa $recusa) {
+            return back()->with($recusa->tom(), $recusa->getMessage());
         }
-
-        // A reabertura retira a decisão, e só isso: `recalcularEstado()` se recusa a
-        // mexer numa linha ainda marcada como cancelada, então é aqui que o
-        // cancelamento deixa de existir. O estado que vale volta da soma dos
-        // pagamentos, e uma conta com dinheiro registrado não renasce em aberto.
-        $registro->update([
-            'status' => FinancialRecord::PENDING,
-            'notes' => $this->anotar(strval($registro->notes), 'Reabertura', 'Conta devolvida à carteira.'),
-        ]);
-
-        $estado = $registro->recalcularEstado();
-
-        Auditor::gravar('reabertura de conta', $registro, [], sprintf('%s reaberta.', $registro->description));
 
         return redirect()
             ->route('financial.show', $registro)
@@ -255,22 +190,19 @@ class FinancialRecordController extends Controller
     }
 
     /**
-     * Excluir lançamento é caso de cadastro errado, não de operação: conta com
-     * pagamento tem dinheiro registrado, e apagar a ficha deixaria o pagamento sem
-     * dona na hora em que o relatório somar o mês.
+     * Exclusão é o verbo do cadastro que nunca existiu; a régua de que conta com
+     * dinheiro dentro não se apaga é do serviço, e o motivo volta como recusa em vez
+     * de sumiço silencioso.
      */
     public function destroy(FinancialRecord $registro): RedirectResponse
     {
-        if ($registro->temPagamento()) {
-            return back()->with('erro', sprintf(
-                'Esta conta tem %s de pagamento registrado. Para tirá-la da carteira sem perder o dinheiro, cancele-a '
-                .'depois de estornar; exclusão é para cadastro que nunca existiu.',
-                Formatters::money($registro->valorPago()),
-            ));
-        }
-
         $descricao = $registro->description;
-        $registro->delete();
+
+        try {
+            $this->conta->apagar($registro);
+        } catch (Recusa $recusa) {
+            return back()->with($recusa->tom(), $recusa->getMessage());
+        }
 
         return redirect()
             ->route('financial.index')
@@ -279,8 +211,7 @@ class FinancialRecordController extends Controller
 
     public function restore(int $registro): RedirectResponse
     {
-        $linha = FinancialRecord::withTrashed()->findOrFail($registro);
-        $linha->restore();
+        $linha = $this->conta->restaurar($registro);
 
         return redirect()
             ->route('financial.show', $linha)
@@ -303,9 +234,9 @@ class FinancialRecordController extends Controller
     }
 
     /**
-     * Cobra a ordem no valor que o banco calcula. O request traz a data e a
-     * categoria; valor, cliente e total são lidos da ordem, porque cobrar R$ 900 de
-     * uma OS que somou R$ 1.480 é a fatura errada com a assinatura do escritório.
+     * A cobrança da ordem: o request traz a data e a categoria, e nada além. Valor,
+     * cliente e total são lidos da ordem pelo serviço, porque o número que a tela
+     * mostra hoje não é o que as linhas somam depois que alguém ajusta uma peça.
      */
     public function cobrar(Request $request, ServiceOrder $ordem): RedirectResponse
     {
@@ -321,64 +252,18 @@ class FinancialRecordController extends Controller
             'categoria.required' => 'Escolha a categoria da receita — é por ela que o relatório soma.',
         ]);
 
-        if ($ordem->status !== self::ORDEM_COBRAVEL) {
-            return back()->with('erro', $ordem->estaEncerrada()
-                ? sprintf('A ordem %s foi cancelada: o que não aconteceu não se cobra.', $ordem->number)
-                : sprintf('A ordem %s ainda não terminou. A cobrança fecha a conta do serviço concluído.', $ordem->number));
+        try {
+            $lancamento = $this->conta->emitirCobranca($ordem, $validado);
+        } catch (Recusa $recusa) {
+            return back()->with($recusa->tom(), $recusa->getMessage());
         }
-
-        $existente = FinancialRecord::query()
-            ->where('service_order_id', $ordem->id)
-            ->where('type', FinancialRecord::REVENUE)
-            ->where('status', '!=', FinancialRecord::CANCELED)
-            ->orderBy('due_date')
-            ->first();
-
-        if ($existente !== null) {
-            return back()->with('erro', sprintf(
-                'A ordem %s já tem a cobrança "%s" em carteira. Se o valor mudou, ajuste a conta existente; '
-                .'cobrança duplicada não é segunda via, é conflito.',
-                $ordem->number,
-                $existente->description,
-            ));
-        }
-
-        $ordem->load('items');
-        $total = $ordem->totais()['total'];
-
-        if ($total <= 0) {
-            return back()->with('erro', sprintf(
-                'A ordem %s não tem o que cobrar: a conta fecha em %s. '
-                .'Registre as linhas do serviço antes de emitir a cobrança.',
-                $ordem->number,
-                Formatters::money($total),
-            ));
-        }
-
-        $lancamento = FinancialRecord::query()->create([
-            'client_id' => $ordem->client_id,
-            'service_order_id' => $ordem->id,
-            'type' => FinancialRecord::REVENUE,
-            'category' => strval($validado['categoria']),
-            'description' => 'Cobrança da '.$ordem->number.' — '.$ordem->title,
-            'amount' => $total,
-            'due_date' => $validado['vencimento'],
-            'status' => FinancialRecord::PENDING,
-            'notes' => filled($validado['observacao'] ?? null) ? $validado['observacao'] : null,
-        ]);
-
-        Auditor::gravar('cobrança de ordem', $lancamento, [], sprintf(
-            'Cobrança emitida da %s no valor calculado do banco (%s).',
-            $ordem->number,
-            Formatters::money($total),
-        ));
 
         return redirect()
             ->route('financial.show', $lancamento)
             ->with('status', sprintf(
                 'Cobrança da %s emitida por %s — o valor veio da soma das linhas da ordem, não do formulário.',
                 $ordem->number,
-                Formatters::money($total),
+                Formatters::money($lancamento->amount),
             ));
     }
 
@@ -446,70 +331,6 @@ class FinancialRecordController extends Controller
         return ListFilters::periodo($query, $request, 'due_date');
     }
 
-    /**
-     * O que o formulário manda, convertido no que a tabela grava. `status` e
-     * `occurred_at` não estão aqui porque não se digita o que se deriva, e
-     * `company_id` vem do contexto do tenant, não do request.
-     *
-     * @return array<string, mixed>
-     */
-    private function prepare(array $validado, Request $request, ?FinancialRecord $registro = null): array
-    {
-        $tipo = strval($validado['tipo']);
-        $receita = $tipo === FinancialRecord::REVENUE;
-
-        $dados = [
-            'type' => $tipo,
-            'category' => strval($validado['categoria']),
-            'description' => strval($validado['descricao']),
-            'amount' => (float) $validado['valor'],
-            'due_date' => $validado['vencimento'],
-            'client_id' => $receita ? (int) $validado['cliente_id'] : null,
-            'service_order_id' => filled($validado['ordem_id'] ?? null) ? (int) $validado['ordem_id'] : null,
-            'notes' => filled($validado['observacao'] ?? null) ? strval($validado['observacao']) : null,
-        ];
-
-        if ($registro === null) {
-            $dados['status'] = FinancialRecord::PENDING;
-            $dados['occurred_at'] = null;
-        }
-
-        $this->garantirMesmaCarteira($dados);
-
-        return $dados;
-    }
-
-    /**
-     * Ordem e cliente apontam para a mesma carteira. A validação de campo confere
-     * cada um isoladamente e não enxerga o par: é aqui que a cobrança da OS do
-     * Restaurante sai contra a Padaria, que é o erro que só aparece quando o
-     * cliente liga reclamando do boleto.
-     *
-     * @param  array<string, mixed>  $dados
-     */
-    private function garantirMesmaCarteira(array $dados): void
-    {
-        if ($dados['service_order_id'] === null || $dados['client_id'] === null) {
-            return;
-        }
-
-        $ordem = ServiceOrder::query()->whereKey($dados['service_order_id'])->first();
-
-        if ($ordem !== null && (int) $ordem->client_id === (int) $dados['client_id']) {
-            return;
-        }
-
-        throw ValidationException::withMessages([
-            'ordem_id' => sprintf(
-                'A ordem %s pertence a %s, e esta conta está aberta contra %s: escolha o cliente da ordem '
-                .'ou a ordem do cliente.',
-                $ordem?->number ?? 'inexistente',
-                $ordem?->client?->name ?? 'carteira nenhuma',
-                Client::query()->whereKey($dados['client_id'])->value('name') ?? 'carteira nenhuma',
-            ),
-        ]);
-    }
-
     /** @return array<string, array<int, mixed>> */
     private function regras(Request $request, ?FinancialRecord $registro = null): array
     {
@@ -565,30 +386,6 @@ class FinancialRecordController extends Controller
         $query->where('company_id', $empresa)->where('status', 'active');
     }
 
-    /**
-     * Receita e ordem têm de apontar para o mesmo cliente. A validação de campo não
-     * enxerga o par — é aqui que a combinação é conferida, porque a mensagem precisa
-     * dizer qual dos dois está errado.
-     */
-    private function garantirContaEstavel(FinancialRecord $registro, array $validado): void
-    {
-        $mudouValor = abs((float) $validado['valor'] - (float) $registro->amount) >= 0.005;
-        $mudouTipo = strval($validado['tipo']) !== $registro->type;
-
-        if (! $mudouValor && ! $mudouTipo) {
-            return;
-        }
-
-        throw ValidationException::withMessages([
-            $mudouValor ? 'valor' : 'tipo' => sprintf(
-                'Esta conta já tem %s registrado. Mexer no %s depois disso é mover a régua debaixo do dinheiro: '
-                .'estorne o pagamento e ajuste, ou cancele e reabra.',
-                Formatters::money($registro->valorPago()),
-                $mudouValor ? 'valor' : 'o tipo',
-            ),
-        ]);
-    }
-
     /** @return array<string, string> */
     private function estados(): array
     {
@@ -624,12 +421,5 @@ class FinancialRecordController extends Controller
             ->get()
             ->mapWithKeys(fn (ServiceOrder $ordem) => [$ordem->id => $ordem->number.' — '.$ordem->title])
             ->all();
-    }
-
-    private function anotar(?string $atual, string $titulo, string $texto): string
-    {
-        $linha = '['.Formatters::date(now()).'] '.$titulo.': '.$texto;
-
-        return trim((string) $atual) === '' ? $linha : $atual."\n".$linha;
     }
 }

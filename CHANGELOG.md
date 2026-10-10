@@ -1171,6 +1171,29 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   toca sino, sanitiza o corpo que vai ao banco ou decide internamento. A suíte fecha em 325 testes /
   3121 asserções e o Pint está PASS em 178 arquivos.
 
+- O financeiro ganhou os dois degraus que faltavam. `App\Services\Finance\LancamentoDeConta` é dono de a conta
+  nascer, ser alterada, cancelada, reaberta, apagada e restaurada, e de emitir a cobrança da ordem no valor que
+  as linhas somam no banco: o request traz vencimento e categoria, e o que chegar de valor ou cliente é
+  ignorado, porque cobrar R$ 900 de uma OS que fechou em R$ 1.480 é a fatura errada com a assinatura do
+  escritório. `App\Services\Finance\RegistroDePagamento` é dono do dinheiro: a conta é travada por
+  `lockForUpdate` antes de qualquer conferência, a linha nasce, o estado e a data do fato voltam da soma lida do
+  banco, e o estorno guarda na trilha quem desfez. Os dois controllers perderam 319 linhas e nenhuma frase
+  mudou de dono.
+- As duas portas continuaram separadas: regra de campo — ordem e cliente de carteiras diferentes, valor ou tipo
+  mexidos depois de haver dinheiro, cancelamento que apagaria pagamento — devolve `ValidationException` com o
+  campo nomeado; travessia proibida — cobrar ordem que não terminou, que já tem cobrança ou que foi cancelada,
+  reabrir conta que não foi cancelada, apagar conta com dinheiro — devolve `Recusa`, e a tela responde 302 com
+  o motivo escrito.
+- O `0` que ninguém digitou: o `prepare()` do controller convertia receita sem cliente em `client_id = 0`, e
+  pela tela isso nunca aparecia porque a validação exige o cliente. Como o serviço passou a receber o array já
+  validado por qualquer caminho, a ausência ficou sendo `NULL` — o mesmo estado que a coluna assume quando o
+  cliente se apaga — em vez de um estrangeiro que o MySQL devolve como erro de chave.
+- `CamadaDeServicosTest` foi a 18 testes / 192 asserções: cinco provas novas escrevem conta, pagamento,
+  cancelamento, reabertura, exclusão e cobrança sem passar por HTTP, e conferem o estado derivado, a data do
+  fato, a nota carimbada e a trilha. A prova da fachada lê agora os sete controllers: nenhum deles abre
+  transação, cria a linha, trava o saldo, deriva o estado, grava a auditoria ou lança `ValidationException`. A
+  suíte fecha em 330 testes / 3209 asserções e o Pint está PASS em 180 arquivos.
+
 ### Alterado
 
 - Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de

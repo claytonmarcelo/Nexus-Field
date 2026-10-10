@@ -601,6 +601,8 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 | `FluxoDeChamado` | A escrita do chamado: protocolo sequencial da empresa com a passagem de origem na mesma transação, travessia com carimbo e sino, e a carteira de quem escreve aplicada sobre o formulário |
 | `ConversaDeChamado` | A escrita da nota: corpo sanitizado antes de virar byte, marca de interna só para quem responde pelo chamado, e resposta barrada depois que a conversa terminou |
 | `LancamentoDeEstoque` | A escrita do estoque: os dois saldos travados na mesma transação, nenhum saldo negativo, e livro-caixa que não se edita nem se apaga |
+| `LancamentoDeConta` | A escrita da conta: ela nasce em aberto porque ninguém digita o que se deriva, a cobrança da ordem vale o que as linhas somam no banco, e ordem e cliente têm de ser da mesma carteira |
+| `RegistroDePagamento` | A escrita do dinheiro: a linha é travada antes de somar, o estado volta da soma do caixa, a data do fato é a do último pagamento, e acima do saldo não entra |
 | `Recusa` | A porta pela qual o domínio diz não: salto que o fluxo não tem, ou passo sem permissão, volta como mensagem na tela (`erro` ou `aviso`) em vez de 500 |
 | `PermissionCatalog` | Módulos e ações de permissão em um único lugar, lidos por seeder, menu e middleware |
 | `Roles` | Os cinco papéis de sistema e seus rótulos em português, para o seeder real e o de demonstração não divergirem |
@@ -640,8 +642,9 @@ nexusfield/
 │   │                          pagamento, e as tabelas que ainda só têm schema — configuração,
 │   │                          notificação, auditoria e anexo
 │   ├── Services/            → FluxoDeOrdem, RegistroDePresenca, FluxoDeChamado,
-│   │                          ConversaDeChamado, LancamentoDeEstoque e Recusa: a
-│   │                          escrita de cada módulo, entre a tela e o banco
+│   │                          ConversaDeChamado, LancamentoDeEstoque, LancamentoDeConta,
+│   │                          RegistroDePagamento e Recusa: a escrita de cada módulo,
+│   │                          entre a tela e o banco
 │   └── Support/             → PermissionCatalog, Roles, TenantContext, StatusCatalog, Formatters,
 │                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro,
 │                              Distancia, Navigation, Notifier, Settings, SettingsCatalog,
