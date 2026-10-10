@@ -11,11 +11,16 @@ use App\Models\ServiceOrderStatusHistory;
 use App\Models\StockMovement;
 use App\Models\Technician;
 use App\Models\TechnicianStock;
+use App\Models\Ticket;
+use App\Models\TicketComment;
+use App\Models\TicketStatusHistory;
 use App\Models\User;
 use App\Services\Orders\FluxoDeOrdem;
 use App\Services\Orders\RegistroDePresenca;
 use App\Services\Recusa;
 use App\Services\Stock\LancamentoDeEstoque;
+use App\Services\Tickets\ConversaDeChamado;
+use App\Services\Tickets\FluxoDeChamado;
 use App\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -294,11 +299,179 @@ class CamadaDeServicosTest extends TestCase
         ]);
     }
 
+    public function test_o_chamado_nasce_pelo_servico_com_protocolo_passagem_e_sino(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $campo = $this->makeUser('technician', $empresa, 'campo@test.local');
+        $padaria = $this->cliente($empresa, 'Padaria do Rodrigo');
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            $chamado = app(FluxoDeChamado::class)->abrir($admin, [
+                'client_id' => $padaria->id,
+                'subject' => 'Vitrine parada no fundo da loja',
+                'description' => '<p>Pressão caindo.</p><script>alert(1)</script>',
+                'category' => 'refrigeracao',
+                'priority' => 'high',
+            ]);
+        } finally {
+            TenantContext::forget();
+        }
+
+        $this->assertSame('open', $chamado->status);
+        $this->assertMatchesRegularExpression('/^CH-\d{4}-0001$/', $chamado->protocol);
+        $this->assertNotNull($chamado->opened_at);
+
+        // O texto rico é sanitizado na escrita, não na tela: o rótulo do editor pode
+        // chegar, o script que vem colado nele não.
+        $this->assertStringContainsString('<p>Pressão caindo.</p>', $chamado->description);
+        $this->assertStringNotContainsString('<script>', $chamado->description);
+
+        $passagem = TicketStatusHistory::query()->where('ticket_id', $chamado->id)->sole();
+        $this->assertNull($passagem->from_status);
+        $this->assertSame('open', $passagem->to_status);
+        $this->assertSame($admin->id, $passagem->user_id);
+
+        // Quem atende é chamado no nascimento: o sino não espera alguém abrir a tela.
+        $this->assertDatabaseHas('notifications', [
+            'company_id' => $empresa->id,
+            'user_id' => $campo->id,
+            'type' => 'chamdo.aberto',
+        ]);
+    }
+
+    public function test_a_conta_de_cliente_abre_na_propria_carteira_mesmo_apontando_outra(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $minha = $this->cliente($empresa, 'Padaria do Rodrigo');
+        $alheia = $this->cliente($empresa, 'Oficina do Sr. Lima');
+        $conta = $this->makeUser('client', $empresa, 'cliente@test.local');
+
+        TenantContext::set($empresa->id);
+        $conta->update(['client_id' => $minha->id]);
+        TenantContext::forget();
+
+        $this->actingAs($conta);
+        TenantContext::set($empresa->id);
+
+        try {
+            $chamado = app(FluxoDeChamado::class)->abrir($conta, [
+                'client_id' => $alheia->id,
+                'subject' => 'Nota fiscal do serviço de ontem',
+                'category' => 'refrigeracao',
+                'priority' => 'normal',
+            ]);
+        } finally {
+            TenantContext::forget();
+        }
+
+        // A carteira é da conta, não do formulário: quem escreve a regra é o serviço,
+        // então nenhuma fachada esquece de aplicar o próprio dono.
+        $this->assertSame($minha->id, $chamado->client_id);
+        $this->assertNotSame($alheia->id, $chamado->client_id);
+        $this->assertSame($conta->id, TicketStatusHistory::query()->where('ticket_id', $chamado->id)->sole()->user_id);
+    }
+
+    public function test_a_travessia_sem_fluxo_e_o_passo_sem_permissao_voltam_como_recusa(): void
+    {
+        [$empresa, $campo] = $this->empresaComTecnico();
+        $conta = $this->makeUser('client', $empresa, 'leitura@test.local');
+        $chamado = $this->chamado($empresa);
+
+        $fluxo = app(FluxoDeChamado::class);
+
+        $this->actingAs($campo);
+        TenantContext::set($empresa->id);
+
+        try {
+            try {
+                $fluxo->mudarStatus($chamado, $campo, 'resolved');
+                $this->fail('O serviço deixou o chamado pular de aberto para resolvido.');
+            } catch (Recusa $recusa) {
+                $this->assertSame('erro', $recusa->tom());
+                $this->assertStringContainsString('não pode ir para', $recusa->getMessage());
+            }
+
+            // Conduzir o dia a dia é do técnico, e o encerramento não: a régua que
+            // oferece o botão é a mesma que barra o passo.
+            $this->assertSame(['in_progress', 'waiting'], array_keys($fluxo->proximosEstados($chamado->fresh(), $campo)));
+            $this->assertSame([], array_keys($fluxo->proximosEstados($chamado->fresh(), $conta)));
+
+            try {
+                $fluxo->mudarStatus($chamado, $conta, 'in_progress');
+                $this->fail('Quem só lê conduziu o estado do chamado.');
+            } catch (Recusa $recusa) {
+                $this->assertStringContainsString('permissão de atendimento', $recusa->getMessage());
+            }
+
+            $origem = $fluxo->mudarStatus($chamado, $campo, 'in_progress', 'Visita feita, aguardando a peça.');
+            $this->assertSame('open', $origem);
+
+            try {
+                $fluxo->mudarStatus($chamado->fresh(), $campo, 'resolved', 'Pronto, pode conferir.');
+                $this->fail('Sem a permissão de encerramento, o chamado foi resolvido.');
+            } catch (Recusa $recusa) {
+                $this->assertStringContainsString('permissão de encerramento', $recusa->getMessage());
+            }
+        } finally {
+            TenantContext::forget();
+        }
+
+        $atual = $chamado->fresh();
+
+        $this->assertSame('in_progress', $atual->status);
+        $this->assertNull($atual->resolved_at, 'A travessia recusada deixou carimbo de resolução.');
+        $this->assertSame(2, TicketStatusHistory::query()->where('ticket_id', $chamado->id)->count());
+    }
+
+    public function test_a_nota_interna_e_a_conversa_encerrada_sao_decisoes_do_servico(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $campo = $this->makeUser('technician', $empresa, 'campo@test.local');
+        $chamado = $this->chamado($empresa);
+
+        $conversa = app(ConversaDeChamado::class);
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            $interna = $conversa->responder($chamado, $admin, '<p>Cotação do fornecedor ainda não assinada.</p>', true);
+            $this->assertTrue($interna->is_internal);
+
+            // O técnico não responde pelo escritório: o pedido de interna é descartado.
+            $falsa = $conversa->responder($chamado->fresh(), $campo, '<p>Peça a caminho.</p><script>alert(1)</script>', true);
+            $this->assertFalse($falsa->is_internal, 'Sem `tickets.update` a marca de interna não se aplica.');
+            $this->assertStringNotContainsString('<script>', $falsa->body);
+
+            $this->assertSame('Nota interna registrada no chamado.', $conversa->resumo($interna));
+            $this->assertSame('Resposta enviada no chamado.', $conversa->resumo($falsa));
+
+            $chamado->mudarStatus('closed', $admin);
+
+            try {
+                $conversa->responder($chamado->fresh(), $admin, '<p>Algo depois do fim</p>', false);
+                $this->fail('A conversa de um chamado fechado recebeu resposta.');
+            } catch (Recusa $recusa) {
+                $this->assertSame('erro', $recusa->tom());
+                $this->assertStringContainsString('outro protocolo', $recusa->getMessage());
+            }
+        } finally {
+            TenantContext::forget();
+        }
+
+        $this->assertSame(2, TicketComment::query()->where('ticket_id', $chamado->id)->count());
+    }
+
     public function test_a_fachada_apresenta_e_o_servico_escreve(): void
     {
         $ordens = File::get(base_path('app/Http/Controllers/Orders/OrderController.php'));
         $chegadas = File::get(base_path('app/Http/Controllers/Orders/CheckinController.php'));
         $estoque = File::get(base_path('app/Http/Controllers/Stock/MovementController.php'));
+        $chamados = File::get(base_path('app/Http/Controllers/Tickets/TicketController.php'));
+        $notas = File::get(base_path('app/Http/Controllers/Tickets/TicketCommentController.php'));
 
         // Nenhum dos dois abre transação, cria linha, grava passagem de estado,
         // toca sino nem escreve na trilha: quem faz isso é o serviço, e a tela só
@@ -315,9 +488,23 @@ class CamadaDeServicosTest extends TestCase
             $this->assertStringNotContainsString($proibida, $estoque, "A escrita {$proibida} voltou para o controller de estoque.");
         }
 
+        // O mesmo corte no chamado: abrir protocolo, escrever a passagem de nascimento,
+        // tocar sino, sanitizar o corpo da nota e conduzir estado são do serviço. Pedir
+        // a travessia com `$this->fluxo->mudarStatus()` é apresentação; gravá-la é de
+        // `FluxoDeChamado`.
+        foreach (['DB::transaction', 'TicketStatusHistory', 'Notifier::', 'Ticket::create', 'TextoSeguro::sanitizar', '$chamado->mudarStatus('] as $proibida) {
+            $this->assertStringNotContainsString($proibida, $chamados, "A escrita {$proibida} voltou para o controller de chamados.");
+        }
+
+        foreach (['DB::transaction', 'Notifier::', 'comments()->create', "'is_internal'", 'estaEncerrado'] as $proibida) {
+            $this->assertStringNotContainsString($proibida, $notas, "A escrita {$proibida} voltou para o controller de notas.");
+        }
+
         $this->assertStringContainsString('FluxoDeOrdem', $ordens);
         $this->assertStringContainsString('RegistroDePresenca', $chegadas);
         $this->assertStringContainsString('LancamentoDeEstoque', $estoque);
+        $this->assertStringContainsString('FluxoDeChamado', $chamados);
+        $this->assertStringContainsString('ConversaDeChamado', $notas);
     }
 
     /** @return array{0: Company, 1: User} */
@@ -423,5 +610,43 @@ class CamadaDeServicosTest extends TestCase
             ->where('technician_id', $ficha->id)
             ->where('product_id', $produto->id)
             ->sole();
+    }
+
+    /**
+     * O chamado já nascido, para os testes que só olham a travessia. O nascimento é
+     * escrito pelo modelo porque aqui o que se prova é o passo seguinte.
+     *
+     * @param  array<string, mixed>  $extras
+     */
+    private function chamado(Company $empresa, array $extras = []): Ticket
+    {
+        if (! array_key_exists('client_id', $extras)) {
+            $extras['client_id'] = $this->cliente($empresa, 'Cliente do chamado')->id;
+        }
+
+        TenantContext::set($empresa->id);
+
+        $chamado = Ticket::query()->create($extras + [
+            'company_id' => $empresa->id,
+            'protocol' => Ticket::proximoProtocolo(),
+            'subject' => 'Vitrine sem pressão na frente da loja',
+            'category' => 'refrigeracao',
+            'priority' => 'normal',
+            'status' => 'open',
+            'opened_at' => now(),
+        ]);
+
+        TicketStatusHistory::query()->create([
+            'ticket_id' => $chamado->id,
+            'user_id' => User::query()->where('company_id', $empresa->id)->value('id'),
+            'from_status' => null,
+            'to_status' => 'open',
+            'note' => 'Chamado aberto na tela de chamados.',
+            'created_at' => now(),
+        ]);
+
+        TenantContext::forget();
+
+        return $chamado;
     }
 }

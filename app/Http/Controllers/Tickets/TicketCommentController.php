@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Tickets;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Tickets\Concerns\EnxergaOChamado;
 use App\Models\Ticket;
+use App\Services\Recusa;
+use App\Services\Tickets\ConversaDeChamado;
 use App\Support\TextoSeguro;
 use Closure;
 use Illuminate\Http\RedirectResponse;
@@ -16,23 +18,19 @@ use Illuminate\Http\Request;
  * cliente não cria documento nenhum, ela continua a conversa que abriu.
  *
  * A marca de nota interna é do escritório: sem `tickets.update` ela não é nem
- * aceita, nem lida, nem desenhada na tela.
+ * aceita, nem lida, nem desenhada na tela. Quem aplica essa régua e quem grava a
+ * linha é `ConversaDeChamado`; aqui fica a validação do campo e a cara da resposta.
  */
 class TicketCommentController extends Controller
 {
     use EnxergaOChamado;
 
+    public function __construct(private readonly ConversaDeChamado $conversa) {}
+
     public function store(Request $request, Ticket $chamado): RedirectResponse
     {
         $usuario = $request->user();
         $this->garantirVisivel($chamado, $usuario);
-
-        if ($chamado->estaEncerrado()) {
-            return back()->with('erro', sprintf(
-                'O chamado %s está fechado: a conversa dele terminou. O que surgiu depois é outro protocolo.',
-                $chamado->protocol,
-            ));
-        }
 
         $validado = $request->validate([
             'nota' => ['required', 'string', 'max:20000', $this->textoComPalavras()],
@@ -40,20 +38,18 @@ class TicketCommentController extends Controller
             'nota.required' => 'Nota vazia não é resposta para quem está esperando.',
         ]);
 
-        $interna = $usuario->hasPermission('tickets.update') && $request->boolean('interna');
+        try {
+            $nota = $this->conversa->responder(
+                $chamado,
+                $usuario,
+                (string) $validado['nota'],
+                $request->boolean('interna'),
+            );
+        } catch (Recusa $recusa) {
+            return back()->with($recusa->tom(), $recusa->getMessage());
+        }
 
-        $chamado->comments()->create([
-            'user_id' => $usuario->id,
-            // Em conta de cliente a coluna já veio com o usuário: é ela que diz de
-            // qual carteira a nota saiu, e é ela que a ficha mostra primeiro.
-            'client_id' => $usuario->client_id,
-            'body' => TextoSeguro::sanitizar($validado['nota']),
-            'is_internal' => $interna,
-        ]);
-
-        return back()->with('status', $interna
-            ? 'Nota interna registrada no chamado.'
-            : 'Resposta enviada no chamado.');
+        return back()->with('status', $this->conversa->resumo($nota));
     }
 
     /**

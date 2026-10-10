@@ -1156,6 +1156,21 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   — nenhum `DB::transaction`, `Auditor::gravar`, `Notifier::`, criação de linha ou `lockForUpdate` pode voltar
   para lá. A suíte fecha em 321 testes / 3078 asserções e o Pint está PASS em 176 arquivos.
 
+- O chamado ganhou o mesmo degrau: `App\Services\Tickets\FluxoDeChamado` é dono do nascimento do
+  protocolo (sequência do ano por empresa sob trava, estado aberto e a passagem de origem numa única
+  transação), do cadastro com o texto rico já sanitizado, da carteira de quem escreve aplicada sobre o que
+  o formulário mandou, e da travessia com carimbo, passagem e sino de resolução. O salto que o `FLUXO` não
+  tem e o passo que a conta não conduz voltam como `Recusa` — o serviço agora diz qual permissão falta,
+  em vez de emprestar a frase do encerramento para quem só não tem a de atendimento.
+- `App\Services\Tickets\ConversaDeChamado` é dono da nota: o corpo sai sanitizado, a marca de interna só
+  existe para quem tem `tickets.update` (o pedido de quem não tem é descartado, não aplicado), e responder
+  um chamado fechado é recusado com a frase que manda abrir outro protocolo. Os dois controllers de
+  chamado ficaram com validação de campo, alcance de leitura e a cara da resposta.
+- `CamadaDeServicosTest` foi a 13 testes / 104 asserções e a prova da fachada lê agora os quatro
+  controllers escritos por serviço: nenhum deles abre transação, grava passagem de estado, cria a linha,
+  toca sino, sanitiza o corpo que vai ao banco ou decide internamento. A suíte fecha em 325 testes /
+  3121 asserções e o Pint está PASS em 178 arquivos.
+
 ### Alterado
 
 - Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de

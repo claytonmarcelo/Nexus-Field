@@ -598,6 +598,8 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 | --- | --- |
 | `FluxoDeOrdem` | A escrita da ordem: número sequencial com a passagem de abertura, travessia com carimbo e sino, e o apagar que só vale para rascunho — a transação é daqui, não do controller |
 | `RegistroDePresenca` | A escrita do check-in de campo: a visita nasce do relógio do servidor, a distância se mede deste lado e a chegada abre a execução pelo fluxo |
+| `FluxoDeChamado` | A escrita do chamado: protocolo sequencial da empresa com a passagem de origem na mesma transação, travessia com carimbo e sino, e a carteira de quem escreve aplicada sobre o formulário |
+| `ConversaDeChamado` | A escrita da nota: corpo sanitizado antes de virar byte, marca de interna só para quem responde pelo chamado, e resposta barrada depois que a conversa terminou |
 | `LancamentoDeEstoque` | A escrita do estoque: os dois saldos travados na mesma transação, nenhum saldo negativo, e livro-caixa que não se edita nem se apaga |
 | `Recusa` | A porta pela qual o domínio diz não: salto que o fluxo não tem, ou passo sem permissão, volta como mensagem na tela (`erro` ou `aviso`) em vez de 500 |
 | `PermissionCatalog` | Módulos e ações de permissão em um único lugar, lidos por seeder, menu e middleware |
@@ -637,7 +639,8 @@ nexusfield/
 │   │                          compromisso de agenda, movimentação e carga de técnico, lançamento com
 │   │                          pagamento, e as tabelas que ainda só têm schema — configuração,
 │   │                          notificação, auditoria e anexo
-│   ├── Services/            → FluxoDeOrdem, RegistroDePresenca, LancamentoDeEstoque e Recusa: a
+│   ├── Services/            → FluxoDeOrdem, RegistroDePresenca, FluxoDeChamado,
+│   │                          ConversaDeChamado, LancamentoDeEstoque e Recusa: a
 │   │                          escrita de cada módulo, entre a tela e o banco
 │   └── Support/             → PermissionCatalog, Roles, TenantContext, StatusCatalog, Formatters,
 │                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro,
@@ -771,6 +774,11 @@ nexusfield/
 
 A regra de dependência é uma só: tela nenhuma decide autorização. O middleware `permission` responde
 403 antes de a view ser renderizada, e `CompanyScope` limita toda leitura à empresa do request.
+
+A camada de escrita é o degrau do meio: `app/Services` é dono da transação, do nascimento do
+documento, do carimbo de estado e do sino que toca depois, e ao controller sobra quem pode e o que
+mostrar. Onde o domínio diz não, a resposta volta como `Recusa` e a tela a devolve em 302 com o
+motivo escrito para quem leu — nunca como a exceção na cara do visitante.
 
 ---
 

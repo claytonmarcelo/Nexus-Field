@@ -9,18 +9,17 @@ use App\Models\ServiceCategory;
 use App\Models\ServiceOrder;
 use App\Models\Technician;
 use App\Models\Ticket;
-use App\Models\TicketStatusHistory;
 use App\Models\User;
+use App\Services\Recusa;
+use App\Services\Tickets\FluxoDeChamado;
 use App\Support\Export;
 use App\Support\ListFilters;
-use App\Support\Notifier;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
 use App\Support\TextoSeguro;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -35,6 +34,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * recebe a carteira dela, e o escritório recebe a operação. A nota interna só não
  * chega ao HTML de quem não tem `tickets.update` porque a consulta já a deixa de
  * fora.
+ *
+ * A escrita é do degrau abaixo: `FluxoDeChamado` abre o protocolo com a passagem de
+ * origem, conduz o estado com carimbo e sino, e é dele a régua que decide se o passo
+ * é deste autor. Aqui fica o que é de apresentação — quem enxerga o quê, qual campo
+ * o formulário oferece e como a resposta vira frase na tela.
  */
 class TicketController extends Controller
 {
@@ -45,6 +49,8 @@ class TicketController extends Controller
     ];
 
     private const FILTROS = ['busca', 'situacao', 'prioridade', 'categoria', 'tecnico', 'cliente', 'inicio', 'fim', 'atrasado'];
+
+    public function __construct(private readonly FluxoDeChamado $fluxo) {}
 
     public function index(Request $request): View
     {
@@ -112,27 +118,7 @@ class TicketController extends Controller
         $usuario = $request->user();
         $dados = $request->validate($this->regras($usuario), $this->mensagens());
 
-        $chamado = DB::transaction(function () use ($dados, $usuario): Ticket {
-            $chamado = Ticket::create([
-                ...$this->normaliza($dados, $usuario),
-                'protocol' => Ticket::proximoProtocolo(),
-                'status' => 'open',
-                'opened_at' => now(),
-            ]);
-
-            TicketStatusHistory::query()->create([
-                'ticket_id' => $chamado->id,
-                'user_id' => $usuario->id,
-                'from_status' => null,
-                'to_status' => $chamado->status,
-                'note' => 'Chamado aberto na tela de chamados.',
-                'created_at' => now(),
-            ]);
-
-            return $chamado;
-        });
-
-        $this->avisarChamadoAberto($chamado, $usuario);
+        $chamado = $this->fluxo->abrir($usuario, $dados);
 
         return redirect()
             ->route('tickets.show', $chamado)
@@ -158,7 +144,7 @@ class TicketController extends Controller
         return view('tickets.show', [
             'chamado' => $chamado,
             'notas' => $notas,
-            'proximosEstados' => $this->proximosEstados($chamado, $usuario),
+            'proximosEstados' => $this->fluxo->proximosEstados($chamado, $usuario),
             'categoria' => $this->categorias()[$chamado->category] ?? null,
             'podeMover' => $usuario->hasPermission('tickets.execute'),
             'podeInterna' => $usuario->hasPermission('tickets.update'),
@@ -193,7 +179,7 @@ class TicketController extends Controller
 
         $dados = $request->validate($this->regras($usuario, $chamado), $this->mensagens());
 
-        $chamado->update($this->normaliza($dados, $usuario));
+        $this->fluxo->atualizar($chamado, $dados, $usuario);
 
         return redirect()
             ->route('tickets.show', $chamado)
@@ -201,9 +187,10 @@ class TicketController extends Controller
     }
 
     /**
-     * O único caminho que muda o estado do chamado. Além da coluna, põe o carimbo
-     * do momento e grava a passagem com quem fez: é o que responde "quem atendeu e
-     * quando" três meses depois, e é o que a ficha desenha como linha do tempo.
+     * O único caminho que muda o estado do chamado, e ele passa pelo serviço: além da
+     * coluna, o passo põe o carimbo do momento e grava a passagem com quem fez — é o
+     * que responde "quem atendeu e quando" três meses depois, e é o que a ficha desenha
+     * como linha do tempo.
      */
     public function mudarStatus(Request $request, Ticket $chamado): RedirectResponse
     {
@@ -211,7 +198,7 @@ class TicketController extends Controller
         $this->garantirVisivel($chamado, $usuario);
 
         $destino = (string) $request->input('estado');
-        $exigeNota = $this->notaObrigatoria($chamado, $destino);
+        $exigeNota = $this->fluxo->notaObrigatoria($chamado, $destino);
 
         $validado = $request->validate([
             'estado' => ['required', Rule::in(array_keys(StatusCatalog::options('ticket')))],
@@ -219,77 +206,20 @@ class TicketController extends Controller
             // não passa por regra de closure, e forjar o passo sem a linha `nota`
             // resolveria um chamado sem dizer o que foi feito.
             'nota' => [$exigeNota ? 'required' : 'nullable', 'string', 'max:1000'],
-        ], $exigeNota ? ['nota.required' => $this->mensagemDaNota($destino)] : []);
+        ], $exigeNota ? ['nota.required' => $this->fluxo->mensagemDaNota($destino)] : []);
 
-        if (! $chamado->podeMudarPara($destino)) {
-            return back()->with('erro', sprintf(
-                'O chamado %s está “%s” e não pode ir para “%s”: o fluxo do módulo é o que vale.',
-                $chamado->protocol,
-                StatusCatalog::label('ticket', $chamado->status),
-                StatusCatalog::label('ticket', $destino),
-            ));
-        }
-
-        if (! array_key_exists($destino, $this->proximosEstados($chamado, $usuario))) {
-            return back()->with('erro', 'Resolver e fechar um chamado pedem a permissão de encerramento, que esta conta não tem.');
-        }
-
-        $origem = StatusCatalog::label('ticket', $chamado->status);
-        $chamado->mudarStatus($destino, $usuario, $validado['nota'] ?? null);
-
-        if ($destino === 'resolved') {
-            $this->avisarResolucao($chamado, $usuario, $validado['nota'] ?? null);
+        try {
+            $origem = $this->fluxo->mudarStatus($chamado, $usuario, $destino, $validado['nota'] ?? null);
+        } catch (Recusa $recusa) {
+            return back()->with($recusa->tom(), $recusa->getMessage());
         }
 
         return back()->with('status', sprintf(
             'Chamado %s: %s → %s.',
             $chamado->protocol,
-            $origem,
+            StatusCatalog::label('ticket', $origem),
             StatusCatalog::label('ticket', $destino),
         ));
-    }
-
-    /**
-     * Chamado novo toca para quem pode atendê-lo: toda conta ativa da empresa
-     * com a permissão `tickets.execute`. Um sino por chamado — a mesma
-     * permissão não dobra o aviso, e quem abriu o chamado não ouve o ato que
-     * acabou de praticar.
-     */
-    private function avisarChamadoAberto(Ticket $chamado, User $usuario): void
-    {
-        $título = sprintf('Chamado %s aberto: %s', $chamado->protocol, $chamado->subject);
-        $link = route('tickets.show', $chamado);
-
-        Notifier::paraQuemPode('tickets.execute', 'chamdo.aberto', $título, null, $link, [
-            'ticket_id' => $chamado->id,
-        ], $usuario);
-    }
-
-    /**
-     * Resolver é o único meio-de-percurso que toca sino: a conta de cliente dona
-     * do chamado e o responsável apontado. A nota da resolução viaja como corpo
-     * do aviso porque o que o outro lado espera é a resposta — o que foi feito —
-     * e não a notícia burocrática de que um estado mudou.
-     */
-    private function avisarResolucao(Ticket $chamado, User $usuario, ?string $nota): void
-    {
-        $título = sprintf('Chamado %s resolvido: %s', $chamado->protocol, $chamado->subject);
-        $link = route('tickets.show', $chamado);
-
-        $destinos = User::query()
-            ->where('company_id', $chamado->company_id)
-            ->where('status', 'active')
-            ->where(fn ($q) => $q
-                ->where('id', $chamado->responsible_user_id)
-                ->orWhere('client_id', $chamado->client_id))
-            ->where('id', '!=', $usuario->id)
-            ->get();
-
-        foreach ($destinos as $destino) {
-            Notifier::para($destino, 'chamdo.resolvido', $título, $nota, $link, [
-                'ticket_id' => $chamado->id,
-            ]);
-        }
     }
 
     public function export(Request $request): StreamedResponse
@@ -332,28 +262,6 @@ class TicketController extends Controller
         }
 
         return ListFilters::periodo($query, $request, 'opened_at');
-    }
-
-    /**
-     * Estados que a ficha oferece: quem conduz o chamado é `tickets.execute`; o fluxo
-     * do modelo decide o caminho e a permissão de encerramento decide se o passo é
-     * deste usuário. Para a conta de cliente a lista vem vazia, então nenhum botão de
-     * estado é desenhado na tela dela.
-     *
-     * @return array<string, string> slug => rótulo
-     */
-    private function proximosEstados(Ticket $chamado, User $usuario): array
-    {
-        if (! $usuario->hasPermission('tickets.execute')) {
-            return [];
-        }
-
-        $podeFechar = $usuario->hasPermission('tickets.close');
-
-        return collect(Ticket::FLUXO[$chamado->status] ?? [])
-            ->reject(fn (string $destino) => in_array($destino, Ticket::ESTADOS_APROVADOS, true) && ! $podeFechar)
-            ->mapWithKeys(fn (string $destino) => [$destino => StatusCatalog::label('ticket', $destino)])
-            ->all();
     }
 
     /** @return array<int, mixed> */
@@ -435,26 +343,6 @@ class TicketController extends Controller
     }
 
     /**
-     * O que a tela não decide, o servidor decide: a carteira de quem escreve e o
-     * texto rico sanitized antes de virar bytes no banco.
-     *
-     * @param  array<string, mixed>  $dados
-     * @return array<string, mixed>
-     */
-    private function normaliza(array $dados, User $usuario): array
-    {
-        if ($usuario->client_id !== null) {
-            $dados['client_id'] = $usuario->client_id;
-        }
-
-        if (array_key_exists('description', $dados)) {
-            $dados['description'] = TextoSeguro::sanitizar($dados['description']);
-        }
-
-        return $dados;
-    }
-
-    /**
      * @return array<string, mixed>
      */
     private function regras(User $usuario, ?Ticket $chamado = null): array
@@ -481,22 +369,6 @@ class TicketController extends Controller
             'category' => ['required', Rule::in(array_keys($this->categorias()))],
             'priority' => ['required', Rule::in(array_keys(StatusCatalog::options('priority')))],
         ];
-    }
-
-    /**
-     * Nota obrigatória nos passos que encerram: resolver sem dizer o que foi feito e
-     * fechar sem resolução registrada são duas maneiras de perder o que aconteceu.
-     */
-    private function notaObrigatoria(Ticket $chamado, string $destino): bool
-    {
-        return $destino === 'resolved' || ($destino === 'closed' && $chamado->status !== 'resolved');
-    }
-
-    private function mensagemDaNota(string $destino): string
-    {
-        return $destino === 'resolved'
-            ? 'Resolver um chamado pede o que foi feito: é a frase que o cliente vai ler.'
-            : 'Fechar um chamado sem resolução registrada pede por que ele está sendo fechado.';
     }
 
     /** @return array<string, string> */
