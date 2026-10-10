@@ -24,6 +24,16 @@ class Formatters
     }
 
     /**
+     * O código da unidade, que é como a operação fala no corredor: "un", "kg", "m".
+     * Produto sem unidade cadastrada conta como unidade — o "un" da casa, escrito
+     * uma única vez, em vez de repetido em cada folha e controller que desenha saldo.
+     */
+    public static function unidade(?string $codigo): string
+    {
+        return strval($codigo ?? 'un');
+    }
+
+    /**
      * Tempo de execução lido como o operador lê: minuto até uma hora, hora e
      * resto acima dela. Null é traço, não zero — estimativa que ninguém deu
      * não deve aparecer como serviço de zero minuto.

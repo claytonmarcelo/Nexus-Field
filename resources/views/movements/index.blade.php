@@ -101,7 +101,7 @@
                                 $produto = $movimento->product;
                                 $central = $movimento->efeitoCentral();
                                 $carga = $movimento->efeitoTecnico();
-                                $unidade = $produto?->unit ?? 'un';
+                                $unidade = Formatters::unidade($produto?->unit);
                             @endphp
                             <tr>
                                 <td class="nf-mono">{{ Formatters::dateTime($movimento->recorded_at) }}</td>

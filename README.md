@@ -596,16 +596,24 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 
 | Nome | Para quê |
 | --- | --- |
+| `FluxoDeOrdem` | A escrita da ordem: número sequencial com a passagem de abertura, travessia com carimbo e sino, e o apagar que só vale para rascunho — a transação é daqui, não do controller |
+| `RegistroDePresenca` | A escrita do check-in de campo: a visita nasce do relógio do servidor, a distância se mede deste lado e a chegada abre a execução pelo fluxo |
+| `LancamentoDeEstoque` | A escrita do estoque: os dois saldos travados na mesma transação, nenhum saldo negativo, e livro-caixa que não se edita nem se apaga |
+| `Recusa` | A porta pela qual o domínio diz não: salto que o fluxo não tem, ou passo sem permissão, volta como mensagem na tela (`erro` ou `aviso`) em vez de 500 |
 | `PermissionCatalog` | Módulos e ações de permissão em um único lugar, lidos por seeder, menu e middleware |
 | `Roles` | Os cinco papéis de sistema e seus rótulos em português, para o seeder real e o de demonstração não divergirem |
 | `TenantContext` / `CompanyScope` / `ResolveCompany` | Isolamento por empresa em toda query |
 | `DashboardMetrics` | As contagens do painel, todas em SQL contra a empresa logada |
-| `StatusCatalog` / `Formatters` | Estados e formatações (dinheiro, decimal, data, hora e duração) num único lugar |
+| `StatusCatalog` / `Formatters` | Estados e formatações (dinheiro, decimal, data, hora, duração e unidade) num único lugar |
 | `ListFilters` | Busca, filtro por coluna, ordenação e por-página lidos do query string |
 | `Export` | CSV com BOM e separador `;`, escrito a partir da mesma consulta da tela |
 | `Distancia` | Haversine em metros, calculado no servidor: coordenada que falta devolve `null`, e `null` não é zero |
 | `TextoSeguro` | Lista fechada de tags, atributos e esquemas de link: o HTML do editor sai seguro antes de virar byte no banco |
 | `Auditor` / `Auditable` | Trilha de auditoria: criar, alterar e excluir são gravados pelo trait em `audit_logs` sem o controller lembrar, e a ação de negócio que não é CRUD (aprovar ordem, montar quadro, mover estado) entra escrita à mão, com o verbo certo |
+| `Notifier` | O sino da barra e a bandeja da conta: o ato de negócio avisa quem tem de mexer, com tipo do vocabulário fechado e link para a ficha |
+| `Settings` / `SettingsCatalog` | As escolhas da empresa declaradas uma vez: a chave é de quem escreve e o padrão é de quem declara — catálogo que nada lê é enfeite |
+| `Relatorio` | Os fechamentos de período somados no MySQL com as mesmas expressões que mandam nos módulos: o dinheiro pago, o total da ordem e o prazo da prioridade |
+| `MotivoErro` | O critério único das cinco páginas de erro: mostra o motivo que nós escrevemos e guarda o texto que o framework inventa sobre a casa por dentro |
 | `TemEnderecos` | Endereços polimórficos e o endereço principal de um cadastro |
 | `EmEdicao` / `CuidaDeEnderecos` / `TrataRegistrosAninhados` | Edição em linha na própria ficha, o ciclo de vida do endereço aninhado e a conferência de que a peça pertence mesmo ao cadastro aberto — id chutado em outra linha da mesma empresa responde 404 |
 | `Navigation` | Menu montado por permissão e rota existente |
@@ -629,9 +637,12 @@ nexusfield/
 │   │                          compromisso de agenda, movimentação e carga de técnico, lançamento com
 │   │                          pagamento, e as tabelas que ainda só têm schema — configuração,
 │   │                          notificação, auditoria e anexo
+│   ├── Services/            → FluxoDeOrdem, RegistroDePresenca, LancamentoDeEstoque e Recusa: a
+│   │                          escrita de cada módulo, entre a tela e o banco
 │   └── Support/             → PermissionCatalog, Roles, TenantContext, StatusCatalog, Formatters,
-│                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro, Distancia e
-│                              Navigation — mais Notifier, que espera a fase 19
+│                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro,
+│                              Distancia, Navigation, Notifier, Settings, SettingsCatalog,
+│                              Relatorio e MotivoErro
 ├── bootstrap/               → inicialização e registro de rotas
 ├── config/                  → banco, sessão, filesystem, temas
 ├── database/
@@ -704,6 +715,8 @@ nexusfield/
 │  Autorização por permissões (Permission)                 │
 │      ↓                                                   │
 │  Controllers enxutos                                     │
+│      ↓                                                   │
+│  Camada de Serviços                                      │
 │      ↓                                                   │
 │  Models Eloquent + camada Support                        │
 │      ↓                                                   │

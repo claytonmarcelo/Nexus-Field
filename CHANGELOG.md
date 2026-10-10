@@ -1134,6 +1134,28 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   sobre o preto dos 1440×900. `ScreenshotsTest` confere as seis medidas no IHDR, o link de cada imagem e a
   legenda contra o que o arquivo mostra.
 
+- O estoque passou a ter o degrau do meio: `App\Services\Stock\LancamentoDeEstoque` é dono da escrita de uma
+  movimentação — produto e linha de carga travados por `lockForUpdate` na mesma transação, os dois saldos lidos
+  do que o banco devolve antes de a linha existir, `recorded_at` do relógio do servidor, a frase da tela, a linha
+  da trilha e o sino de reposição. Ao `MovementController` ficou o que é de apresentação: saber de quem é o fato
+  (a permissão, o alcance restrito, a ordem em que a unidade foi gasta) e traduzir a resposta.
+- A recusa de saldo continuou `ValidationException` com campo nomeado, e não `Recusa`: quem errou a quantidade
+  precisa que a mensagem volte em cima do campo dela, não numa faixa no topo da tela. As duas contas — carga que
+  não passa do central, consumo que não passa da mala — seguem sendo feitas dentro da trava, porque duas leituras
+  que cada uma acham "tem bastante" é exatamente como um estoque chega a −3 unidades.
+- O `un` que se repetia: o rótulo da unidade do produto era escrito em três arquivos (o controller, o
+  painel e a listagem de movimentações) e passou a morar em `Formatters::unidade()`, ao lado das outras
+  formatações, com a mesma regra de sempre — coluna vazia é "un", e não decisão de cada tela.
+- O README ganhou o degrau do meio onde ele ainda não estava: os quatro serviços na tabela de camada própria,
+  `app/Services` na estrutura de pastas e "Camada de Serviços" no diagrama da requisição, entre o controller e o
+  modelo. A linha que ainda dizia que o Notifier "espera a fase 19" saiu, e as quatro classes de apoio que
+  ficaram de fora da tabela (Notifier, Settings/SettingsCatalog, Relatorio e MotivoErro) entraram.
+- `CamadaDeServicosTest` ganhou três provas e fecha em 9 testes / 61 asserções: o lançamento escreve os dois
+  saldos, a trilha e a frase da tela; a recusa devolve o campo que errou sem deixar linha nem tocar no saldo; o
+  consumo que esvazia o central sai com aviso e sino. A prova da fachada lê agora também o controller de estoque
+  — nenhum `DB::transaction`, `Auditor::gravar`, `Notifier::`, criação de linha ou `lockForUpdate` pode voltar
+  para lá. A suíte fecha em 321 testes / 3078 asserções e o Pint está PASS em 176 arquivos.
+
 ### Alterado
 
 - Os middleware de `bootstrap/app.php` saíram do FQCN em linha para imports: a lista de

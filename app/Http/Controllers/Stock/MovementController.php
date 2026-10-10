@@ -8,19 +8,16 @@ use App\Models\Product;
 use App\Models\ServiceOrder;
 use App\Models\StockMovement;
 use App\Models\Technician;
-use App\Models\TechnicianStock;
 use App\Models\User;
-use App\Support\Auditor;
+use App\Services\Stock\LancamentoDeEstoque;
 use App\Support\Export;
 use App\Support\Formatters;
 use App\Support\ListFilters;
-use App\Support\Notifier;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -35,25 +32,18 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * listagem de produtos, da ficha e do painel. Um campo de quantidade viveria ao
  * lado desse número e alguém acabaria acreditando nele.
  *
- * As regras que mandam aqui são três, e nenhuma mora no formulário.
+ * Esta classe é a fachada: resolve o pedido, apresenta a resposta e responde pelo
+ * recorte de leitura. A escrita em si — os dois saldos, a trava que faz a conta
+ * valer, o carimbo da auditoria e o sino de reposição — mora em
+ * `App\Services\Stock\LancamentoDeEstoque`, e as regras que ela impõe estão
+ * documentadas lá.
  *
- * **A data é de cá.** `recorded_at` é o relógio do servidor; um pedido com data
- * escolhida no navegador reescreveria a ordem dos fatos e o saldo de um dia que já
- * passou. Quem precisa explicar um fato de ontem diz isso na observação.
- *
- * **Nenhum saldo fica negativo.** Carga não pode passar do que há no central, e
- * consumo e devolução não podem passar do que o técnico carrega. A conta é feita
- * dentro de uma transação com o produto e a linha de carga travados por
- * `lockForUpdate`, porque dois registros que cada um confere "tem bastante" na
- * própria leitura é exatamente como um estoque chega a −3 unidades.
- *
- * **Movimentação não se edita nem se apaga.** É livro-caixa: o que estava errado se
- * responde com outra linha que diz o que corrigiu, e a auditoria mostra quem fez as
- * duas. Riscar a linha riscaria a explicação do saldo que ela formou.
- *
- * O recorte de leitura é responder pelo inventário (`stock.adjust`): quem pode
- * ajustar lê e move a empresa inteira; quem só movimenta — o técnico com a própria
- * ficha — fala da própria carga e lê as linhas em que o nome dele aparece.
+ * Quem resolve aqui é "de quem é o fato", não "o que o fato vale": a tela responde
+ * por qual produto, de qual técnico e em qual ordem, sempre pela permissão de quem
+ * está logado. O recorte de leitura é responder pelo inventário (`stock.adjust`):
+ * quem pode ajustar lê e move a empresa inteira; quem só movimenta — o técnico com
+ * a própria ficha — fala da própria carga e lê as linhas em que o nome dele
+ * aparece.
  */
 class MovementController extends Controller
 {
@@ -67,6 +57,8 @@ class MovementController extends Controller
     private const ORDENAVEIS = ['recorded_at', 'type', 'quantity', 'created_at'];
 
     private const FILTROS = ['busca', 'tipo', 'produto', 'tecnico', 'ordem', 'inicio', 'fim'];
+
+    public function __construct(private readonly LancamentoDeEstoque $estoque) {}
 
     public function index(Request $request): View
     {
@@ -106,9 +98,10 @@ class MovementController extends Controller
     }
 
     /**
-     * Registra um fato. A ordem dentro da transação é o que faz a trava valer:
-     * primeiro o produto, depois a linha de carga, e só então os saldos são lidos do
-     * que o banco devolve — antes de a linha existir.
+     * Registra um fato pedindo ao serviço, e devolve para a tela a frase que o
+     * serviço formou mais o aviso de reposição — quando o saldo cruzou o ponto
+     * mínimo, o mesmo texto volta como flash de alerta e já tocou o sino de quem
+     * repõe.
      */
     public function store(Request $request): RedirectResponse
     {
@@ -121,45 +114,29 @@ class MovementController extends Controller
         $validado = $request->validate($this->regras($request, $usuario, $restrito), $this->mensagens());
 
         $tipo = strval($validado['tipo']);
-        $quantidade = (float) $validado['quantidade'];
         $tecnico = $this->quemMoveu($tipo, $validado, $usuario, $restrito);
         $ordem = $tipo === 'consume'
             ? $this->ordemDoConsumo((int) $validado['ordem_id'], $usuario, $tecnico)
             : null;
 
-        [$movimento, $produto, $depoisCentral] = DB::transaction(function () use (
-            $validado,
-            $tipo,
-            $quantidade,
-            $tecnico,
-            $ordem,
-            $usuario
-        ): array {
-            return $this->gravar([
-                'produto_id' => (int) $validado['produto_id'],
-                'tipo' => $tipo,
-                'quantidade' => $quantidade,
-                'tecnico' => $tecnico,
-                'ordem' => $ordem,
-                'usuario' => $usuario,
-                'custo' => $validado['custo_unitario'] ?? null,
-                'observacao' => $validado['observacao'] ?? null,
-            ]);
-        });
-
-        Auditor::gravar('movimentação de estoque', $movimento, [], $this->descrição($movimento, $produto, $depoisCentral));
+        $lancamento = $this->estoque->registrar([
+            'produto_id' => (int) $validado['produto_id'],
+            'tipo' => $tipo,
+            'quantidade' => (float) $validado['quantidade'],
+            'tecnico' => $tecnico,
+            'ordem' => $ordem,
+            'usuario' => $usuario,
+            'custo' => $validado['custo_unitario'] ?? null,
+            'observacao' => $validado['observacao'] ?? null,
+        ]);
 
         $redirect = redirect()
-            ->route('movements.index', ['produto' => $produto->id])
-            ->with('status', $this->mensagem($movimento, $produto, $depoisCentral));
+            ->route('movements.index', ['produto' => $lancamento['produto']->id])
+            ->with('status', $lancamento['resumo']);
 
-        $aviso = $this->avisoDeReposicao($produto, $depoisCentral);
-
-        if ($aviso !== null) {
-            $this->avisarEstoqueBaixo($produto, $aviso);
-        }
-
-        return $aviso === null ? $redirect : $redirect->with('aviso', $aviso);
+        return $lancamento['aviso'] === null
+            ? $redirect
+            : $redirect->with('aviso', $lancamento['aviso']);
     }
 
     public function export(Request $request): StreamedResponse
@@ -178,71 +155,6 @@ class MovementController extends Controller
         );
     }
 
-    /**
-     * @param  array{produto_id: int, tipo: string, quantidade: float, tecnico: ?Technician, ordem: ?ServiceOrder, usuario: User, custo: mixed, observacao: mixed}  $par
-     * @return array{0: StockMovement, 1: Product, 2: float}
-     */
-    private function gravar(array $par): array
-    {
-        $produto = Product::query()->whereKey($par['produto_id'])->lockForUpdate()->firstOrFail();
-        $tipo = $par['tipo'];
-        $quantidade = $par['quantidade'];
-
-        $deltaCentral = round((StockMovement::CENTRAL_SIGN[$tipo] ?? 0) * $quantidade, 4);
-        $deltaTecnico = $par['tecnico'] === null
-            ? null
-            : round((StockMovement::TECHNICIAN_SIGN[$tipo] ?? 0) * $quantidade, 4);
-
-        $carga = $par['tecnico'] === null ? null : TechnicianStock::travar($par['tecnico'], $produto);
-
-        $antes = $produto->saldoCentralAtual();
-
-        if ($deltaCentral < 0 && $antes + $deltaCentral < 0) {
-            throw ValidationException::withMessages([
-                'quantidade' => sprintf(
-                    'O estoque central de %s tem %s %s: %s de %s não cabe aí.',
-                    $produto->name,
-                    Formatters::decimal($antes),
-                    $this->unidade($produto),
-                    StatusCatalog::label('movement', $tipo),
-                    Formatters::decimal(abs($deltaCentral)),
-                ),
-            ]);
-        }
-
-        if ($deltaTecnico !== null && $deltaTecnico < 0 && (float) $carga->quantity + $deltaTecnico < 0) {
-            throw ValidationException::withMessages([
-                'tecnico_id' => sprintf(
-                    '%s carrega %s %s de %s: %s de %s passa do que há na mala.',
-                    $par['tecnico']->name,
-                    Formatters::decimal($carga->quantity),
-                    $this->unidade($produto),
-                    $produto->name,
-                    StatusCatalog::label('movement', $tipo),
-                    Formatters::decimal(abs($deltaTecnico)),
-                ),
-            ]);
-        }
-
-        $movimento = StockMovement::query()->create([
-            'product_id' => $produto->id,
-            'technician_id' => $par['tecnico']?->id,
-            'service_order_id' => $par['ordem']?->id,
-            'user_id' => $par['usuario']->id,
-            'type' => $tipo,
-            'quantity' => $quantidade,
-            'unit_cost' => $par['custo'],
-            'note' => filled($par['observacao']) ? $par['observacao'] : null,
-            'recorded_at' => now(),
-        ]);
-
-        if ($deltaTecnico !== null) {
-            $carga->aplicar($deltaTecnico);
-        }
-
-        return [$movimento, $produto, $produto->saldoCentralAtual()];
-    }
-
     /** @return array<int, mixed> */
     private function linhaCsv(StockMovement $movimento): array
     {
@@ -255,7 +167,7 @@ class MovementController extends Controller
             StatusCatalog::label('movement', $movimento->type),
             $produto?->name,
             $produto?->sku,
-            $produto === null ? null : $this->unidade($produto),
+            Formatters::unidade($produto?->unit),
             Formatters::decimal($movimento->quantity),
             match (true) {
                 $central > 0 => '+'.Formatters::decimal($central),
@@ -465,118 +377,6 @@ class MovementController extends Controller
         ];
     }
 
-    private function descrição(StockMovement $movimento, Product $produto, float $depois): string
-    {
-        $unidade = $this->unidade($produto);
-        $carga = $movimento->efeitoTecnico();
-
-        $texto = sprintf(
-            '%s: %s %s de %s (%s). Estoque central agora: %s %s.',
-            StatusCatalog::label('movement', $movimento->type),
-            Formatters::decimal(abs((float) $movimento->quantity)),
-            $unidade,
-            $produto->name,
-            $produto->sku,
-            Formatters::decimal($depois),
-            $unidade,
-        );
-
-        if ($carga === null) {
-            return $texto;
-        }
-
-        return $texto.sprintf(
-            ' %s %s %s na carga de %s.',
-            $carga > 0 ? 'Entraram' : 'Saíram',
-            Formatters::decimal(abs($carga)),
-            $unidade,
-            $movimento->technician?->name ?? 'técnico',
-        );
-    }
-
-    private function mensagem(StockMovement $movimento, Product $produto, float $depois): string
-    {
-        $unidade = $this->unidade($produto);
-        $central = $movimento->efeitoCentral();
-        $carga = $movimento->efeitoTecnico();
-
-        $texto = sprintf(
-            '%s de %s %s de %s (%s). Estoque central: %s%s %s.',
-            StatusCatalog::label('movement', $movimento->type),
-            Formatters::decimal(abs((float) $movimento->quantity)),
-            $unidade,
-            $produto->name,
-            $produto->sku,
-            $central > 0 ? '+' : ($central < 0 ? '−' : ''),
-            Formatters::decimal($central === 0 ? 0 : abs($central)),
-            $unidade,
-        );
-
-        if ($carga === null) {
-            return $texto;
-        }
-
-        return rtrim($texto, '.').sprintf(
-            ' %s %s %s na carga de %s.',
-            $carga > 0 ? 'Entraram' : 'Saíram',
-            Formatters::decimal(abs($carga)),
-            $unidade,
-            $movimento->technician?->name ?? 'técnico',
-        );
-    }
-
-    /**
-     * O saldo cruzou a linha e a operação precisa saber disso no momento em que
-     * cruzou, não na semana em que alguém abrir o painel.
-     */
-    private function avisoDeReposicao(Product $produto, float $depois): ?string
-    {
-        if ($produto->reorder_point === null || $depois >= (float) $produto->reorder_point) {
-            return null;
-        }
-
-        return sprintf(
-            '%s está abaixo do ponto de reposição: %s contra o mínimo de %s %s.',
-            $produto->name,
-            Formatters::decimal($depois),
-            Formatters::decimal($produto->reorder_point),
-            $this->unidade($produto),
-        );
-    }
-
-    /**
-     * A falta no central é o único flash de tela que também toca sino: quem vê
-     * o aviso verde é quem digitou a baixa; quem repõe precisa ser chamado à
-     * parte. O toque é um por conta sem leitura — a mesma peça voltando a
-     * faltar não martela quem ainda não leu a falta anterior, e volta a soar
-     * para quem já leu.
-     */
-    private function avisarEstoqueBaixo(Product $produto, string $aviso): void
-    {
-        $link = route('movements.index', ['produto' => $produto->id]);
-
-        foreach (Notifier::quemPode('stock.adjust') as $conta) {
-            if (Notifier::jaAvisaram((int) $conta->id, 'estoque.baixo', $link)) {
-                continue;
-            }
-
-            Notifier::para(
-                $conta,
-                'estoque.baixo',
-                sprintf('%s abaixo do ponto de reposição', $produto->name),
-                $aviso,
-                $link,
-                ['produto_id' => $produto->id],
-            );
-        }
-    }
-
-    /** O código da unidade, que é como a operação fala no corredor: "un", "kg", "m". */
-    private function unidade(Product $produto): string
-    {
-        return strval($produto->unit ?? 'un');
-    }
-
     /** @return array<int, string> */
     private function produtos(): array
     {
@@ -599,7 +399,7 @@ class MovementController extends Controller
                 $produto->name,
                 $produto->sku,
                 Formatters::decimal($produto->central_balance),
-                $produto->unit,
+                Formatters::unidade($produto->unit),
             )])
             ->all();
     }

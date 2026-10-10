@@ -402,7 +402,7 @@
                                     $central = $movimento->efeitoCentral();
                                     $carga = $movimento->efeitoTecnico() ?? 0.0;
                                     $efeito = abs($central) >= abs($carga) ? $central : $carga;
-                                    $unidade = $movimento->product?->unit ?? 'un';
+                                    $unidade = Formatters::unidade($movimento->product?->unit);
                                 @endphp
                                 <li>
                                     <span>

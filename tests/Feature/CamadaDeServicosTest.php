@@ -4,17 +4,23 @@ namespace Tests\Feature;
 
 use App\Models\Client;
 use App\Models\Company;
+use App\Models\Product;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderCheckin;
 use App\Models\ServiceOrderStatusHistory;
+use App\Models\StockMovement;
 use App\Models\Technician;
+use App\Models\TechnicianStock;
 use App\Models\User;
 use App\Services\Orders\FluxoDeOrdem;
 use App\Services\Orders\RegistroDePresenca;
 use App\Services\Recusa;
+use App\Services\Stock\LancamentoDeEstoque;
 use App\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Tests\CreatesFixtures;
 use Tests\TestCase;
 
@@ -178,10 +184,121 @@ class CamadaDeServicosTest extends TestCase
         $this->assertSame('closed', $atualizada->status);
     }
 
+    public function test_o_lancamento_de_estoque_escreve_os_dois_saldos_a_trilha_e_a_frase_da_tela(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $ana = $this->tecnico($empresa, 'Ana Beltrão');
+        $produto = $this->produto($empresa, 'Gás R-410a', ['sku' => 'GS-410', 'unit' => 'kg']);
+
+        $estoque = app(LancamentoDeEstoque::class);
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            $compra = $estoque->registrar($this->pedido($admin, 'purchase', $produto, 10));
+            $carga = $estoque->registrar($this->pedido($admin, 'load', $produto, 4, $ana));
+        } finally {
+            TenantContext::forget();
+        }
+
+        $this->assertSame(6.0, $produto->fresh()->saldoCentralAtual(), 'A carga não baixou o central.');
+        $this->assertSame(4.0, (float) $this->carga($ana, $produto)->quantity, 'A carga não entrou na mala.');
+
+        // As duas frases que a escrita devolve: a da tela, com o efeito do gesto, e a
+        // da trilha, com o saldo que o lançamento formou.
+        $this->assertStringContainsString('Compra de 10,00 kg de Gás R-410a (GS-410)', $compra['resumo']);
+        $this->assertStringContainsString('Estoque central: +10,00 kg.', $compra['resumo']);
+        $this->assertStringNotContainsString('na carga de', $compra['resumo'], 'Compra não tem mala, e a frase não pode inventar uma.');
+
+        $this->assertStringContainsString('Carga para o técnico de 4,00 kg de Gás R-410a (GS-410)', $carga['resumo']);
+        $this->assertStringContainsString('Estoque central: −4,00 kg', $carga['resumo']);
+        $this->assertStringContainsString('Entraram 4,00 kg na carga de Ana Beltrão.', $carga['resumo']);
+        $this->assertSame(6.0, $carga['central']);
+        $this->assertNull($carga['aviso'], 'Com o ponto de reposição em zero não há o que avisar.');
+
+        $this->assertDatabaseHas('audit_logs', [
+            'entity_type' => 'StockMovement',
+            'entity_id' => (string) $carga['movimento']->id,
+            'action' => 'movimentação de estoque',
+            'user_id' => $admin->id,
+        ]);
+    }
+
+    public function test_a_recusa_do_saldo_devolve_o_campo_que_errou_e_nao_deixa_linha(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $ana = $this->tecnico($empresa, 'Ana Beltrão');
+        $produto = $this->produto($empresa, 'Correia dentada');
+        $ordem = $this->ordem($empresa, 'OS-2026-0501', 'Troca da correia', ['technician_id' => $ana->id]);
+
+        $estoque = app(LancamentoDeEstoque::class);
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            $estoque->registrar($this->pedido($admin, 'purchase', $produto, 5));
+
+            try {
+                $estoque->registrar($this->pedido($admin, 'load', $produto, 8, $ana));
+                $this->fail('O serviço deixou o estoque central ficar negativo.');
+            } catch (ValidationException $recusa) {
+                $this->assertArrayHasKey('quantidade', $recusa->errors());
+                $this->assertStringContainsString('não cabe aí', $recusa->errors()['quantidade'][0]);
+            }
+
+            // A mala também não vira crédito: sem carga na ficha, o consumo não passa.
+            try {
+                $estoque->registrar($this->pedido($admin, 'consume', $produto, 2, $ana, $ordem));
+                $this->fail('O consumo passou do que há na mala.');
+            } catch (ValidationException $recusa) {
+                $this->assertArrayHasKey('tecnico_id', $recusa->errors());
+                $this->assertStringContainsString('passa do que há na mala', $recusa->errors()['tecnico_id'][0]);
+            }
+        } finally {
+            TenantContext::forget();
+        }
+
+        // A transação desfeita não pode deixar rastro: nem linha, nem saldo na mala.
+        $this->assertSame(1, StockMovement::query()->count(), 'A recusa deixou linha escrita.');
+        $this->assertSame(5.0, $produto->fresh()->saldoCentralAtual());
+        $this->assertSame(0, TechnicianStock::query()->count());
+    }
+
+    public function test_a_falta_no_central_sai_da_escrita_com_aviso_e_sino(): void
+    {
+        [$empresa, $admin] = $this->empresaComAdmin();
+        $ana = $this->tecnico($empresa, 'Ana Beltrão');
+        $produto = $this->produto($empresa, 'Filtro de óleo', ['reorder_point' => 4]);
+
+        $this->actingAs($admin);
+        TenantContext::set($empresa->id);
+
+        try {
+            app(LancamentoDeEstoque::class)->registrar($this->pedido($admin, 'purchase', $produto, 10));
+            $carga = app(LancamentoDeEstoque::class)->registrar($this->pedido($admin, 'load', $produto, 8, $ana));
+        } finally {
+            TenantContext::forget();
+        }
+
+        $this->assertStringContainsString('abaixo do ponto de reposição', strval($carga['aviso']));
+        $this->assertStringContainsString('2,00 contra o mínimo de 4,00 un', strval($carga['aviso']));
+
+        // O sino é da escrita, não da tela: quem responde pelo inventário é chamado no
+        // momento em que o saldo cruzou a linha, sem depender de alguém abrir a listagem.
+        $this->assertDatabaseHas('notifications', [
+            'company_id' => $empresa->id,
+            'user_id' => $admin->id,
+            'type' => 'estoque.baixo',
+        ]);
+    }
+
     public function test_a_fachada_apresenta_e_o_servico_escreve(): void
     {
         $ordens = File::get(base_path('app/Http/Controllers/Orders/OrderController.php'));
         $chegadas = File::get(base_path('app/Http/Controllers/Orders/CheckinController.php'));
+        $estoque = File::get(base_path('app/Http/Controllers/Stock/MovementController.php'));
 
         // Nenhum dos dois abre transação, cria linha, grava passagem de estado,
         // toca sino nem escreve na trilha: quem faz isso é o serviço, e a tela só
@@ -192,8 +309,15 @@ class CamadaDeServicosTest extends TestCase
             $this->assertStringNotContainsString($proibida, $chegadas, "A escrita {$proibida} voltou para o controller de chegadas.");
         }
 
+        // O mesmo corte no estoque: quem abre a transação, trava o produto, escreve a
+        // linha, carimba a auditoria e toca o sino de reposição é `LancamentoDeEstoque`.
+        foreach (['DB::transaction', 'Auditor::gravar', 'Notifier::', 'StockMovement::query()->create', 'TechnicianStock::travar', 'lockForUpdate'] as $proibida) {
+            $this->assertStringNotContainsString($proibida, $estoque, "A escrita {$proibida} voltou para o controller de estoque.");
+        }
+
         $this->assertStringContainsString('FluxoDeOrdem', $ordens);
         $this->assertStringContainsString('RegistroDePresenca', $chegadas);
+        $this->assertStringContainsString('LancamentoDeEstoque', $estoque);
     }
 
     /** @return array{0: Company, 1: User} */
@@ -252,5 +376,52 @@ class CamadaDeServicosTest extends TestCase
         TenantContext::forget();
 
         return $tecnico;
+    }
+
+    /** @param  array<string, mixed>  $extras */
+    private function produto(Company $empresa, string $nome, array $extras = []): Product
+    {
+        TenantContext::set($empresa->id);
+        $produto = Product::query()->create($extras + [
+            'name' => $nome,
+            'sku' => Str::slug($nome),
+            'unit' => 'un',
+            'cost' => 10,
+            'price' => 25,
+            'reorder_point' => 0,
+            'status' => 'active',
+        ]);
+        TenantContext::forget();
+
+        return $produto;
+    }
+
+    /**
+     * O pedido que a tela montaria: o controller resolve produto, tipo, quantidade,
+     * dono da carga e ordem antes de chamar o serviço — aqui a chamada é direta, sem
+     * HTTP, para provar que a escrita não depende da fachada.
+     *
+     * @return array{produto_id: int, tipo: string, quantidade: float, tecnico: ?Technician, ordem: ?ServiceOrder, usuario: User, custo: null, observacao: null}
+     */
+    private function pedido(User $autor, string $tipo, Product $produto, float $quantidade, ?Technician $tecnico = null, ?ServiceOrder $ordem = null): array
+    {
+        return [
+            'produto_id' => $produto->id,
+            'tipo' => $tipo,
+            'quantidade' => $quantidade,
+            'tecnico' => $tecnico,
+            'ordem' => $ordem,
+            'usuario' => $autor,
+            'custo' => null,
+            'observacao' => null,
+        ];
+    }
+
+    private function carga(Technician $ficha, Product $produto): TechnicianStock
+    {
+        return TechnicianStock::query()
+            ->where('technician_id', $ficha->id)
+            ->where('product_id', $produto->id)
+            ->sole();
     }
 }
