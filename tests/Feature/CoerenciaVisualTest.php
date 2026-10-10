@@ -16,7 +16,8 @@ use Tests\TestCase;
  * interface que não existe, nenhuma palavra se parte ao meio porque o layout cedeu
  * antes dela, a tela aberta oferece uma só porta de entrada, o botão do menu desenha
  * o próprio estado em vez de trocar de glifo, a abertura da boas-vindas fecha em
- * faixa própria em vez de vão, e o hífen da casca pública não vira quebra de palavra.
+ * faixa própria em vez de vão, o hífen da casca pública não vira quebra de palavra, e
+ * o rótulo escondido do cabeçalho ordenável não empurra a janela para fora da tela.
  */
 class CoerenciaVisualTest extends TestCase
 {
@@ -255,6 +256,35 @@ class CoerenciaVisualTest extends TestCase
         $this->assertStringContainsString('flex: 0 1 auto', $valor);
         $this->assertStringContainsString('min-width: 0', $valor,
             'Quem tem folga para encolher é o valor, nunca a etiqueta.');
+    }
+
+    /**
+     * A tabela larga rola por dentro do cartão de propósito, e o recorte que faz isso
+     * só vale para o que se posiciona dentro dele. O rótulo que o cabeçalho ordenável
+     * entrega ao leitor de tela é `position: absolute` — é como o Bootstrap esconde
+     * uma palavra sem tirá-la da fala — e, enquanto o rolador não era bloco contenedor
+     * ele se media pelo cartão, que é `position: relative`, furando o recorte: em 768px
+     * a coluna "Situação" começa a 801px, o documento tinha 810px e a janela arrastava
+     * 42px para o lado. A prova amarra os dois lados do contrato — o pixel continua
+     * existindo para quem ouve, e deixou de existir para quem rola.
+     */
+    public function test_o_rolador_e_dono_do_que_se_posiciona_dentro_dele(): void
+    {
+        $componentes = $this->folha('components');
+        $rolador = $this->bloco($componentes, '.table-responsive');
+
+        $this->assertStringContainsString('position: relative', $rolador,
+            'Sem o rolador como bloco contenedor, o rótulo absoluto do cabeçalho escapa '
+                .'do recorte e abre rolagem horizontal na janela.');
+        $this->assertStringContainsString('overscroll-behavior-x: contain', $rolador,
+            'O arrasto continua morrendo na tabela: o que saiu foi o vazamento, não a rolagem.');
+
+        // A premissa da regra: o cabeçalho ordenável ainda fala o próprio estado para
+        // quem não vê a seta.
+        $cabecalho = file_get_contents(base_path('resources/views/components/ui/sort-link.blade.php'));
+        $this->assertStringContainsString('class="visually-hidden"', $cabecalho,
+            'Se o cabeçalho deixou de ter rótulo escondido, a regra perdeu o motivo.');
+        $this->assertStringContainsString('aria-sort=', $cabecalho);
     }
 
     /**

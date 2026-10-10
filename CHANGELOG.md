@@ -1514,6 +1514,61 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Corrigido
 
+- A página arrastava para o lado em tela pequena, e o culpado media um pixel.
+
+  * A coluna do conteúdo era a segunda trilha de uma grade `auto 1fr`, e `1fr` é `minmax(auto, 1fr)`: o piso
+    `auto` deixa um filho mais largo que a janela — tabela, palavra, o que for — esticar a trilha inteira, e
+    aí o arrasto que era da tabela vira da página. A trilha passou a ter piso zero (`auto minmax(0, 1fr)`):
+    o filho cabe, ou rola dentro de si, mas não leva o corpo junto. Junto disso o gesto foi preso nas quatro
+    caixas roladeiras que a casa tem — tabela larga, tira de abas do relatório, campo de arquivo e o
+    `.fc-scroller` da agenda, onde a medição pegou 22px de conteúdo fora da caixa em 320px e o FullCalendar
+    escreve `overflow: visible` no próprio elemento, de modo que só `!important` ganha dele.
+
+  * O vazamento que sobrou não era a tabela, e sim um rótulo de leitor de tela: o cabeçalho ordenável esconde
+    a própria fala como um quadro de um pixel em `position: absolute`, e enquanto o rolador não era bloco
+    contenedor esse pixel se media pelo cartão — `position: relative` por causa do próprio Bootstrap — furando
+    o recorte da `.table-responsive`. Em `/produtos`, aos 768px, a coluna "Situação" começa a 801px: o
+    documento tinha 810 e a janela arrastava 42px; em `/relatorios/estoque`, 1073. O `.table-responsive` passou
+    a responder pelo que se posiciona dentro dele, e a culpa foi fechada por eliminação: escondido aquele
+    `span` — único candidato absoluto da página — o documento caía exatamente a 768.
+
+  * É por isso que o celular nunca mostrou o defeito: abaixo de 768px a tabela vira ficha e o `thead` passa a
+    ser ele mesmo o quadro absoluto de um pixel, então o rótulo já se media ali. A banda do vazamento era a da
+    tabela de verdade, e ela só apareceu na varredura de onze larguras.
+
+  * Os cartões: dois cartões seguidos direto na coluna de conteúdo não vêm na grade do Bootstrap e não herdam
+    respiro nenhum — o segundo encostava no pé do primeiro e a tela virava uma placa só, que é o que as
+    configurações mostravam. `margin-top: 1rem`, o mesmo valor do `g-3`, para a casa ter um só ritmo. Nas
+    grades de campo o piso de coluna passou a `min(15rem, 100%)` (`min(13rem, 100%)` nas checagens): abaixo
+    disso a coluna vale a janela inteira em vez de estourá-la. O `.mb-3` que todo campo carrega foi cortado a
+    zero dentro da grade — sem isso a linha de baixo herda margem e `gap` ao mesmo tempo, e a folga dobra
+    conforme o campo tem ajuda ou erro. E a frase que explica cada chave de varredura agora mora na mesma
+    célula da chave: solta embaixo da grade, ela caía sob outra opção e explicava a tecla errada.
+
+  * No polegar, a linha de dois lados deixou de ser dois lados (em 320px o selo de estado pedia 52px a mais que
+    a caixa e cortava a palavra no meio) e o nome do arquivo escolhido passa a rolar no próprio botão, para o
+    usuário ler o que enviou em vez de ver a metade.
+
+  * A prova é a régua, não o olho: as 66 telas do sistema em onze larguras (1440, 1024, 900, 820, 768, 680,
+    600, 540, 430, 390 e 320) — 726 combinações, 0 documentos passando da janela; as mesmas 66 medidas vão a
+    vão em 390 e 1440 — 132 combinações, 0 vãos apertados, `/configuracoes` e `/perfil` a 16px; janela com
+    barra clássica de 10px em 1366, 1024, 768 e 390 — 28 combinações, 0 estouros e 0 arrastes; sino, menu da
+    conta e menu lateral abertos, em 390 e 768 — 32 combinações, todas com documento igual à janela e
+    `rolou 0`. O `getLayoutMetrics` do Chrome, com a barra na foto, confirma os 768px de `/produtos` que antes
+    tinham 810. Os sete endereços que devolvem CSV ou JSON não têm tela, e não entram na conta.
+
+  * A sonda também tinha um defeito, e ele mascarava o resultado: a casa usa `scroll-behavior: smooth`, então
+    `scrollTo` seguido de leitura imediata devolvia `scrollX = 0` e declarava limpa uma página que arrastava
+    42px. Toda medição de arrasto agora desliga a animação antes de medir, e a regra nova do rolador tem prova
+    em `CoerenciaVisualTest`. Suíte: 345 testes, 3330 asserções; Pint limpo nos 183 arquivos.
+
+- O README anunciava o check-in por um nome que nenhuma tela usa.
+
+  * A linha de módulos dizia "Check-in / check-out com geolocalização" — o nome da fase, não o que se vê. A
+    tela está no ar desde a fase 15 e se chama Visitas de campo (`/visitas`): é a chegada escrita na ficha da
+    ordem e a saída na passagem, com a distância medida deste lado. A linha passou a nomear a tela e a guardar
+    a capacidade entre parênteses.
+
 - A boas-vindas abriu um vão onde antes havia um botão, e uma palavra continuou se partindo no hífen.
 
   * Tirados os três chamados do meio do hero, a coluna da letra ficou sem nada embaixo: o row centralizava

@@ -264,6 +264,19 @@
         max-width: 100%;
         flex-wrap: nowrap;
     }
+
+    /*
+     * Abaixo de ~360px a coluna "A hora" da lista não cabe no corpo do cartão: a
+     * medição pegou 22px de conteúdo passando da caixa em 320px. O FullCalendar
+     * escreve `overflow: visible` no próprio rolador, direto no elemento, e estilo
+     * inline só perde para declaração importante — é o único jeito de a regra da
+     * casa ganhar dele. Preso na caixa, o quadro continua inteiro de ler e o
+     * arrasto não sobe para a página.
+     */
+    .nf-agenda .fc-scroller {
+        overflow-x: auto !important;
+        overscroll-behavior-x: contain;
+    }
 }
 
 /*

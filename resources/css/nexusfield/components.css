@@ -11,6 +11,15 @@
  * ------------------------------------------------------------------ */
 .app-wrapper {
     min-height: 100vh;
+    /*
+     * A coluna do conteúdo é a segunda trilha da grade, e `1fr` é `minmax(auto, 1fr)`:
+     * o piso `auto` deixa um filho mais largo que a janela — tabela sem rolagem
+     * própria, palavra sem espaço — esticar a trilha inteira. Aí a casa toda
+     * empurra para o lado e o arrastar vira da página, não da tabela. O piso zero
+     * devolve a decisão ao filho: ele cabe, ou rola dentro de si, mas não leva o
+     * corpo junto.
+     */
+    grid-template-columns: auto minmax(0, 1fr);
 }
 
 /*
@@ -496,6 +505,17 @@
     box-shadow: var(--nf-shadow-md);
 }
 
+/*
+ * Dois cartões seguidos direto na coluna de conteúdo — as configurações e os
+ * formulários de cadastro — não vêm dentro da grade do Bootstrap, então não
+ * herdam o respiro dos canaletas. Sem esta regra o segundo cartão encosta no pé
+ * do primeiro e a tela vira uma placa só. O valor é o mesmo do `g-3`, para a casa
+ * ter um só ritmo.
+ */
+.nf-content > .card + .card {
+    margin-top: 1rem;
+}
+
 .card-header,
 .card-footer {
     background-color: transparent;
@@ -878,6 +898,28 @@
 .table-responsive > .table > tbody > tr > th,
 .table-responsive > .table > tbody > tr > td {
     white-space: nowrap;
+}
+
+/*
+ * A tabela larga é roladeira de propósito, mas no toque o dedo não sabe parar
+ * nela: quando o arrasto chega ao fim da coluna o navegador encadeia o gesto na
+ * página, e a listagem vira "o site inteiro arrasta para o lado". `contain`
+ * prende o gesto na própria caixa — o arrasto continua disponível onde ele faz
+ * sentido, e só lá.
+ */
+.table-responsive {
+    overscroll-behavior-x: contain;
+    /*
+     * O rótulo que o cabeçalho ordenável entrega ao leitor de tela é um quadro de um
+     * pixel em `position: absolute` — é assim que o Bootstrap esconde uma palavra sem
+     * tirá-la da fala. Enquanto o rolador não era bloco contenedor, esse pixel se
+     * media pelo cartão, que é `position: relative` por causa do próprio Bootstrap, e
+     * furava o recorte da `.table-responsive`: em 768px a coluna "Situação" começa a
+     * 801px, o documento inteiro passava a ter 810px de largura e a janela arrastava
+     * 42px para o lado. Quem recorta o conteúdo de um rolador responde também pelo
+     * que se posiciona dentro dele.
+     */
+    position: relative;
 }
 
 /* Em cartão estreito o scroll horizontal esconde coluna sem aviso. Aqui a célula

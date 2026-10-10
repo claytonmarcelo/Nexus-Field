@@ -152,8 +152,21 @@
    divisão entre seções continua sendo o corte no material. */
 .nf-form-grade {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-    gap: 0 1.25rem;
+    /* O piso da coluna é `min(15rem, 100%)`: abaixo de 15rem de caixa ela passa a
+       valer a largura inteira em vez de estourar a janela. */
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+    gap: 1.1rem 1.25rem;
+}
+
+/*
+ * O ritmo vertical passa a ser do `gap` acima, e o `.mb-3` que todo campo carrega
+ * fica com o pé cortado dentro da grade. Sem isso a linha de baixo herda margem e
+ * espaçamento ao mesmo tempo, e a folga dobra conforme o campo tem ajuda ou erro.
+ * O `!important` é o mesmo recurso usado na barra de filtros: o AdminLTE marca o
+ * utilitário como importante, e só se ganha dele com a mesma força.
+ */
+.nf-form-grade .mb-3 {
+    margin-bottom: 0 !important;
 }
 
 .nf-form-grade .nf-form-largo {
@@ -253,6 +266,35 @@
     align-items: start;
 }
 
+/*
+ * No celular a linha de dois lados não tem como ser dois lados: o selo de estado,
+ * que não quebra linha, e o botão do lado esquerdo espremeriam a primeira coluna
+ * até cortar a palavra no meio — foi o que a medição mostrou em 320px, com o selo
+ * pedindo 52px a mais que a caixa. Aqui o texto fica com a linha toda e as ações
+ * descem juntas para a de baixo, na mesma ordem de leitura.
+ */
+@media (max-width: 575.98px) {
+    .nf-item-linha-lado {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem 0.75rem;
+    }
+
+    .nf-item-linha-lado > :first-child {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    /* O nome do arquivo escolhido não cabe no botão nativo: em vez de cortar, a
+       caixa passa a rolar no próprio eixo e o usuário lê o que enviou. */
+    .form-control[type="file"] {
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        max-width: 100%;
+    }
+}
+
 
 .nf-total-linha {
     display: flex;
@@ -287,13 +329,36 @@
    colunas no desktop, uma no celular, com o mesmo respiro dos campos. */
 .nf-check-grade {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-    gap: 0.25rem 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(13rem, 100%), 1fr));
+    gap: 0.75rem 1.25rem;
 }
 
 .nf-check-grade .form-check {
     margin-bottom: 0.25rem;
     min-height: 1.75rem;
+}
+
+/*
+ * Célula de opção com explicação: o rótulo e a frase que o esclarece andam juntos
+ * na mesma coluna da grade. Solta, a ajuda caía embaixo de outra opção e passava a
+ * explicar a chave errada — o que se lê tem de ficar debaixo do que se marca.
+ */
+.nf-check-celula {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.nf-check-celula .form-check {
+    margin-bottom: 0;
+}
+
+.nf-check-celula .nf-check-ajuda {
+    /* Recuo do rótulo: o `.form-check` desloca 1.5em para a caixa de marcar. */
+    padding-inline-start: 1.5em;
+    color: var(--nf-text-muted);
+    font-size: 0.78rem;
+    line-height: 1.35;
 }
 
 /* ── Fechamento de período (relatórios) ──────────────────────────────────── */
@@ -335,6 +400,9 @@
 .nf-relatorio-abas {
     margin: -0.25rem 0 1rem;
     overflow-x: auto;
+    /* A tira de abas é roladeira dela; o gesto morre nela e não vira arrasto da
+       página, como na tabela larga. */
+    overscroll-behavior-x: contain;
 }
 
 .nf-relatorio-abas .nav-link {

@@ -557,7 +557,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vieram uma fase por vez
 | Ordens de serviço | ✅ | ✅ | ✅ |
 | Chamados | ✅ | ✅ | ✅ |
 | Agenda e compromissos | ✅ | ✅ | ✅ |
-| Check-in / check-out com geolocalização | ✅ | ✅ | ✅ |
+| Visitas de campo (check-in e check-out geolocalizado) | ✅ | ✅ | ✅ |
 | Estoque e movimentações | ✅ | ✅ | ✅ |
 | Financeiro (contas a receber e a pagar) | ✅ | ✅ | ✅ |
 | Relatórios e exportações | ✅ | ✅ | ✅ |

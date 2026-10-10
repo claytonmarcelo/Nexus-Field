@@ -116,21 +116,21 @@
 
                 <div class="nf-check-grade">
                     @foreach (['varredura_ordens_atrasadas', 'varredura_vencimentos', 'varredura_agenda'] as $chave)
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="{{ $chave }}"
-                                id="lig-{{ $chave }}" value="1"
-                                @checked(old($chave, $valores[$chave]))
-                                @disabled(! $editando)>
-                            <label class="form-check-label" for="lig-{{ $chave }}">
-                                {{ $preferencias[$chave]['rotulo'] }}
-                            </label>
+                        <div class="nf-check-celula">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="{{ $chave }}"
+                                    id="lig-{{ $chave }}" value="1"
+                                    @checked(old($chave, $valores[$chave]))
+                                    @disabled(! $editando)>
+                                <label class="form-check-label" for="lig-{{ $chave }}">
+                                    {{ $preferencias[$chave]['rotulo'] }}
+                                </label>
+                            </div>
+
+                            <p class="nf-check-ajuda mb-0">{{ $preferencias[$chave]['ajuda'] }}</p>
                         </div>
                     @endforeach
                 </div>
-
-                @foreach (['varredura_ordens_atrasadas', 'varredura_vencimentos', 'varredura_agenda'] as $chave)
-                    <p class="nf-text-muted-2 small mb-1">{{ $preferencias[$chave]['ajuda'] }}</p>
-                @endforeach
             </div>
 
             @if ($editando)
