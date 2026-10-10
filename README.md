@@ -659,31 +659,91 @@ nexusfield/
 ## Arquitetura
 
 ```text
-┌────────────────────────────────────────────┐
-│  Navegador                                 │
-│  AdminLTE 4 + Bootstrap 5.3 + camada Nf    │
-│  tema claro/escuro · SweetAlert2 · Toastr  │
-└──────────────────┬─────────────────────────┘
-                   │ HTTPS · sessão em banco · CSRF
-                   ▼
-┌────────────────────────────────────────────┐
-│  Laravel 13                                 │
-│  rotas web → middleware                     │
-│  auth → company → permission                │
-│  controllers finos, regras no model/support │
-└──────────────────┬─────────────────────────┘
-                   │ Eloquent escopado por empresa
-                   ▼
-┌────────────────────────────────────────────┐
-│  MySQL 8 · InnoDB · utf8mb4                 │
-│  companies ─┬─ users ─ roles ─ permissions  │
-│             ├─ clients ─ contacts ─ addresses │
-│             ├─ technicians ─ teams ─ specialties │
-│             ├─ services ─ categories ─ products │
-│             ├─ orders ─ tickets ─ appointments │
-│             ├─ check-in ─ estoque ─ financeiro │
-│             └─ settings ─ notifications ─ auditoria │
-└────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                    1. CAMADA DE FRONT-END                │
+├──────────────────────────────────────────────────────────┤
+│  Navegador Web                                           │
+│                                                          │
+│  • AdminLTE 4                                            │
+│  • Bootstrap 5.3                                         │
+│  • Camada de personalização Nf                           │
+│  • Tema claro e escuro                                   │
+│  • SweetAlert2                                           │
+│  • Toastr                                                │
+└────────────────────────────┬─────────────────────────────┘
+                             │
+                             │ HTTPS
+                             │ Sessão armazenada no banco
+                             │ Proteção CSRF
+                             ▼
+┌──────────────────────────────────────────────────────────┐
+│                  2. CAMADA DE APLICAÇÃO                  │
+├──────────────────────────────────────────────────────────┤
+│  Laravel 13                                              │
+│                                                          │
+│  Fluxo de requisição:                                    │
+│                                                          │
+│  Rotas Web                                               │
+│      ↓                                                   │
+│  Middlewares                                             │
+│      ↓                                                   │
+│  Autenticação (Auth)                                     │
+│      ↓                                                   │
+│  Identificação da empresa (Company)                      │
+│      ↓                                                   │
+│  Autorização por permissões (Permission)                 │
+│      ↓                                                   │
+│  Controllers enxutos                                     │
+│      ↓                                                   │
+│  Models Eloquent + camada Support                        │
+│      ↓                                                   │
+│  Regras de negócio e persistência                        │
+└────────────────────────────┬─────────────────────────────┘
+                             │
+                             │ Eloquent ORM
+                             │ Consultas isoladas por empresa
+                             ▼
+┌──────────────────────────────────────────────────────────┐
+│                    3. CAMADA DE DADOS                    │
+├──────────────────────────────────────────────────────────┤
+│  MySQL 8                                                 │
+│  • InnoDB                                                │
+│  • utf8mb4                                               │
+│                                                          │
+│  ESTRUTURA FUNCIONAL                                     │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │ EMPRESAS E CONTROLE DE ACESSO                      │  │
+│  │ companies ─ users ─ roles ─ permissions            │  │
+│  └────────────────────────────────────────────────────┘  │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │ CLIENTES                                           │  │
+│  │ clients ─ contacts ─ addresses                     │  │
+│  └────────────────────────────────────────────────────┘  │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │ EQUIPE TÉCNICA                                     │  │
+│  │ technicians ─ teams ─ specialties                  │  │
+│  └────────────────────────────────────────────────────┘  │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │ CATÁLOGO                                           │  │
+│  │ services ─ categories ─ products                   │  │
+│  └────────────────────────────────────────────────────┘  │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │ OPERAÇÕES                                          │  │
+│  │ orders ─ tickets ─ appointments                    │  │
+│  │ check-in                                           │  │
+│  └────────────────────────────────────────────────────┘  │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │ GESTÃO INTERNA                                     │  │
+│  │ estoque ─ financeiro                               │  │
+│  │ settings ─ notifications ─ auditoria               │  │
+│  └────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────┘
 ```
 
 A regra de dependência é uma só: tela nenhuma decide autorização. O middleware `permission` responde
