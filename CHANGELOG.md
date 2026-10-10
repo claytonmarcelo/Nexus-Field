@@ -1126,6 +1126,13 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   404) não pode oferecer um hífen que o quebra-linhas use como corte. A suíte fecha em 318 testes / 3050
   asserções, Pint PASS em 175 arquivos e a varredura nos mesmos 73 endereços GET — 66×200, 5×302, 1×403,
   1×404, nenhum 5xx.
+- As seis capturas do README voltaram a ser prova de tela: a série foi refeita com o hero sem os botões do
+  meio e com a esteira em faixa própria (fase 26 e 27), e com os cartões do painel carregando a
+  micro-visualização da fase 23 — as capturas antigas ainda mostravam a casa de antes. O tema entra por
+  cookie antes da navegação, o painel é fotografado depois de um login real (CSRF da mesma resposta, senha
+  lida do `.env` e nunca impressa), e o quadro do celular sai do viewport verdadeiro de 390×844 montado
+  sobre o preto dos 1440×900. `ScreenshotsTest` confere as seis medidas no IHDR, o link de cada imagem e a
+  legenda contra o que o arquivo mostra.
 
 ### Alterado
 

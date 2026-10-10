@@ -39,16 +39,17 @@ o clique abre o arquivo no tamanho capturado. O painel de celular é fotografado
 (390×844) e montado sobre o mesmo quadro de 1440×900 — é o único quadro diferente da série, e a
 legenda diz isso. Os painéis mostram a empresa de demonstração criada pelo `DemoSeeder` — é ela que
 tem ordens, chamados, financeiro e estoque para os indicadores calcularem; na empresa real sem dados,
-os mesmos blocos aparecem nos estados vazios. As capturas do painel já contam os catorze indicadores de hoje:
-o estoque acrescentou o cartão "Movimentações de hoje" e a lista "Últimas movimentações", e o
-financeiro entrou com "A receber", "A pagar", "Recebido no mês" e "Despesa do mês" — refeitas na
-rodada de prontidão de deploy, depois da última fase pousar.
+os mesmos blocos aparecem nos estados vazios. A série foi refeita depois que a fase 27 pousou, então ela
+mostra a casa como ela está hoje: a boas-vindas sem botão no meio do hero e com o ciclo de seis passos em
+faixa própria, e os catorze indicadores do painel com a micro-visualização que sai da mesma consulta do
+cartão — o "Movimentações de hoje" do estoque, e os quatro do financeiro ("A receber", "A pagar",
+"Recebido no mês" e "Despesa do mês").
 
 <div align="center">
 
 | Apresentação pública · tema claro | Entrada · tema escuro |
 | :--: | :--: |
-| <a href="docs/screenshots/01-boas-vindas.png"><img src="docs/screenshots/01-boas-vindas.png" alt="Página de apresentação pública do NEXUS-FIELD em tema claro, com a logo animada no palco do hero e o ciclo de um serviço ao lado do título" width="360"></a> | <a href="docs/screenshots/02-entrada.png"><img src="docs/screenshots/02-entrada.png" alt="Tela de entrada com e-mail, senha com botão de revelar, manter conectado e recuperação de acesso em tema escuro" width="360"></a> |
+| <a href="docs/screenshots/01-boas-vindas.png"><img src="docs/screenshots/01-boas-vindas.png" alt="Página de apresentação pública do NEXUS-FIELD em tema claro: título e parágrafos à esquerda, a logo animada no palco à direita e o ciclo de um serviço em faixa própria abaixo" width="360"></a> | <a href="docs/screenshots/02-entrada.png"><img src="docs/screenshots/02-entrada.png" alt="Tela de entrada com e-mail, senha com botão de revelar, manter conectado e recuperação de acesso em tema escuro" width="360"></a> |
 
 | Recuperação de acesso · tema claro | Painel no celular · tema escuro |
 | :--: | :--: |
