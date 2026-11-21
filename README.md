@@ -571,6 +571,15 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 
 ---
 
+## Integrações de IA e APIs
+
+O projeto já tem a base instalada para agentes e LLMs (`laravel/ai` + `laravel/mcp`), exportação em
+Excel e PDF e storage S3/R2, além das skills e do MCP server do Laravel Boost. Credenciais ficam só
+no `.env`, e a regra de tenant vale também para conversas de IA. O que entrou, o que ficou de fora e
+por quê está em [docs/integracoes-ia-e-apis.md](docs/integracoes-ia-e-apis.md).
+
+---
+
 ## Tecnologias
 
 ### Backend
