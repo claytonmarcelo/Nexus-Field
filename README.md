@@ -929,12 +929,15 @@ senha por dentro da aplicação. Se a senha contiver `#`, escreva o valor entre 
 aspas o dotenv lê o `#` como início de comentário e a senha chega truncada. Em produção o seeder
 recusa senha gerada automaticamente; credencial nunca entra no código nem no Git.
 
-**Não há cadastro por conta própria (`/register`).** As contas deste estágio vêm do seeder: o seeder
-padrão cria a conta raiz, e `DemoSeeder` cria as quatro contas de demonstração. O motivo de não abrir
-auto-cadastro é de escopo, não de pressa: cada usuário nasce vinculado a uma empresa e a um papel,
-então uma tela de cadastro teria que criar a empresa, escolher o plano e nomear o administrador na
-mesma operação — decisão comercial, não um campo de formulário. A recuperação de acesso existe para
-quem já tem conta e esqueceu a senha.
+**Cadastro público de empresa:** `/cadastro` abre o fluxo em quatro etapas — dados da empresa e do
+administrador inicial, confirmação de e-mail, envio de documentos privados e acompanhamento do pedido.
+O pedido nasce antes da empresa: fica em `company_registrations` com protocolo `NF-CAD-ANO-0001`,
+CNPJ/e-mail em hash, tokens com expiração e IP em hash. O link de confirmação vai por e-mail; só depois
+de confirmado o solicitante pode anexar documentos (disco `local`, nunca `public`), aceitar os termos e
+enviar para análise. A aprovação pela plataforma cria empresa, papéis, estrutura organizacional mínima e
+administrador na mesma transação; o e-mail de aprovação traz o link de definição de senha. Nenhuma senha
+é enviada por e-mail. A recuperação de acesso continua disponível em `/forgot-password` para quem já tem
+conta e esqueceu a senha. As contas internas de demonstração seguem vindo do seeder.
 
 ---
 

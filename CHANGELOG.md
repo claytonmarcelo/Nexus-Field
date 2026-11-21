@@ -26,6 +26,15 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Adicionado
 
+- Etapa 6 (E6) do módulo de organização: cadastro público de empresas em `/cadastro`, com quatro
+  etapas, confirmação de e-mail, tokens hasheados com expiração, CNPJ validado por dígito verificador,
+  anti-abuso por IP em hash, documentos privados no disco `local`, aceites legais versionados, trilha
+  de transições e notificações de confirmação/análise/aprovação/reprovação. Toda escrita e transição
+  vive em `App\Services\Cadastro\GestorDeCadastro`; controllers enxutos e `Form Requests` validam a
+  entrada. A aprovação cria empresa, papéis, estrutura mínima e administrador na mesma transação e
+  gera token de redefinição para o e-mail de boas-vindas. Migration dedicada amplia `companies` sem
+  remover colunas e faz backfill de `legal_name`/`cnpj`/`lifecycle_status`. Suíte: 397 testes /
+  3702 asserções.
 - Etapa 4 do módulo de organização: estrutura interna gerenciável em `organization.*` — filiais, setores
   (árvore com `parent_id`/`path` e recálculo da subárvore ao mover), cargos e vínculos com histórico de
   passagem. Escrita centralizada em `App\Services\Organizacao\GestorDeEstrutura` (transação, `Recusa`,

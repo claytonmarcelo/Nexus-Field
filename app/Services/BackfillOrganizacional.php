@@ -57,8 +57,13 @@ final class BackfillOrganizacional
         return $totais;
     }
 
-    /** @param array<string, int> $totais */
-    private function paraEmpresa(Company $empresa, array &$totais): void
+    /**
+     * Estrutura mínima de uma única empresa. Público para que a aprovação de um
+     * cadastro use a mesma rotina, na mesma transação, sem segunda fonte de verdade.
+     *
+     * @param array<string, int> $totais
+     */
+    public function paraEmpresa(Company $empresa, array &$totais): void
     {
         $filial = Branch::query()->firstOrCreate(
             ['company_id' => $empresa->id, 'slug' => 'matriz'],

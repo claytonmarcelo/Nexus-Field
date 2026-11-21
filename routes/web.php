@@ -3,6 +3,7 @@
 use App\Http\Controllers\Agenda\AgendaController;
 use App\Http\Controllers\Audit\AuditController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Cadastro\CadastroController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Catalog\ProductController;
@@ -50,6 +51,20 @@ Route::get('cron/schedule', CronController::class)
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store'])->middleware('throttle:10,1');
+
+    // Cadastro público em etapas: o token de confirmação e o de acesso viajam
+    // apenas no e-mail; todas as escritas passam pelo GestorDeCadastro.
+    Route::get('cadastro', [CadastroController::class, 'create'])->name('cadastro.create');
+    Route::post('cadastro', [CadastroController::class, 'store'])->middleware('throttle:6,1')->name('cadastro.store');
+    Route::get('cadastro/confirmar', [CadastroController::class, 'confirmar'])->name('cadastro.confirmar');
+    Route::get('cadastro/confirmar/{token}', [CadastroController::class, 'confirmarToken'])
+        ->middleware('throttle:10,1')->name('registration.confirm');
+    Route::get('cadastro/documentos', [CadastroController::class, 'documentos'])->name('cadastro.documentos');
+    Route::post('cadastro/documentos', [CadastroController::class, 'anexar'])
+        ->middleware('throttle:20,1')->name('cadastro.documentos.anexar');
+    Route::post('cadastro/aceitar', [CadastroController::class, 'aceitar'])->name('cadastro.aceitar');
+    Route::post('cadastro/enviar', [CadastroController::class, 'submeter'])->name('cadastro.enviar');
+    Route::get('cadastro/enviado/{protocolo}', [CadastroController::class, 'enviado'])->name('cadastro.enviado');
 
     Route::get('forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
     Route::post('forgot-password', [PasswordResetController::class, 'email'])->name('password.email')->middleware('throttle:5,1');

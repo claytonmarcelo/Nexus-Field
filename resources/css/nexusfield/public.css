@@ -461,6 +461,122 @@
     }
 }
 
+/* Cadastro público em etapas. A casca reaproveita `.nf-auth`; aqui só o que é
+   específico do fluxo: card mais largo, trilha de etapas e blocos de apoio. */
+.nf-cadastro-card {
+    max-width: 52rem;
+}
+
+.nf-cadastro-etapas {
+    display: flex;
+    justify-content: center;
+    gap: .5rem;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    list-style: none;
+}
+
+.nf-cadastro-etapas li {
+    display: grid;
+    width: 1.75rem;
+    height: 1.75rem;
+    place-items: center;
+    border: 1px solid var(--nf-line-strong);
+    border-radius: 50%;
+    color: var(--nf-text-muted);
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+.nf-cadastro-etapas li.ativo {
+    border-color: var(--nf-primary);
+    background: var(--nf-primary);
+    color: #fff;
+}
+
+.nf-cadastro-etapas li.concluido {
+    border-color: var(--nf-primary);
+    color: var(--nf-primary);
+}
+
+.nf-cadastro-grupo {
+    margin-bottom: .85rem;
+    font-family: var(--nf-font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.nf-cadastro-termos {
+    display: grid;
+    gap: .5rem;
+    margin: 1.25rem 0;
+}
+
+.nf-cadastro-protocolo {
+    margin-bottom: 1rem;
+    color: var(--nf-text-muted);
+    font-size: .875rem;
+}
+
+.nf-cadastro-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--nf-line);
+    border-radius: var(--bs-border-radius-lg);
+    background: var(--nf-tint);
+}
+
+.nf-cadastro-aviso i {
+    color: var(--nf-primary);
+    font-size: 1.4rem;
+}
+
+.nf-cadastro-aviso p,
+.nf-cadastro-dica {
+    margin: 0;
+    color: var(--nf-text-muted);
+    font-size: .875rem;
+}
+
+.nf-cadastro-dica {
+    margin-top: 1rem;
+}
+
+.nf-cadastro-docs {
+    display: grid;
+    gap: .5rem;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    list-style: none;
+}
+
+.nf-cadastro-docs li {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--nf-line);
+    border-radius: var(--bs-border-radius);
+    font-size: .875rem;
+}
+
+.nf-cadastro-docs i {
+    color: var(--nf-primary);
+}
+
+.nf-cadastro-docs small {
+    margin-left: auto;
+    color: var(--nf-text-muted);
+}
+
+.nf-cadastro-aceite {
+    display: inline-block;
+    margin-right: .5rem;
+}
+
 /* Oscilação amortecida: larga com amplitude, encolhe a cada volta e trava em 0. */
 @keyframes nf-auto-nivel {
     0% { transform: rotate(-5.5deg); }

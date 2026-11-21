@@ -17,9 +17,9 @@ validação. A criação de usuários internos continua sob responsabilidade do
 administrador da empresa; o auto-cadastro é de empresa, não de qualquer conta
 avulsa.
 
-**Implementação:** Etapa 6 do plano em `docs/organizacao/ETAPA-1-DESENHO.md`.
-A seção "Contas e acesso" do README será atualizada junto com a entrega da
-funcionalidade, para não anunciar antes da hora uma tela que ainda não existe.
+**Implementação:** Etapa 6 do plano em `docs/organizacao/ETAPA-1-DESENHO.md`, entregue em
+`/cadastro`: quatro etapas, confirmação de e-mail, documentos privados e aprovação pela plataforma.
+A seção "Contas e acesso" do README foi atualizada junto com a entrega.
 
 **Restrições mantidas:** MySQL compatível, nenhum segredo versionado, dados de
 exemplo fictícios, isolamento por `company_id`, identidade visual preservada e
