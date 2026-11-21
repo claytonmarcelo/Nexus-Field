@@ -14,5 +14,6 @@
     src="{{ asset('img/'.$arquivo.'.png') }}"
     width="{{ $lado }}"
     height="{{ $lado }}"
+    style="width: {{ $lado / 16 }}rem; height: {{ $lado / 16 }}rem"
     alt=""
 />

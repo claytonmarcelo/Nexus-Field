@@ -57,8 +57,8 @@
 }
 
 .nf-brand-mark {
-    width: 30px;
-    height: 30px;
+    width: 1.875rem;
+    height: 1.875rem;
     flex: none;
     transition: transform var(--nf-duration) var(--nf-ease);
 }
@@ -123,7 +123,7 @@
     inset: 4% 6%;
     border-radius: 50%;
     background: radial-gradient(closest-side, color-mix(in srgb, var(--nf-primary) 30%, transparent), transparent 76%);
-    filter: blur(16px);
+    filter: blur(1rem);
     opacity: .55;
     animation: nf-acender 7s var(--nf-ease) infinite;
     content: "";
@@ -131,10 +131,10 @@
 
 .nf-brand-stage-logo {
     position: relative;
-    width: clamp(210px, 34vw, 360px);
+    width: clamp(13.125rem, 34vw, 22.5rem);
     height: auto;
     transform-origin: 50% 4%;
-    filter: drop-shadow(0 12px 26px color-mix(in srgb, var(--nf-primary) 22%, transparent));
+    filter: drop-shadow(0 .75rem 1.625rem color-mix(in srgb, var(--nf-primary) 22%, transparent));
     animation: nf-auto-nivel 7s var(--nf-ease) infinite;
 }
 
@@ -151,7 +151,7 @@
 /* No escuro o "FIELD" da logo é quase preto sobre preto: o fio claro em volta
      das letras é o que devolve a palavra inteira para a leitura. */
 [data-bs-theme="dark"] .nf-brand-stage-logo {
-    filter: drop-shadow(0 0 1px rgba(255, 255, 255, .62)) drop-shadow(0 12px 26px color-mix(in srgb, var(--nf-primary) 22%, transparent));
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, .62)) drop-shadow(0 .75rem 1.625rem color-mix(in srgb, var(--nf-primary) 22%, transparent));
 }
 
 /*
@@ -334,8 +334,8 @@
 }
 
 .nf-public-footer .nf-brand-mark {
-    width: 22px;
-    height: 22px;
+    width: 1.375rem;
+    height: 1.375rem;
 }
 
 .nf-public-footer .nf-wordmark {
@@ -372,7 +372,7 @@
 
 .nf-auth-card {
     width: 100%;
-    max-width: 430px;
+    max-width: 26.875rem;
     border: 1px solid var(--nf-line);
     border-radius: var(--bs-border-radius-xl);
     background-color: var(--nf-elevated);
@@ -388,13 +388,13 @@
 }
 
 .nf-auth-brand .nf-brand-mark {
-    width: 58px;
-    height: 58px;
-    filter: drop-shadow(0 6px 14px color-mix(in srgb, var(--nf-primary) 20%, transparent));
+    width: 3.625rem;
+    height: 3.625rem;
+    filter: drop-shadow(0 .375rem .875rem color-mix(in srgb, var(--nf-primary) 20%, transparent));
 }
 
 .nf-auth-brand-nivel {
-    width: 76px;
+    width: 4.75rem;
     height: 1px;
     margin-top: .6rem;
     background: linear-gradient(90deg, transparent, var(--nf-line-strong), transparent);

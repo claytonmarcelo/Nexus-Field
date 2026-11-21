@@ -27,7 +27,8 @@
  * container continua fluido, só para de esticar depois de um certo ponto.
  */
 .nf-content {
-    max-width: 1680px;
+    /* 1680px na escala antiga; em rem acompanha a raiz a 80%. */
+    max-width: 105rem;
     margin-inline: auto;
 }
 
@@ -39,7 +40,7 @@
     min-height: var(--nf-header-height);
     padding-block: .25rem;
     background-color: color-mix(in srgb, var(--nf-surface) 88%, transparent);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(.625rem);
     border-bottom: 1px solid var(--nf-line);
     box-shadow: var(--nf-shadow-sm);
 }
@@ -99,7 +100,7 @@
     display: inline-flex;
     flex-direction: column;
     justify-content: center;
-    gap: 4px;
+    gap: .25rem;
     width: 2.35rem;
     height: 2.15rem;
     padding: 0 .55rem;
@@ -142,7 +143,7 @@
 }
 
 .nf-nav-toggle-bar:nth-child(1) {
-    transform: translateY(calc(var(--nf-dobra) * 6px)) rotate(calc(var(--nf-dobra) * 40deg));
+    transform: translateY(calc(var(--nf-dobra) * .375rem)) rotate(calc(var(--nf-dobra) * 40deg));
 }
 
 .nf-nav-toggle-bar:nth-child(2) {
@@ -150,7 +151,7 @@
 }
 
 .nf-nav-toggle-bar:nth-child(3) {
-    transform: translateY(calc(var(--nf-dobra) * -6px)) rotate(calc(var(--nf-dobra) * -40deg));
+    transform: translateY(calc(var(--nf-dobra) * -.375rem)) rotate(calc(var(--nf-dobra) * -40deg));
 }
 
 /* No desktop a coleção é a exceção: o corpo marca `sidebar-collapse`. */
@@ -2196,11 +2197,11 @@
  * nunca cortada -- o que a casa envia e o que se ve.
  */
 .brand-link .nf-sidebar-logo {
-    width: 30px;
-    height: 30px;
+    width: 1.875rem;
+    height: 1.875rem;
     flex: none;
     object-fit: contain;
-    border-radius: 8px;
+    border-radius: .5rem;
 }
 
 /*
@@ -2213,7 +2214,7 @@
     max-height: 2rem;
     object-fit: contain;
     margin-top: .35rem;
-    border-radius: 8px;
+    border-radius: .5rem;
 }
 
 /* ------------------------------------------------------------------ *

@@ -127,7 +127,7 @@
     border: 0;
     border-left: 3px solid var(--nf-line-strong);
     border-radius: var(--bs-border-radius-sm);
-    padding: 1px 5px;
+    padding: .0625rem .3125rem;
     font-weight: 600;
     font-size: .78rem;
     line-height: 1.35;
@@ -189,8 +189,8 @@
     border-left-style: solid;
     background: repeating-linear-gradient(
         135deg,
-        var(--nf-elevated) 0 6px,
-        color-mix(in srgb, var(--nf-info) 9%, var(--nf-elevated)) 6px 12px
+        var(--nf-elevated) 0 .375rem,
+        color-mix(in srgb, var(--nf-info) 9%, var(--nf-elevated)) .375rem .75rem
     );
     color: var(--nf-text);
     font-weight: 500;
@@ -335,7 +335,7 @@
 
 .nf-agenda-esqueleto .nf-skeleton {
     height: .8rem;
-    border-radius: 6px;
+    border-radius: .375rem;
 }
 
 .nf-agenda-esqueleto .nf-skeleton:nth-child(1) { width: 24%; }

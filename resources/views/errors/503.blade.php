@@ -13,7 +13,8 @@
     <meta name="description" content="A plataforma está em manutenção programada e volta em instantes.">
     <title>Manutenção programada — NEXUS-FIELD</title>
     <style>
-        :root { color-scheme: dark; }
+        /* Página isolada: não carrega Vite, então a escala de 80% vive aqui. */
+        :root { color-scheme: dark; font-size: 80%; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             min-height: 100vh;
@@ -27,8 +28,8 @@
         }
         main { max-width: 34rem; }
         .marca {
-            width: 72px; height: 72px; margin: 0 auto 1.5rem;
-            border-radius: 18px;
+            width: 4.5rem; height: 4.5rem; margin: 0 auto 1.5rem;
+            border-radius: 1.125rem;
             background: linear-gradient(145deg, #0d1a0d, #000);
             border: 1px solid rgba(98, 188, 96, .4);
             display: grid; place-items: center;

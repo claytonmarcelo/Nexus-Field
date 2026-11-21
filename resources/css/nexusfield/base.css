@@ -2,7 +2,22 @@
  * Base: como a página se comporta antes de qualquer componente existir.
  */
 
+/*
+ * Escala visual global: 80% de todas as medidas expressas em `rem`.
+ *
+ * O projeto inteiro — Bootstrap, AdminLTE e as folhas da casa — já mede
+ * tipografia, espaçamento, raios e quase todos os componentes em `rem`. Um único
+ * `font-size` na raiz encolhe tudo isso de uma vez, sem `zoom` (que não é padrão
+ * em todos os navegadores) nem `transform: scale` no container (que quebraria
+ * posicionamento, scroll e área de toque). Media queries continuam em px de
+ * viewport, como devem: elas descrevem o aparelho, não o conteúdo.
+ *
+ * 80% de 16px = 12,8px por `rem`. As poucas medidas ainda em px que precisam
+ * acompanhar a escala foram convertidas para `rem` nas folhas e nos componentes;
+ * bordas de 1px e a largura da barra de rolagem ficam em px de propósito.
+ */
 html {
+    font-size: 80%;
     background-color: var(--nf-bg);
 }
 
