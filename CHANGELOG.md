@@ -10,6 +10,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Adicionado
 
+- Documentação de deploy em `docs/vercel.md` (arquitetura do container, variáveis por nome, ordem de
+  operação, verificações executadas e itens não verificados) e relatório de segurança em
+  `docs/seguranca/VERCEL-PRODUCAO.md`, com evidências, commits e riscos residuais. O build local da
+  imagem ficou marcado como não verificado porque o daemon Docker está indisponível na máquina.
 - Cron protegido da Vercel em `GET /cron/schedule`: `Authorization: Bearer $CRON_SECRET`, comparação em
   tempo constante, falha fechada sem segredo configurado, limite de 10 chamadas por minuto/IP e registro
   de toda recusa (IP, navegador e motivo, sem segredo) no log da aplicação. A rota dispara apenas
