@@ -10,6 +10,11 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Adicionado
 
+- Etapa 1 do módulo global de empresas e organização: baseline verde (353 testes / 3365 asserções),
+  inventário da arquitetura atual, desenho do modelo de dados e da política de alcance única em
+  `docs/organizacao/ETAPA-1-DESENHO.md`, estudo de mercado com fontes em
+  `docs/mercado/ESTUDO-ORGANIZACAO-2026-11-21.md` e registro da mudança de decisão sobre auto-cadastro
+  em `docs/DECISOES.md`. Nenhum código de aplicação foi alterado nesta etapa.
 - Documentação de deploy em `docs/vercel.md` (arquitetura do container, variáveis por nome, ordem de
   operação, verificações executadas e itens não verificados) e relatório de segurança em
   `docs/seguranca/VERCEL-PRODUCAO.md`, com evidências, commits e riscos residuais. O build local da
