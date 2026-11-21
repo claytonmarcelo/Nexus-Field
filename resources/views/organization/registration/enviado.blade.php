@@ -1,4 +1,4 @@
-<x-cadastro-shell
+<x-organization.cadastro-shell
     title="Cadastro enviado"
     subtitle="Seu pedido está em análise. Avisaremos por e-mail quando houver uma decisão."
     :step="4"
@@ -15,4 +15,4 @@
     <p class="nf-auth-back">
         <a href="{{ route('login') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Ir para a entrada</a>
     </p>
-</x-cadastro-shell>
+</x-organization.cadastro-shell>

@@ -23,6 +23,13 @@ class CadastroEmpresaTest extends TestCase
 
     private const CNPJ = '11.444.777/0001-61';
 
+    private function administrador(string $email = 'admin@painel.local'): User
+    {
+        $empresa = $this->makeCompany('empresa-painel');
+
+        return $this->makeUser('administrator', $empresa, $email);
+    }
+
     /** @return array<string, mixed> */
     private function dados(string $email = 'admin@empresa-teste.local'): array
     {
@@ -40,18 +47,37 @@ class CadastroEmpresaTest extends TestCase
         ];
     }
 
-    public function test_pagina_de_cadastro_e_publica(): void
+    public function test_cadastro_de_empresa_fica_no_painel_e_fora_das_paginas_publicas(): void
     {
-        $this->get(route('cadastro.create'))
+        $this->seedPermissions();
+
+        $this->get(route('cadastro.create'))->assertRedirect(route('login'));
+
+        foreach ([route('welcome'), route('login'), route('password.request')] as $url) {
+            $this->get($url)->assertDontSee('cadastros/empresas', false);
+        }
+
+        $this->actingAs($this->administrador())->get(route('cadastro.create'))
             ->assertOk()
-            ->assertSee('Cadastro de empresa');
+            ->assertSee('Cadastro de empresa')
+            ->assertSee('Empresas');
+    }
+
+    public function test_cadastro_de_empresa_exige_permissao(): void
+    {
+        $this->seedPermissions();
+        $empresa = $this->makeCompany('empresa-sem-permissao');
+        $usuario = $this->makeUser('technician', $empresa, 'tecnico@painel.local');
+
+        $this->actingAs($usuario)->get(route('cadastro.create'))->assertForbidden();
     }
 
     public function test_inicio_cria_pedido_em_rascunho_e_notifica_confirmacao(): void
     {
         Notification::fake();
+        $this->seedPermissions();
 
-        $this->post(route('cadastro.store'), $this->dados())
+        $this->actingAs($this->administrador())->post(route('cadastro.store'), $this->dados())
             ->assertRedirect(route('cadastro.confirmar'))
             ->assertSessionHas('status');
 
@@ -67,10 +93,11 @@ class CadastroEmpresaTest extends TestCase
 
     public function test_cnpj_invalido_e_recusado(): void
     {
+        $this->seedPermissions();
         $dados = $this->dados();
         $dados['cnpj'] = '11.444.777/0001-62';
 
-        $this->post(route('cadastro.store'), $dados)
+        $this->actingAs($this->administrador())->post(route('cadastro.store'), $dados)
             ->assertSessionHasErrors('cnpj');
 
         $this->assertSame(0, CompanyRegistration::count());
@@ -78,10 +105,11 @@ class CadastroEmpresaTest extends TestCase
 
     public function test_cnpj_ja_cadastrado_e_recusado(): void
     {
+        $this->seedPermissions();
         $empresa = $this->makeCompany();
         $empresa->forceFill(['cnpj' => '11444777000161'])->save();
 
-        $this->post(route('cadastro.store'), $this->dados())
+        $this->actingAs($this->administrador())->post(route('cadastro.store'), $this->dados())
             ->assertRedirect()
             ->assertSessionHas('erro');
 

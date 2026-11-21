@@ -3,7 +3,7 @@
 use App\Http\Controllers\Agenda\AgendaController;
 use App\Http\Controllers\Audit\AuditController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Cadastro\CadastroController;
+use App\Http\Controllers\Organization\CompanyRegistrationController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Catalog\ProductController;
@@ -48,23 +48,15 @@ Route::get('cron/schedule', CronController::class)
     ->middleware('throttle:10,1')
     ->name('cron.schedule');
 
+// A confirmação por e-mail é um endpoint com token, não uma tela: pode ser
+// aberta fora da sessão que iniciou o pedido. Depois dela, o fluxo volta para
+// o painel autenticado em Cadastros › Empresas.
+Route::get('cadastros/empresas/confirmar/{token}', [CompanyRegistrationController::class, 'confirmarToken'])
+    ->middleware('throttle:10,1')->name('registration.confirm');
+
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store'])->middleware('throttle:10,1');
-
-    // Cadastro público em etapas: o token de confirmação e o de acesso viajam
-    // apenas no e-mail; todas as escritas passam pelo GestorDeCadastro.
-    Route::get('cadastro', [CadastroController::class, 'create'])->name('cadastro.create');
-    Route::post('cadastro', [CadastroController::class, 'store'])->middleware('throttle:6,1')->name('cadastro.store');
-    Route::get('cadastro/confirmar', [CadastroController::class, 'confirmar'])->name('cadastro.confirmar');
-    Route::get('cadastro/confirmar/{token}', [CadastroController::class, 'confirmarToken'])
-        ->middleware('throttle:10,1')->name('registration.confirm');
-    Route::get('cadastro/documentos', [CadastroController::class, 'documentos'])->name('cadastro.documentos');
-    Route::post('cadastro/documentos', [CadastroController::class, 'anexar'])
-        ->middleware('throttle:20,1')->name('cadastro.documentos.anexar');
-    Route::post('cadastro/aceitar', [CadastroController::class, 'aceitar'])->name('cadastro.aceitar');
-    Route::post('cadastro/enviar', [CadastroController::class, 'submeter'])->name('cadastro.enviar');
-    Route::get('cadastro/enviado/{protocolo}', [CadastroController::class, 'enviado'])->name('cadastro.enviado');
 
     Route::get('forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
     Route::post('forgot-password', [PasswordResetController::class, 'email'])->name('password.email')->middleware('throttle:5,1');
@@ -78,6 +70,25 @@ Route::middleware(['auth', 'company'])->group(function () {
     Route::get('dashboard', DashboardController::class)
         ->middleware('permission:dashboard.view')
         ->name('dashboard');
+
+    /*
+     * Cadastro de empresas: uma etapa da área autenticada, em Cadastros ›
+     * Empresas. Não há atalho na página inicial nem nas telas de acesso; quem
+     * abre o formulário já tem sessão e a permissão organization.create.
+     */
+    Route::prefix('cadastros/empresas')->name('cadastro.')
+        ->middleware('permission:organization.create')
+        ->group(function () {
+            Route::get('/', [CompanyRegistrationController::class, 'create'])->name('create');
+            Route::post('/', [CompanyRegistrationController::class, 'store'])->middleware('throttle:6,1')->name('store');
+            Route::get('confirmar', [CompanyRegistrationController::class, 'confirmar'])->name('confirmar');
+            Route::get('documentos', [CompanyRegistrationController::class, 'documentos'])->name('documentos');
+            Route::post('documentos', [CompanyRegistrationController::class, 'anexar'])
+                ->middleware('throttle:20,1')->name('documentos.anexar');
+            Route::post('aceitar', [CompanyRegistrationController::class, 'aceitar'])->name('aceitar');
+            Route::post('enviar', [CompanyRegistrationController::class, 'submeter'])->name('enviar');
+            Route::get('enviado/{protocolo}', [CompanyRegistrationController::class, 'enviado'])->name('enviado');
+        });
 
     Route::prefix('ordens')->name('orders.')->group(function () {
         // Literal antes de parametrizado: `ordens/nova` é a tela de cadastro, não

@@ -1,4 +1,4 @@
-<x-cadastro-shell
+<x-organization.cadastro-shell
     title="Documentos do cadastro"
     subtitle="Envie os documentos que serão analisados pela plataforma. Arquivos privados, nunca publicados."
     :step="3"
@@ -67,4 +67,4 @@
             Envie ao menos um documento e aceite os dois termos para liberar o envio.
         </p>
     @endif
-</x-cadastro-shell>
+</x-organization.cadastro-shell>

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Cadastro;
+namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Concerns\ReageARecusa;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Cadastro\EnviarDocumentoRequest;
-use App\Http\Requests\Cadastro\IniciarCadastroRequest;
+use App\Http\Requests\Organization\EnviarDocumentoRequest;
+use App\Http\Requests\Organization\IniciarCadastroRequest;
 use App\Models\CompanyRegistration;
 use App\Services\Cadastro\GestorDeCadastro;
 use App\Services\Recusa;
@@ -14,8 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
-/** Casca HTTP do cadastro público. Toda decisão fica em `GestorDeCadastro`. */
-class CadastroController extends Controller
+/** Casca HTTP do cadastro de empresas no painel. Toda decisão fica em `GestorDeCadastro`. */
+class CompanyRegistrationController extends Controller
 {
     use ReageARecusa;
 
@@ -23,7 +23,7 @@ class CadastroController extends Controller
 
     public function create(): View
     {
-        return view('auth.cadastro.inicio');
+        return view('organization.registration.inicio');
     }
 
     public function store(IniciarCadastroRequest $request): RedirectResponse
@@ -50,7 +50,7 @@ class CadastroController extends Controller
 
     public function confirmar(): View
     {
-        return view('auth.cadastro.confirmar', [
+        return view('organization.registration.confirmar', [
             'protocolo' => session('cadastro.protocolo'),
         ]);
     }
@@ -89,7 +89,7 @@ class CadastroController extends Controller
 
         $request->session()->put('cadastro.access_token', $token);
 
-        return view('auth.cadastro.documentos', [
+        return view('organization.registration.documentos', [
             'registro' => $registro,
             'documentos' => $registro->documents()->latest()->get(),
         ]);
@@ -170,7 +170,7 @@ class CadastroController extends Controller
     {
         $registro = CompanyRegistration::query()->where('protocol', $protocolo)->firstOrFail();
 
-        return view('auth.cadastro.enviado', ['registro' => $registro]);
+        return view('organization.registration.enviado', ['registro' => $registro]);
     }
 
     /** Busca o pedido pelo token guardado na sessão da etapa. */

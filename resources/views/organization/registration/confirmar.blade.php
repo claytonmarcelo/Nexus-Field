@@ -1,4 +1,4 @@
-<x-cadastro-shell
+<x-organization.cadastro-shell
     title="Confirme seu e-mail"
     subtitle="Enviamos um link de confirmação. Abra-o para liberar o envio dos documentos."
     :step="2"
@@ -17,4 +17,4 @@
     <p class="nf-auth-back">
         <a href="{{ route('cadastro.create') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Revisar dados</a>
     </p>
-</x-cadastro-shell>
+</x-organization.cadastro-shell>

@@ -1,4 +1,4 @@
-<x-cadastro-shell
+<x-organization.cadastro-shell
     title="Cadastro de empresa"
     subtitle="Informe os dados da empresa e do administrador. Você receberá um link para confirmar o e-mail."
     :step="1"
@@ -68,6 +68,6 @@
     </form>
 
     <p class="nf-auth-back">
-        <a href="{{ route('login') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Já tenho conta: entrar</a>
+        <a href="{{ route('dashboard') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar ao painel</a>
     </p>
-</x-cadastro-shell>
+</x-organization.cadastro-shell>

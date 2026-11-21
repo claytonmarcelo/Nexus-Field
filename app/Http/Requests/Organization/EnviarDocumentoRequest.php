@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Cadastro;
+namespace App\Http\Requests\Organization;
 
 use App\Models\CompanyDocument;
 use Illuminate\Foundation\Http\FormRequest;
@@ -10,7 +10,7 @@ class EnviarDocumentoRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->hasPermission('organization.create') ?? false;
     }
 
     /** @return array<string, mixed> */

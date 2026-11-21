@@ -117,6 +117,12 @@ class Navigation
                 'label' => 'Cadastros',
                 'items' => [
                     [
+                        'label' => 'Empresas',
+                        'route' => 'cadastro.create',
+                        'permission' => 'organization.create',
+                        'icon' => 'fa-solid fa-building-columns',
+                    ],
+                    [
                         'label' => 'Clientes',
                         'route' => 'clients.index',
                         'permission' => 'clients.view',

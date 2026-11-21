@@ -10,6 +10,11 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Alterado
 
+- Cadastro de empresas: o fluxo saiu do grupo `guest` e passou a viver em **Cadastros › Empresas**
+  (`/cadastros/empresas`), com `auth`, tenant e `organization.create`, casca autenticada e trilha do
+  menu lateral. O endpoint tokenizado de confirmação por e-mail ficou fora dos grupos de acesso, sem
+  virar tela pública; as quatro etapas e todas as regras de `GestorDeCadastro` continuam intactas.
+  Suíte: 398 testes / 3718 asserções.
 - Dashboard: os cartões passaram a seis grupos nomeados — Visão geral, Na fila agora, Chamados e
   caixa, Operação e estoque, Pessoas e contexto e Sua sessão — com rótulo tipográfico, régua e colunas
   consistentes (`col-xl-4/6/8` em vez de larguras automáticas misturadas). A chave de tema da barra
