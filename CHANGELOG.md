@@ -10,6 +10,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Adicionado
 
+- Fase 0 do endurecimento de produção: baseline de segurança com 345 testes / 3.330 asserções verdes,
+  `composer audit` e `npm audit --omit=dev` limpos, 159 rotas inventariadas e classificadas, e plano
+  detalhado de commits das Fases 0 a 14 em `docs/seguranca/00-inventario.md`. Nenhum código de
+  aplicação foi alterado nesta fase.
 - Base de IA, agentes e integrações do projeto: `laravel/boost` (guidelines, 4 skills e MCP server para Claude Code), `laravel/mcp`, `laravel/ai` (SDK oficial de LLMs/agents/skills, em `1.x-dev` enquanto não há release estável), `maatwebsite/excel`, `barryvdh/laravel-dompdf` e `league/flysystem-aws-s3-v3`. Configs publicadas, stubs de agent/tool, migration das conversas de agente aplicada e variáveis de ambiente documentadas. O critério e o que ficou de fora estão em `docs/integracoes-ia-e-apis.md`.
 - Autenticação com sessão endurecida: `Auth::attempt`, troca do ID da sessão após entrar
   (contra session fixation), logout com `invalidate` + `regenerateToken`, bloqueio de usuário
