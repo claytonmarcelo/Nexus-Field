@@ -21,6 +21,7 @@ class Notifier
         'chamdo.aberto', 'chamdo.resolvido',
         'estoque.baixo', 'financeiro.vencendo',
         'agenda.lembrete',
+        'organizacao.vinculo',
     ];
 
     public static function para(

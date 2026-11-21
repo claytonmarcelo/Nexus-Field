@@ -10,6 +10,14 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Adicionado
 
+- Etapa 4 do módulo de organização: estrutura interna gerenciável em `organization.*` — filiais, setores
+  (árvore com `parent_id`/`path` e recálculo da subárvore ao mover), cargos e vínculos com histórico de
+  passagem. Escrita centralizada em `App\Services\Organizacao\GestorDeEstrutura` (transação, `Recusa`,
+  `Auditor::silenciar` + trilha semântica e `Notifier`), controllers enxutos, `Form Requests` próprios do
+  módulo, autorização no servidor (`organization.view/create/update/delete`) por papel, filtro de alcance
+  na folha e no organograma, e tabelas acessíveis com `<caption>` e `<th scope="col">`. Análise prévia em
+  `docs/organizacao/ETAPA-4-ANALISE.md` e adendo de fontes em `docs/mercado/ESTUDO-ORGANIZACAO-2026-11-21.md`.
+  Suíte: 388 testes / 3660 asserções.
 - Etapa 3 do módulo de organização: política única de alcance em `App\Support\Alcance`, com resolução
   dos escopos gravados (`company`, `client`, `self`, `branch`, `department`, `team`, `subordinates`),
   subárvore de setores, cadeia de subordinados e OR sempre agrupado em closure para não anular o

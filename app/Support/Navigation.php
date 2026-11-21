@@ -94,6 +94,12 @@ class Navigation
                         'icon' => 'fa-solid fa-key',
                     ],
                     [
+                        'label' => 'Organização',
+                        'route' => 'organization.index',
+                        'permission' => 'organization.view',
+                        'icon' => 'fa-solid fa-sitemap',
+                    ],
+                    [
                         'label' => 'Configurações',
                         'route' => 'settings.index',
                         'permission' => 'settings.view',

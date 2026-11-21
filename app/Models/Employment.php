@@ -13,7 +13,7 @@ class Employment extends Model
 {
     use Auditable, BelongsToCompany, SoftDeletes;
 
-    public const SITUACOES = ['ativo', 'afastado', 'desligado'];
+    public const SITUACOES = ['ativo', 'afastado', 'encerrado', 'desligado'];
 
     protected $fillable = [
         'company_id', 'user_id', 'branch_id', 'department_id', 'position_id', 'manager_id',

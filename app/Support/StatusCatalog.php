@@ -123,6 +123,37 @@ class StatusCatalog
             'ticket' => ['Chamado', 'progress'],
             'custom' => ['Compromisso interno', 'draft'],
         ],
+        // Estrutura interna: o mesmo par ativo/inativo de catálogo, agora com
+        // o vocabulário lido pelas telas de filial, setor e cargo.
+        'organization' => [
+            'active' => ['Ativo', 'done'],
+            'inactive' => ['Inativo', 'draft'],
+        ],
+        'branch_type' => [
+            'matriz' => ['Matriz', 'done'],
+            'filial' => ['Filial', 'open'],
+        ],
+        'department_type' => [
+            'administrativo' => ['Administrativo', 'draft'],
+            'comercial' => ['Comercial', 'open'],
+            'financeiro' => ['Financeiro', 'waiting'],
+            'operacao' => ['Operação', 'progress'],
+            'suporte' => ['Suporte', 'open'],
+            'ti' => ['Tecnologia', 'progress'],
+            'outro' => ['Outro', 'draft'],
+        ],
+        'employment' => [
+            'ativo' => ['Ativo', 'done'],
+            'afastado' => ['Afastado', 'waiting'],
+            'encerrado' => ['Passagem encerrada', 'draft'],
+            'desligado' => ['Desligado', 'canceled'],
+        ],
+        'employment_type' => [
+            'clt' => ['CLT', 'done'],
+            'pj' => ['PJ', 'open'],
+            'estagio' => ['Estágio', 'waiting'],
+            'temporario' => ['Temporário', 'draft'],
+        ],
 
         // O vocabulário do sino: o tipo gravado pelo Notifier ganha rótulo e tom
         // aqui, e é daqui que a central filtra — a tela não conhece texto solto.
@@ -137,6 +168,7 @@ class StatusCatalog
             'estoque.baixo' => ['Estoque baixo', 'waiting'],
             'financeiro.vencendo' => ['Cobrança vencendo', 'waiting'],
             'agenda.lembrete' => ['Lembrete de agenda', 'progress'],
+            'organizacao.vinculo' => ['Vínculo organizacional', 'open'],
         ],
     ];
 

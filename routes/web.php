@@ -16,6 +16,11 @@ use App\Http\Controllers\Deploy\CronController;
 use App\Http\Controllers\Finance\FinancialRecordController;
 use App\Http\Controllers\Finance\PaymentController;
 use App\Http\Controllers\Notifications\NotificationController;
+use App\Http\Controllers\Organization\BranchController;
+use App\Http\Controllers\Organization\DepartmentController;
+use App\Http\Controllers\Organization\EmploymentController;
+use App\Http\Controllers\Organization\OrganizationController;
+use App\Http\Controllers\Organization\PositionController;
 use App\Http\Controllers\Orders\CheckinController;
 use App\Http\Controllers\Orders\OrderAssignmentController;
 use App\Http\Controllers\Orders\OrderController;
@@ -592,6 +597,98 @@ Route::middleware(['auth', 'company'])->group(function () {
         Route::get('/{ato}', [AuditController::class, 'show'])
             ->middleware('permission:audit.view')
             ->name('show');
+    });
+
+    /*
+     * A estrutura da empresa. O degrau de leitura abre organograma e listagens para
+     * gestão; escrever filial, setor, cargo ou vínculo é de administrador. A rota
+     * literária `nova` vem antes do parâmetro para não ser lida como uma ficha.
+     */
+    Route::prefix('organizacao')->name('organization.')->group(function () {
+        Route::middleware('permission:organization.view')->group(function () {
+            Route::get('/', [OrganizationController::class, 'index'])->name('index');
+
+            Route::prefix('filiais')->name('branches.')->group(function () {
+                Route::get('/', [BranchController::class, 'index'])->name('index');
+
+                Route::middleware('permission:organization.create')->group(function () {
+                    Route::get('nova', [BranchController::class, 'create'])->name('create');
+                    Route::post('/', [BranchController::class, 'store'])->name('store');
+                });
+
+                Route::middleware('permission:organization.update')->group(function () {
+                    Route::get('{filial}/editar', [BranchController::class, 'edit'])->name('edit');
+                    Route::put('{filial}', [BranchController::class, 'update'])->name('update');
+                });
+
+                Route::delete('{filial}', [BranchController::class, 'destroy'])
+                    ->middleware('permission:organization.delete')
+                    ->name('destroy');
+
+                Route::get('{filial}', [BranchController::class, 'show'])->name('show');
+            });
+
+            Route::prefix('setores')->name('departments.')->group(function () {
+                Route::get('/', [DepartmentController::class, 'index'])->name('index');
+
+                Route::middleware('permission:organization.create')->group(function () {
+                    Route::get('nova', [DepartmentController::class, 'create'])->name('create');
+                    Route::post('/', [DepartmentController::class, 'store'])->name('store');
+                });
+
+                Route::middleware('permission:organization.update')->group(function () {
+                    Route::get('{setor}/editar', [DepartmentController::class, 'edit'])->name('edit');
+                    Route::put('{setor}', [DepartmentController::class, 'update'])->name('update');
+                });
+
+                Route::delete('{setor}', [DepartmentController::class, 'destroy'])
+                    ->middleware('permission:organization.delete')
+                    ->name('destroy');
+
+                Route::get('{setor}', [DepartmentController::class, 'show'])->name('show');
+            });
+
+            Route::prefix('cargos')->name('positions.')->group(function () {
+                Route::get('/', [PositionController::class, 'index'])->name('index');
+
+                Route::middleware('permission:organization.create')->group(function () {
+                    Route::get('nova', [PositionController::class, 'create'])->name('create');
+                    Route::post('/', [PositionController::class, 'store'])->name('store');
+                });
+
+                Route::middleware('permission:organization.update')->group(function () {
+                    Route::get('{cargo}/editar', [PositionController::class, 'edit'])->name('edit');
+                    Route::put('{cargo}', [PositionController::class, 'update'])->name('update');
+                });
+
+                Route::delete('{cargo}', [PositionController::class, 'destroy'])
+                    ->middleware('permission:organization.delete')
+                    ->name('destroy');
+
+                Route::get('{cargo}', [PositionController::class, 'show'])->name('show');
+            });
+
+            Route::prefix('vinculos')->name('employments.')->group(function () {
+                Route::get('/', [EmploymentController::class, 'index'])->name('index');
+
+                Route::middleware('permission:organization.create')->group(function () {
+                    Route::get('novo', [EmploymentController::class, 'create'])->name('create');
+                    Route::post('/', [EmploymentController::class, 'store'])->name('store');
+                });
+
+                Route::middleware('permission:organization.update')->group(function () {
+                    Route::get('{vinculo}/editar', [EmploymentController::class, 'edit'])->name('edit');
+                    Route::put('{vinculo}', [EmploymentController::class, 'update'])->name('update');
+                });
+
+                // DELETE aqui encerra a passagem; não existe exclusão de vínculo.
+                Route::delete('{vinculo}', [EmploymentController::class, 'destroy'])
+                    ->middleware('permission:organization.delete')
+                    ->name('destroy');
+
+                Route::get('{vinculo}', [EmploymentController::class, 'show'])->name('show');
+            });
+        });
     });
 
     /*

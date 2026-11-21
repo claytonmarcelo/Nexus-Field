@@ -81,3 +81,19 @@ assinados, escopo `company_id` à frente dos índices, CTE recursiva para árvor
 verificação server-side de anti-bot, upload privado e sanitização de saídas.
 Não entram: troca de SGBD, segredos versionados e validação de CPF/CNPJ por
 dependência não confirmada.
+
+## Adendo da Etapa 4 — estrutura interna e organograma
+
+Consulta adicional em 21/11/2026, antes de qualquer código desta etapa:
+
+| Fonte | Resultado | Uso |
+| --- | --- | --- |
+| https://laravel.com/docs/13.x/authorization | `FormRequest::authorize()` como porta explícita; Gates/Policies centralizam a decisão | Autorização em duas camadas: `permission:` na rota e `authorize()` no Form Request. Não criar policies paralelas ao catálogo. |
+| https://laravel.com/docs/13.x/validation | `prepareForValidation`, `Rule::unique()->where()` e regras closure | Slug derivado do nome; unicidade por `company_id`; ciclo e profundidade barrados como 422. |
+| https://en.wikipedia.org/wiki/Organizational_chart | Hierarquia, unidade de comando e amplitude de controle | Árvore com `parent_id`, `path` materializado, um gestor por vínculo e teto de profundidade. |
+| SHRM, Lucidchart, Mindtools (mesma data) | 404 ou casca JavaScript; **não verificado** | Nenhuma decisão baseada nestas fontes. |
+
+Rejeitado neste adendo: organograma desenhado à mão ou importado como imagem
+(o dado precisa derivar dos vínculos), policy paralela ao catálogo e exclusão
+física de vínculo (o histórico é a finalidade da tabela). O detalhamento das
+decisões está em `docs/organizacao/ETAPA-4-ANALISE.md`.

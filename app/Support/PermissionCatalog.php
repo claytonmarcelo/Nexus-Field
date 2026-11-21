@@ -27,6 +27,7 @@ class PermissionCatalog
         'roles' => ['view', 'create', 'update', 'delete'],
         'settings' => ['view', 'manage'],
         'audit' => ['view', 'export'],
+        'organization' => ['view', 'create', 'update', 'delete'],
     ];
 
     /**
@@ -54,6 +55,7 @@ class PermissionCatalog
         'roles' => 'Papéis',
         'settings' => 'Configurações',
         'audit' => 'Auditoria',
+        'organization' => 'Organização',
     ];
 
     /**
@@ -139,6 +141,10 @@ class PermissionCatalog
                 'roles.view',
                 'settings.view',
                 'audit.view', 'audit.export',
+                // A estrutura é aberta para leitura do gestor: ele precisa do
+                // organograma para situar a própria equipe. Escrever filial,
+                // setor, cargo ou vínculo continua sendo degrau de administrador.
+                'organization.view',
             ],
             'employee' => [
                 'dashboard.view',
