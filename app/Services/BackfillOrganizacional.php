@@ -130,16 +130,23 @@ final class BackfillOrganizacional
             );
             $totais['vinculos']++;
 
+            // Equivalência exata com o comportamento anterior: conta de cliente
+            // via a própria carteira e ficha de campo vê só o seu trabalho.
+            // Qualquer outro usuário do escritório continuava vendo a empresa
+            // inteira, então recebe escopo `company`.
             $ehCliente = $usuario->client_id !== null;
+            $ehTecnico = ! $ehCliente && $usuario->technician !== null;
+            $alcance = $ehCliente ? 'client' : ($ehTecnico ? 'self' : 'company');
+            $idAlcance = $ehCliente ? $usuario->client_id : ($ehTecnico ? $usuario->id : null);
 
             OrganizationScope::query()->updateOrCreate(
                 [
                     'company_id' => $empresa->id,
                     'user_id' => $usuario->id,
-                    'scope' => $ehCliente ? 'client' : 'company',
+                    'scope' => $alcance,
                 ],
                 [
-                    'scope_id' => $ehCliente ? $usuario->client_id : null,
+                    'scope_id' => $idAlcance,
                     'active' => true,
                 ],
             );

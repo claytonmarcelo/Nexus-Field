@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\ComAlcance;
 use App\Support\Settings;
 use App\Support\SettingsCatalog;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,7 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ServiceOrderCheckin extends Model
 {
-    use Auditable, BelongsToCompany;
+    use Auditable, BelongsToCompany, ComAlcance;
 
     /**
      * Tolerância padrão entre a posição lida e o endereço da ordem. É o número da
@@ -120,14 +121,16 @@ class ServiceOrderCheckin extends Model
     public function scopeVisiveisPara(Builder $q, User $usuario): Builder
     {
         if ($usuario->client_id !== null) {
-            return $q->whereHas('serviceOrder', fn (Builder $ordem) => $ordem->where('client_id', $usuario->client_id));
+            $q->whereHas('serviceOrder', fn (Builder $ordem) => $ordem->where('client_id', $usuario->client_id));
+        } elseif ($tecnico = $usuario->technician) {
+            $q->where('technician_id', $tecnico->id);
         }
 
-        if ($tecnico = $usuario->technician) {
-            return $q->where('technician_id', $tecnico->id);
-        }
-
-        return $q;
+        // O cliente do check-in vem da ordem (relação), não de uma coluna
+        // local; por isso o mapa só conhece o técnico.
+        return $this->aplicarAlcance($q, $usuario, [
+            'tecnico' => 'technician_id',
+        ]);
     }
 
     public function estaAberto(): bool

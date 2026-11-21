@@ -143,7 +143,7 @@ class Department extends Model
         return $query->where('company_id', $setor->company_id)
             ->where(function (Builder $q) use ($setor): void {
                 $q->where('id', $setor->id)
-                    ->orWhere('path', 'like', (string) $setor->path.$setor->id.'/%');
+                    ->orWhere('path', 'like', (string) $setor->path.'%');
             });
     }
 

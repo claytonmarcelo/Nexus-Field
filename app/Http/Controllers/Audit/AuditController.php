@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Audit;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Support\Alcance;
 use App\Support\Export;
 use App\Support\Formatters;
 use App\Support\ListFilters;
@@ -39,14 +40,15 @@ class AuditController extends Controller
                 ->paginate(ListFilters::porPagina($request))
                 ->withQueryString(),
             'entidades' => $this->entidadesVistas(),
-            'quem' => $this->contasDaEmpresa(),
+            'quem' => $this->contasDaEmpresa($request->user()),
             'filtrosAtivos' => ListFilters::ativos($request, self::FILTROS),
         ]);
     }
 
-    public function show(AuditLog $ato): View
+    public function show(Request $request, AuditLog $ato): View
     {
         $this->garantirDaEmpresa($ato);
+        $this->garantirAlcance($ato, $request->user());
 
         return view('audit.show', [
             'ato' => $ato->load('user'),
@@ -98,6 +100,7 @@ class AuditController extends Controller
 
         $query = ListFilters::igual($query, $request, 'entidade', 'entity_type', array_keys($this->entidadesVistas()));
         $query = ListFilters::relacionado($query, $request, 'quem', 'user', 'id');
+        $query = Alcance::aplicar($query, $request->user(), ['usuario' => 'user_id']);
 
         return ListFilters::periodo($query, $request, 'created_at');
     }
@@ -121,14 +124,18 @@ class AuditController extends Controller
     }
 
     /** @return array<int, string> id => nome, das contas vivas desta empresa */
-    private function contasDaEmpresa(): array
+    private function contasDaEmpresa(?User $usuario = null): array
     {
-        return User::query()
+        $query = User::query()
             ->where('company_id', TenantContext::id())
             ->whereNull('deleted_at')
-            ->orderBy('name')
-            ->pluck('name', 'id')
-            ->all();
+            ->orderBy('name');
+
+        if ($usuario !== null) {
+            $query = Alcance::aplicar($query, $usuario, ['usuario' => 'id']);
+        }
+
+        return $query->pluck('name', 'id')->all();
     }
 
     /**
@@ -155,5 +162,21 @@ class AuditController extends Controller
     private function garantirDaEmpresa(AuditLog $ato): void
     {
         abort_unless((int) $ato->company_id === (int) TenantContext::id(), 404);
+    }
+
+    /**
+     * A ficha precisa da mesma régua da listagem: se o ato não pertence ao
+     * alcance de quem abre, ele não existe. Autor sem vínculo (ato de sistema)
+     * também fica de fora quando há recorte organizacional.
+     */
+    private function garantirAlcance(AuditLog $ato, User $usuario): void
+    {
+        if (! Alcance::temRecorteOrganizacional($usuario)) {
+            return;
+        }
+
+        $ids = Alcance::idsUsuarios($usuario) ?? [];
+
+        abort_unless($ato->user_id !== null && in_array((int) $ato->user_id, $ids, true), 404);
     }
 }

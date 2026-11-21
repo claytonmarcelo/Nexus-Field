@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\ComAlcance;
 use App\Support\StatusCatalog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -32,7 +33,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class StockMovement extends Model
 {
-    use Auditable, BelongsToCompany;
+    use Auditable, BelongsToCompany, ComAlcance;
 
     // consume fica fora de propósito: o consumo baixa o estoque carregado pelo técnico,
     // não o central. adjustment carrega o sinal na própria quantidade (inventario pode
@@ -138,10 +139,15 @@ class StockMovement extends Model
         $tecnico = $usuario->technician;
 
         if ($tecnico !== null && ! $usuario->hasPermission('stock.adjust')) {
-            return $q->where('technician_id', $tecnico->id);
+            $q->where('technician_id', $tecnico->id);
         }
 
-        return $q;
+        // A permissão `stock.adjust` continua mandando no estoque central;
+        // o Alcance apenas estreita a visão de quem tem estrutura atribuída.
+        return $this->aplicarAlcance($q, $usuario, [
+            'usuario' => 'user_id',
+            'tecnico' => 'technician_id',
+        ]);
     }
 
     public static function alcanceRestrito(User $usuario): bool

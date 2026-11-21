@@ -10,6 +10,7 @@ use App\Models\OrganizationScope;
 use App\Models\Permission;
 use App\Models\Position;
 use App\Models\Role;
+use App\Models\Technician;
 use App\Models\User;
 use App\Services\Recusa;
 use App\Support\Roles;
@@ -130,6 +131,26 @@ class OrganizacaoBackfillTest extends TestCase
 
         $this->assertSame('client', $alcance->scope);
         $this->assertSame($cliente->id, $alcance->scope_id);
+    }
+
+    public function test_tecnico_de_campo_recebe_alcance_proprio_como_no_comportamento_legado(): void
+    {
+        $empresa = $this->empresaComPapeis();
+        $usuario = $this->usuarioComPapel($empresa, 'technician', 'tecnico-organizacao@test.local');
+
+        Technician::create([
+            'company_id' => $empresa->id,
+            'user_id' => $usuario->id,
+            'name' => 'Tecnico Ficticio',
+            'status' => 'available',
+        ]);
+
+        $this->artisan('nf:organizacao:backfill')->assertSuccessful();
+
+        $alcance = OrganizationScope::query()->where('user_id', $usuario->id)->firstOrFail();
+
+        $this->assertSame('self', $alcance->scope);
+        $this->assertSame($usuario->id, $alcance->scope_id);
     }
 
     public function test_backfill_respeita_o_isolamento_entre_empresas(): void

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\ComAlcance;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class ServiceOrder extends Model
 {
-    use Auditable, BelongsToCompany;
+    use Auditable, BelongsToCompany, ComAlcance;
 
     /**
      * O número nasce do ano corrente e de uma sequência por empresa, e é a
@@ -161,16 +162,19 @@ class ServiceOrder extends Model
     public function scopeVisiveisPara(Builder $q, User $usuario): Builder
     {
         if ($usuario->client_id !== null) {
-            return $q->where('client_id', $usuario->client_id);
-        }
-
-        if ($tecnico = $usuario->technician) {
-            return $q->where(fn (Builder $lado) => $lado
+            $q->where('client_id', $usuario->client_id);
+        } elseif ($tecnico = $usuario->technician) {
+            $q->where(fn (Builder $lado) => $lado
                 ->where('technician_id', $tecnico->id)
                 ->orWhereHas('assignments', fn (Builder $comissao) => $comissao->where('technician_id', $tecnico->id)));
         }
 
-        return $q;
+        // A comissão continua sendo do modelo: o recorte organizacional entra
+        // como AND e não pode fazer a ordem comissionada desaparecer.
+        return $this->aplicarAlcance($q, $usuario, [
+            'tecnico' => 'technician_id',
+            'atribuicoes' => 'assignments',
+        ]);
     }
 
     /**

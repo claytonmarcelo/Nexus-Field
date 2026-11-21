@@ -10,13 +10,23 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Adicionado
 
+- Etapa 3 do módulo de organização: política única de alcance em `App\Support\Alcance`, com resolução
+  dos escopos gravados (`company`, `client`, `self`, `branch`, `department`, `team`, `subordinates`),
+  subárvore de setores, cadeia de subordinados e OR sempre agrupado em closure para não anular o
+  `CompanyScope`. Os `visiveisPara` legados continuam sendo a fonte da verdade enquanto o usuário só
+  tem `company`/`client`/`self`: comissão de ordem, responsável de chamado, cliente de check-in via
+  relação, `stock.adjust` e subconsultas da agenda seguem intactos, e o recorte organizacional entra
+  como AND somente quando existe estrutura nova. Trait `ComAlcance` integra os cinco modelos; folha de
+  contas, filtros de "quem" e ficha de auditoria passam a usar a mesma régua da listagem. Correção do
+  prefixo de `Department::naArvore` e do backfill de técnico de campo (`self` com `scope_id = user_id`).
+  A cota do plano continua contando todas as contas da empresa. Suíte: 374 testes / 3506 asserções.
 - Etapa 2 do módulo de organização: tabelas `branches`, `departments`, `department_service_categories`,
   `positions`, `employments` e `organization_scopes`, todas com `company_id`, índices compostos e
   integridade no banco. Modelos com `BelongsToCompany`, `Auditable` e histórico de vínculo, proteção
   contra ciclo/pai de outra empresa/profundidade excessiva e comando idempotente
   `nf:organizacao:backfill` que dá matriz, seis setores, seis cargos, vínculos e alcance equivalente
-  ao comportamento atual (empresa inteira, ou carteira para contas de cliente). Suíte: 359 testes /
-  3391 asserções.
+  ao comportamento atual (empresa inteira, carteira para contas de cliente ou trabalho próprio para
+  técnicos de campo). Suíte: 359 testes / 3391 asserções.
 - Etapa 1 do módulo global de empresas e organização: baseline verde (353 testes / 3365 asserções),
   inventário da arquitetura atual, desenho do modelo de dados e da política de alcance única em
   `docs/organizacao/ETAPA-1-DESENHO.md`, estudo de mercado com fontes em

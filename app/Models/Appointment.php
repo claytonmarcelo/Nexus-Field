@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\ComAlcance;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Appointment extends Model
 {
-    use Auditable, BelongsToCompany;
+    use Auditable, BelongsToCompany, ComAlcance;
 
     /**
      * Fluxo do compromisso. Concluído é terminal: o que aconteceu já aconteceu, e
@@ -105,14 +106,19 @@ class Appointment extends Model
             $ordens = ServiceOrder::query()->visiveisPara($usuario)->select('id');
             $chamados = Ticket::query()->visiveisPara($usuario)->select('id');
 
-            return $q->where(fn (Builder $lado) => $lado
+            $q->where(fn (Builder $lado) => $lado
                 ->when($usuario->technician, fn (Builder $m) => $m->where('appointments.technician_id', $usuario->technician->id))
                 ->when($usuario->client_id, fn (Builder $m) => $m->where('appointments.client_id', $usuario->client_id))
                 ->orWhereIn('appointments.service_order_id', $ordens)
                 ->orWhereIn('appointments.ticket_id', $chamados));
         }
 
-        return $q;
+        // As subconsultas de ordem e chamado continuam decidindo o alcance
+        // legado; aqui só entra o recorte da estrutura nova, quando existir.
+        return $this->aplicarAlcance($q, $usuario, [
+            'cliente' => 'appointments.client_id',
+            'tecnico' => 'appointments.technician_id',
+        ]);
     }
 
     public function podeMudarPara(string $novo): bool

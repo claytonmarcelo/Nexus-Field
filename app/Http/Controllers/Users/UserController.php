@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Alcance;
 use App\Support\Auditor;
 use App\Support\ListFilters;
 use App\Support\StatusCatalog;
@@ -239,7 +240,7 @@ class UserController extends Controller
     /** @return Builder<User> */
     private function consulta(Request $request): Builder
     {
-        $query = ListFilters::busca($this->contasDaEmpresa(), $request, ['name', 'email']);
+        $query = ListFilters::busca($this->contasDaEmpresa($request->user()), $request, ['name', 'email']);
         $query = ListFilters::igual($query, $request, 'situacao', 'status', array_keys(StatusCatalog::options('user')));
         $query = ListFilters::relacionado($query, $request, 'papel', 'roles', 'id');
 
@@ -252,11 +253,19 @@ class UserController extends Controller
      * filtra a coluna na mão: é ela que mantém a folha de ponto dentro do
      * próprio tenant.
      *
+     * O Alcance entra apenas quando existe estrutura organizacional nova
+     * (filial, setor, equipe ou subordinados). Sem ela, a consulta continua
+     * exatamente a de antes — nenhuma conta desaparece por causa do backfill.
+     *
      * @return Builder<User>
      */
-    private function contasDaEmpresa(): Builder
+    private function contasDaEmpresa(?User $usuario = null): Builder
     {
-        return User::query()->where('company_id', TenantContext::id());
+        $query = User::query()->where('company_id', TenantContext::id());
+
+        return $usuario === null
+            ? $query
+            : Alcance::aplicar($query, $usuario, ['usuario' => 'id']);
     }
 
     /** @return array<int, string> id => nome, de todo papel desta empresa */
