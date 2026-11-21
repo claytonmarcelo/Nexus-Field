@@ -10,6 +10,13 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Adicionado
 
+- Etapa 2 do módulo de organização: tabelas `branches`, `departments`, `department_service_categories`,
+  `positions`, `employments` e `organization_scopes`, todas com `company_id`, índices compostos e
+  integridade no banco. Modelos com `BelongsToCompany`, `Auditable` e histórico de vínculo, proteção
+  contra ciclo/pai de outra empresa/profundidade excessiva e comando idempotente
+  `nf:organizacao:backfill` que dá matriz, seis setores, seis cargos, vínculos e alcance equivalente
+  ao comportamento atual (empresa inteira, ou carteira para contas de cliente). Suíte: 359 testes /
+  3391 asserções.
 - Etapa 1 do módulo global de empresas e organização: baseline verde (353 testes / 3365 asserções),
   inventário da arquitetura atual, desenho do modelo de dados e da política de alcance única em
   `docs/organizacao/ETAPA-1-DESENHO.md`, estudo de mercado com fontes em
