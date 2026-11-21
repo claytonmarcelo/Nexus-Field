@@ -10,6 +10,13 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Adicionado
 
+- Cron protegido da Vercel em `GET /cron/schedule`: `Authorization: Bearer $CRON_SECRET`, comparação em
+  tempo constante, falha fechada sem segredo configurado, limite de 10 chamadas por minuto/IP e registro
+  de toda recusa (IP, navegador e motivo, sem segredo) no log da aplicação. A rota dispara apenas
+  `schedule:run`, continua funcionando durante manutenção e casa com o `vercel.json`.
+- Recuperação de senha sem enumeração de conta: resposta idêntica para e-mail existente ou desconhecido,
+  com log de auditoria contendo apenas hash SHA-256 do e-mail, status e IP. Testes de equivalência de
+  resposta e de ausência do e-mail em claro no log.
 - Endurecimento de configuração para produção serverless: `config/deploy.php` centraliza proxies,
   hosts confiáveis, caminho de storage temporário e segredo do cron; `bootstrap/app.php` aplica
   `TrustProxies`/`TrustHosts`, isenta o cron do modo manutenção e redireciona storage para `/tmp`;

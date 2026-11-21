@@ -12,6 +12,7 @@ use App\Http\Controllers\Clients\AddressController;
 use App\Http\Controllers\Clients\ClientContactController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Deploy\CronController;
 use App\Http\Controllers\Finance\FinancialRecordController;
 use App\Http\Controllers\Finance\PaymentController;
 use App\Http\Controllers\Notifications\NotificationController;
@@ -34,6 +35,12 @@ use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+
+// Vercel Cron -> GET /cron/schedule com Authorization: Bearer $CRON_SECRET.
+// Fora dos grupos `guest` e `auth`: quem autoriza é o segredo, não a sessão.
+Route::get('cron/schedule', CronController::class)
+    ->middleware('throttle:10,1')
+    ->name('cron.schedule');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');

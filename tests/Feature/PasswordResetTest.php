@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Tests\CreatesFixtures;
 use Tests\TestCase;
@@ -40,9 +41,50 @@ class PasswordResetTest extends TestCase
     public function test_email_desconhecido_nao_dispara_link(): void
     {
         $this->post(route('password.email'), ['email' => 'ninguem@test.local'])
-            ->assertSessionHasErrors('email');
+            ->assertRedirect()
+            ->assertSessionHas('status')
+            ->assertSessionDoesntHaveErrors('email');
 
         $this->assertSame(0, DB::table('password_reset_tokens')->count());
+    }
+
+    public function test_resposta_nao_revela_se_a_conta_existe(): void
+    {
+        $existente = $this->makeUser('existe@test.local');
+
+        $this->post(route('password.email'), ['email' => $existente->email])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $mensagemParaContaExistente = $this->app['session.store']->get('status');
+
+        $this->post(route('password.email'), ['email' => 'inexiste@test.local'])
+            ->assertRedirect()
+            ->assertSessionHas('status')
+            ->assertSessionDoesntHaveErrors('email');
+
+        $this->assertSame(
+            $mensagemParaContaExistente,
+            $this->app['session.store']->get('status'),
+        );
+    }
+
+    public function test_log_de_solicitacao_nao_guarda_o_email_em_claro(): void
+    {
+        Log::spy();
+        $email = 'privado@test.local';
+
+        $this->post(route('password.email'), ['email' => $email])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        Log::shouldHaveReceived('info')
+            ->once()
+            ->withArgs(function (string $mensagem, array $contexto) use ($email): bool {
+                return $mensagem === 'password.reset.solicitado'
+                    && isset($contexto['email_hash'], $contexto['solicitado'])
+                    && ! str_contains(json_encode($contexto, JSON_UNESCAPED_UNICODE), $email);
+            });
     }
 
     public function test_token_valido_troca_a_senha_e_consome_o_token(): void

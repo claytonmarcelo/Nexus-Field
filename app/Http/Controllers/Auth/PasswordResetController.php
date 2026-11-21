@@ -7,6 +7,7 @@ use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
@@ -22,15 +23,21 @@ class PasswordResetController extends Controller
 
     public function email(Request $request): RedirectResponse
     {
-        $request->validate(['email' => ['required', 'email']]);
+        $dados = $request->validate(['email' => ['required', 'email']]);
+        $email = mb_strtolower((string) $dados['email']);
 
-        $status = Password::sendResetLink($request->only('email'));
+        // O broker devolve `passwords.user` para conta inexistente. Devolver
+        // esse status ao navegador transformaria o esqueci-senha em um oráculo
+        // de contas: a resposta abaixo é sempre a mesma, exista ou não o e-mail.
+        $status = Password::sendResetLink(['email' => $email]);
 
-        if ($status !== Password::RESET_LINK_SENT) {
-            throw ValidationException::withMessages(['email' => __($status)]);
-        }
+        Log::info('password.reset.solicitado', [
+            'email_hash' => hash('sha256', $email),
+            'solicitado' => $status === Password::RESET_LINK_SENT,
+            'ip' => $request->ip(),
+        ]);
 
-        return back()->with('status', __($status));
+        return back()->with('status', __(Password::RESET_LINK_SENT));
     }
 
     public function reset(Request $request, string $token): View
