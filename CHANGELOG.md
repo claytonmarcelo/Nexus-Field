@@ -10,6 +10,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Adicionado
 
+- Análise competitiva e plano de diferenciação em `docs/mercado/ANALISE-COMPETITIVA.md`: fontes oficiais
+  com data de acesso, matriz de cobertura, comparação passiva do painel externo, itens não aplicáveis
+  ao FSM e critério para não replicar CRM/e-commerce no NEXUS-FIELD. As fatias M1 a M4 ficam
+  priorizadas para implementação com teste e commit atômico.
 - Fase 0 do endurecimento de produção: baseline de segurança com 345 testes / 3.330 asserções verdes,
   `composer audit` e `npm audit --omit=dev` limpos, 159 rotas inventariadas e classificadas, e plano
   detalhado de commits das Fases 0 a 14 em `docs/seguranca/00-inventario.md`. Nenhum código de
