@@ -10,6 +10,11 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Adicionado
 
+- Infraestrutura de deploy na Vercel via Container Runtime: `Dockerfile` com PHP 8.4, extensões exigidas
+  por Laravel/DomPDF/PhpSpreadsheet, build Vite e dependências de produção; nginx + PHP-FPM com
+  cabeçalhos de segurança, diretórios graváveis em `/tmp` por `APP_STORAGE_PATH` e entrypoint que falha
+  cedo sem `APP_KEY`/`APP_URL`. `vercel.json` fixa o preset `container`, três regiões e o cron diário
+  das 10:00 UTC (07:00 de São Paulo). Nenhuma credencial foi incluída nos arquivos.
 - Análise competitiva e plano de diferenciação em `docs/mercado/ANALISE-COMPETITIVA.md`: fontes oficiais
   com data de acesso, matriz de cobertura, comparação passiva do painel externo, itens não aplicáveis
   ao FSM e critério para não replicar CRM/e-commerce no NEXUS-FIELD. As fatias M1 a M4 ficam
