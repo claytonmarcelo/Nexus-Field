@@ -8,6 +8,16 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ## [Unreleased]
 
+### Alterado
+
+- Casca pública e rodapé: a chave de tema passou a ocupar a coluna central do cabeçalho
+  (`grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)`), com a marca à esquerda e as ações
+  à direita — desvio medido de 0px no navegador. O rodapé não repete mais o `NEXUS-FIELD` verde da
+  assinatura: a marca aparece uma única vez, em tinta neutra (`.nf-wordmark-neutro`), acompanhada
+  apenas de `Gestão de operações em campo`, `Clayton Marcelo` e do ano do servidor. A asserção que
+  exigia o texto verde foi reescrita para exigir a ausência de `nf-signature-brand`. Suíte:
+  388 testes / 3662 asserções.
+
 ### Adicionado
 
 - Etapa 4 do módulo de organização: estrutura interna gerenciável em `organization.*` — filiais, setores

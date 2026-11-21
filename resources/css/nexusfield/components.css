@@ -62,9 +62,23 @@
     color: var(--nf-primary);
 }
 
+/*
+ * A chave de tema é o único item centralizado da barra autenticada: o hambúrguer
+ * fica na esquerda e sino/conta na direita, sem mudar a ordem de leitura do menu.
+ * O centro é o do container do cabeçalho (`.nf-content`), não o da viewport, para
+ * acompanhar o max-width de leitura já usado pelo restante do painel.
+ */
+.app-header .nf-content {
+    position: relative;
+}
+
 .nf-nav-item-toggle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
     display: flex;
     align-items: center;
+    transform: translate(-50%, -50%);
 }
 
 /* ------------------------------------------------------------------ *
@@ -377,13 +391,6 @@
     gap: .55em;
     font-size: .8rem;
     color: var(--nf-text-muted);
-}
-
-.nf-signature-brand {
-    font-family: var(--nf-font-display);
-    font-weight: 600;
-    letter-spacing: .04em;
-    color: var(--nf-primary);
 }
 
 .nf-signature-credit {
@@ -1295,6 +1302,11 @@
 .nf-wordmark-tail {
     color: var(--nf-text-muted);
     letter-spacing: .08em;
+}
+
+/* No rodapé a marca é informação, não destaque: o verde fica só no cabeçalho. */
+.nf-wordmark-neutro .nf-wordmark-lead {
+    color: var(--nf-text-muted);
 }
 
 .nf-avatar {

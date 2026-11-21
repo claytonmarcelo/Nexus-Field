@@ -11,9 +11,12 @@
                 </span>
             </a>
 
-            <div class="nf-public-header-actions">
+            {{-- A chave de tema fica no centro da barra: marca à esquerda, ações à direita. --}}
+            <div class="nf-public-header-tema">
                 <x-ui.theme-toggle />
+            </div>
 
+            <div class="nf-public-header-actions">
                 @auth
                     {{-- Sessão aberta não tem motivo para ver a tela de entrada; o
                          caminho honesto é o painel. --}}

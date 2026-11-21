@@ -189,12 +189,16 @@ class AuthenticatedLayoutTest extends TestCase
 
         $publica = $this->get(route('welcome'))->getContent();
 
-        $this->assertStringContainsString('NEXUS-FIELD', $publica);
+        // A marca continua no rodapé, mas em tinta neutra: o verde fica só no
+        // cabeçalho. A assinatura não deve repetir "NEXUS-FIELD" como texto verde.
+        $this->assertStringContainsString('nf-wordmark-neutro', $publica);
+        $this->assertStringNotContainsString('nf-signature-brand', $publica);
         $this->assertStringContainsString('Clayton Marcelo', $publica);
         $this->assertStringContainsString('2026', $publica);
 
         $autenticada = $this->actingAs($user)->get(route('dashboard'))->getContent();
 
+        $this->assertStringNotContainsString('nf-signature-brand', $autenticada);
         $this->assertStringContainsString('Clayton Marcelo', $autenticada);
         $this->assertStringContainsString('nf-signature', $autenticada);
     }
