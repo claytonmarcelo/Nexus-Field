@@ -10,6 +10,12 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Adicionado
 
+- Endurecimento de configuração para produção serverless: `config/deploy.php` centraliza proxies,
+  hosts confiáveis, caminho de storage temporário e segredo do cron; `bootstrap/app.php` aplica
+  `TrustProxies`/`TrustHosts`, isenta o cron do modo manutenção e redireciona storage para `/tmp`;
+  `AppServiceProvider` força HTTPS na geração de URLs em produção; cookie de sessão passa a ser
+  `secure` por padrão em produção. `.env.example` ganha o checklist de variáveis da Vercel e deixa
+  de usar um endereço de e-mail realista para a conta raiz.
 - Infraestrutura de deploy na Vercel via Container Runtime: `Dockerfile` com PHP 8.4, extensões exigidas
   por Laravel/DomPDF/PhpSpreadsheet, build Vite e dependências de produção; nginx + PHP-FPM com
   cabeçalhos de segurança, diretórios graváveis em `/tmp` por `APP_STORAGE_PATH` e entrypoint que falha

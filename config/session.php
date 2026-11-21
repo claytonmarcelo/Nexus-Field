@@ -169,7 +169,10 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Em produção o padrão é seguro: sem HTTPS o navegador não devolve o
+    // cookie e o login falha silenciosamente. O valor pode ser sobrescrito
+    // apenas em um ambiente controlado, por exemplo testes locais por HTTP.
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
 
     /*
     |--------------------------------------------------------------------------
