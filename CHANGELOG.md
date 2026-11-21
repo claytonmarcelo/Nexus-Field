@@ -10,6 +10,12 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Alterado
 
+- Dashboard: os cartões passaram a seis grupos nomeados — Visão geral, Na fila agora, Chamados e
+  caixa, Operação e estoque, Pessoas e contexto e Sua sessão — com rótulo tipográfico, régua e colunas
+  consistentes (`col-xl-4/6/8` em vez de larguras automáticas misturadas). A chave de tema da barra
+  autenticada saiu do centro e passou a ficar ao lado do sino, mantendo o grupo de ações à direita;
+  no cabeçalho público ela continua centralizada. Nenhum bloco, consulta ou permissão foi alterado.
+  Suíte: 388 testes / 3662 asserções.
 - Casca pública e rodapé: a chave de tema passou a ocupar a coluna central do cabeçalho
   (`grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)`), com a marca à esquerda e as ações
   à direita — desvio medido de 0px no navegador. O rodapé não repete mais o `NEXUS-FIELD` verde da

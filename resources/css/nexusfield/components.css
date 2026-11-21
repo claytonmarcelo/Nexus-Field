@@ -63,22 +63,18 @@
 }
 
 /*
- * A chave de tema é o único item centralizado da barra autenticada: o hambúrguer
- * fica na esquerda e sino/conta na direita, sem mudar a ordem de leitura do menu.
- * O centro é o do container do cabeçalho (`.nf-content`), não o da viewport, para
- * acompanhar o max-width de leitura já usado pelo restante do painel.
+ * No painel a chave de tema é uma ação da barra, como o sino: os dois ficam
+ * agrupados à direita, na mesma fila do menu da conta. No topo das telas abertas
+ * ela continua centralizada (ver `.nf-public-header-inner` em public.css).
  */
-.app-header .nf-content {
-    position: relative;
+.app-header .navbar-nav.ms-auto {
+    align-items: center;
+    gap: .35rem;
 }
 
 .nf-nav-item-toggle {
-    position: absolute;
-    top: 50%;
-    left: 50%;
     display: flex;
     align-items: center;
-    transform: translate(-50%, -50%);
 }
 
 /* ------------------------------------------------------------------ *
@@ -1124,6 +1120,46 @@
 
 .tooltip .tooltip-arrow::before {
     border-color: var(--nf-line-strong);
+}
+
+/* ------------------------------------------------------------------ *
+ * Dashboard — seis grupos com começo, meio e fim
+ *
+ * O painel antes era uma pilha de cartões soltos: KPI, tabela, gauge, lista,
+ * outra lista. Um rótulo curto e uma régua devolvem a leitura por intenção —
+ * primeiro o número, depois o que pede decisão, por fim o contexto da sessão.
+ * ------------------------------------------------------------------ */
+.nf-dashboard-section {
+    margin-top: 1.5rem;
+}
+
+.nf-dashboard-section:first-child {
+    margin-top: 0;
+}
+
+.nf-dashboard-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .35rem .9rem;
+    margin-bottom: .7rem;
+    padding-bottom: .45rem;
+    border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-dashboard-section-title {
+    margin: 0;
+    font-family: var(--nf-font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: .01em;
+    color: var(--nf-text);
+}
+
+.nf-dashboard-section-note {
+    margin: 0;
+    font-size: .78rem;
+    color: var(--nf-text-muted);
 }
 
 /* ------------------------------------------------------------------ *

@@ -7,7 +7,8 @@
      `aria-expanded` é o menu.js, que só espelha a classe que o template já pôs no
      <body> — ver resources/js/nexusfield/menu.js.
 
-     O sino mora entre o toggle de tema e o menu da conta, e lê a bandeja de quem
+     A chave de tema fica ao lado do sino, no mesmo grupo de ações à direita; no
+     cabeçalho público ela é centralizada. O sino lê a bandeja de quem
      está logado — a consulta filtra por `user_id` antes de qualquer coisa, então
      a contagem da barra é sempre da pessoa, nunca da empresa. Ele não some para
      papel nenhum: `notifications.view` é de todos os papéis, e um sino que não
