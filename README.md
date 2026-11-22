@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-318%20testes%20%2F%203050%20asser%C3%A7%C3%B5es-brightgreen" alt="318 testes, 3050 asserções">
+  <img src="https://img.shields.io/badge/testes-408%20testes%20%2F%203812%20asser%C3%A7%C3%B5es-brightgreen" alt="408 testes, 3812 asserções">
 </p>
 
 <p align="center">
@@ -510,9 +510,9 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   de fatos é `flex: 0 0 auto` e o valor tem folga (`flex: 0 1 auto; min-width: 0`) para descer inteiro. A outra
   ponta é a linha que sobra: `text-wrap: pretty` nos parágrafos e `balance` nos títulos, porque última linha
   com uma palavra órfã é acidente de largura, não decisão de leitura
-- A boas-vindas tem duas portas, e só duas: `Entrar` no cabeçalho e `Criar conta` no fecho final. O
-  cadastro saiu do topo — na tela de entrada ele aparece como link inferior (`Não tem uma conta? Criar
-  conta`), no padrão do site de referência. O meio do hero não repete nenhum dos dois endereços
+- A boas-vindas tem uma única porta: `Entrar` no cabeçalho. O bloco final que explicava como criar
+  conta foi removido; o cadastro aparece como link inferior na tela de entrada (`Não tem uma conta?
+  Criar conta`), no padrão do site de referência. O meio do hero não repete nenhum endereço
 - O botão do menu desenha o estado em vez de trocar de glifo: três barras em CSS, uma moldura e uma variável,
   `--nf-dobra`, preenchida pelos quebradores do template (`sidebar-collapse` no desktop largo, `sidebar-open`
   no celular). Aberto, as barras paralelas com a do meio mais curta são o menu recolhido em miniatura; fechado,
@@ -1065,9 +1065,9 @@ que o banco devolveu no dia, cobra a régua entre o número do cartão e o perí
 nascer onde não há série, nem anel nascer onde a ficha não tinha prazo, nem tinta nova entrar na folha dos
 componentes. A demonstração também é provada como história: a hora em que cada ordem terminou é a mesma hora
 gravada na trilha de estado, na saída da visita de campo e na liberação da comissão do técnico. E a camada de
-apresentação tem régua travada: `CoerenciaVisualTest` (11 testes / 146 asserções) varre as 205 classes `nf-`
+apresentação tem régua travada: `CoerenciaVisualTest` (14 testes / 195 asserções) varre as 205 classes `nf-`
 da folha contra a interface, não deixa o layout partir palavra no meio nem o hífen cortá-la no meio da frase,
-conta duas — não três — chamadas para entrar na tela aberta, prova que o botão do menu desenha o próprio estado
+conta uma — não duas — chamada na boas-vindas, prova que o botão do menu desenha o próprio estado
 em CSS com tinta só dos tokens, e prende a abertura da boas-vindas na faixa que a fecha: seis passos, fora da
 coluna do medalhão, desembocando na cobrança.
 

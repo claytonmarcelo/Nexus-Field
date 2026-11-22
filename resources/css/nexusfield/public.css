@@ -282,30 +282,6 @@
     line-height: 1.65;
 }
 
-.nf-cta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    border: 1px solid var(--nf-line-strong);
-    border-radius: var(--bs-border-radius-xl);
-    background-color: var(--nf-elevated);
-    background-image: linear-gradient(180deg, var(--nf-tint), transparent 4.5rem);
-    box-shadow: var(--nf-shadow-md), inset 0 1px 0 var(--nf-sheen);
-    padding: clamp(1.5rem, 4vw, 2.75rem);
-}
-
-.nf-cta-title {
-    margin-bottom: .5rem;
-    font-size: clamp(1.3rem, 1.05rem + 1vw, 1.9rem);
-}
-
-.nf-cta-text {
-    max-width: 56ch;
-    color: var(--nf-text-muted);
-}
-
 /*
  * Rodapé de uma linha: a marca em cima do fio de borda, o crédito no mesmo eixo.
  * A altura é a da própria marca mais o forro do pé autenticado (.55rem), para as
@@ -470,9 +446,6 @@
         font-size: .95rem;
     }
 
-    .nf-cta > .btn {
-        width: 100%;
-    }
 }
 
 /* Cadastro público em etapas. A casca reaproveita `.nf-auth`; aqui só o que é

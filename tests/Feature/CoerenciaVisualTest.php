@@ -288,10 +288,10 @@ class CoerenciaVisualTest extends TestCase
     }
 
     /**
-     * A boas-vindas tem duas portas, e só duas: `Entrar` no cabeçalho e `Criar conta`
-     * no fecho final. A chave de tema mora no centro da barra, separada das ações, e
-     * o cadastro não aparece no topo — o padrão do site de referência oferece a
-     * entrada no cabeçalho e o cadastro no rodapé da tela de login.
+     * A boas-vindas tem uma única porta: `Entrar` no cabeçalho. O bloco final que
+     * explicava como criar conta saiu da página — o cadastro é oferecido no rodapé
+     * da tela de entrada, como no site de referência. A chave de tema mora no centro
+     * da barra, separada das ações, e o texto da página só descreve a entrega.
      */
     public function test_a_boas_vindas_abre_as_portas_de_acesso_sem_repeti_las_no_hero(): void
     {
@@ -316,18 +316,21 @@ class CoerenciaVisualTest extends TestCase
         );
         $this->assertMatchesRegularExpression('/\.nf-public-header-tema\s*\{[^}]*justify-content:\s*center/s', $publica);
 
-        $this->assertSame(2, substr_count($html, 'class="btn btn-'),
-            'A página aberta ofereceu uma chamada além da entrada no cabeçalho e do fecho final.');
+        $this->assertSame(1, substr_count($html, 'class="btn btn-'),
+            'Só a entrada do cabeçalho pode ser botão na apresentação.');
 
         $hero = $this->recorte($html, 'class="nf-hero"', '</section>');
         $this->assertStringNotContainsString('class="btn', $hero,
-            'O meio da página chamou o clique de novo: as portas são do cabeçalho e do fecho.');
+            'O meio da página voltou a disputar o clique com a entrada do cabeçalho.');
         $this->assertStringNotContainsString('Acessar a plataforma', $html);
         $this->assertStringNotContainsString('Ver os módulos', $html);
+        $this->assertStringNotContainsString('Comece pela operação que já existe', $html,
+            'O fecho com o passo a passo de cadastro voltou à página inicial.');
+        $this->assertStringNotContainsString('nf-cta', $html);
+        $this->assertStringNotContainsString('href="'.route('register').'"', $html,
+            'O cadastro saiu do cabeçalho e do fecho: agora vive na tela de entrada.');
 
-        // O que saiu foi o botão do meio, não os destinos.
         $this->assertStringContainsString('id="modulos"', $html);
-        $this->assertStringContainsString('href="'.route('register').'"', $html);
         $this->assertStringContainsString('href="'.route('login').'"', $html);
     }
 

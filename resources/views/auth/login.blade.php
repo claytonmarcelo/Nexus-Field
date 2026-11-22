@@ -4,7 +4,10 @@
     :back="route('welcome')"
     label="Voltar para a apresentação"
 >
-    <form method="POST" action="{{ route('login') }}" data-nf-guard novalidate>
+    {{-- O navegador pode guardar a credencial, mas a aplicação não deve devolvê-la
+         preenchida: `off` no formulário e nos campos evita que um logout deixe o
+         e‑mail e a senha da sessão anterior aparecendo na tela seguinte. --}}
+    <form method="POST" action="{{ route('login') }}" data-nf-guard novalidate autocomplete="off">
         @csrf
 
         <x-ui.input
@@ -12,7 +15,7 @@
             name="email"
             type="email"
             :required="true"
-            autocomplete="username"
+            autocomplete="off"
             inputmode="email"
             placeholder="seu@email.com"
         />
@@ -22,7 +25,7 @@
             name="password"
             type="password"
             :required="true"
-            autocomplete="current-password"
+            autocomplete="off"
         />
 
         <div class="nf-auth-row">

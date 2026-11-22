@@ -172,23 +172,6 @@
                     </div>
                 </div>
             </section>
-
-            <section class="nf-section">
-                <div class="container">
-                    <div class="nf-cta">
-                        <div>
-                            <h2 class="nf-display nf-cta-title">Comece pela operação que já existe</h2>
-                            <p class="nf-cta-text mb-0">
-                                Crie sua conta com nome, e‑mail e senha. Depois, no painel, envie
-                                o cadastro da sua empresa para análise.
-                            </p>
-                        </div>
-                        <x-ui.button href="{{ route('register') }}" variant="primary" size="lg" icon="fa-solid fa-user-plus">
-                            Criar conta
-                        </x-ui.button>
-                    </div>
-                </div>
-            </section>
         </main>
 
         <x-public-footer />

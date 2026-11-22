@@ -2,6 +2,31 @@
 
 Registro de mudanças de direção que afetam regra de negócio, com data e motivo.
 
+## 22/11/2026 — Fecho da boas-vindas e credenciais no login
+
+**Decisão anterior:** a apresentação terminava com `Comece pela operação que já existe`, explicava
+como criar conta e repetia `Criar conta` em um bloco final; o formulário de entrada usava
+`autocomplete="username"` e `autocomplete="current-password"`.
+
+**Nova decisão:** o bloco final saiu da boas-vindas, que agora tem uma única porta — `Entrar` no
+cabeçalho — e textos que só descrevem a entrega. O cadastro continua no rodapé da tela de entrada.
+No login, o formulário e os dois campos passam a usar `autocomplete="off"`: o navegador pode guardar
+a credencial, mas a aplicação não a reapresenta preenchida ao abrir a tela ou depois de um logout.
+
+**Motivo:** o usuário pediu a remoção exata daquele bloco, uma página coerente com o que o produto
+entrega e que as informações de e‑mail e senha não apareçam no formulário após o desloge. A solução
+escolhida foi bloquear o autopreenchimento sem proibir o gerenciador de senhas, preservando os
+placeholders genéricos e a regra de que senha nunca volta em `old()`.
+
+**Implementação:** a seção `.nf-cta` e seu CSS morto foram removidos; os testes de coerência visual
+passaram a exigir um único botão na página e a ausência do texto e do destino de cadastro. Um teste
+novo em `AccessScreenTest` verifica `autocomplete="off"` no formulário, e‑mail e senha, valor vazio no
+e‑mail e nenhum `value` na senha. Nenhuma cor, token, permissão, integração ou consulta foi alterada.
+Suíte: 408 testes / 3812 asserções.
+
+**Restrições mantidas:** credencial da conta raiz fora de código, teste, doc, log e commit; prosa
+hifenizada com U+2011; paleta e logotipo preservados; nenhum push.
+
 ## 22/11/2026 — Casca pública no padrão da referência
 
 **Decisão anterior:** a chave de tema havia ido para o canto superior direito do cabeçalho, ao lado
@@ -11,7 +36,7 @@ com cópia longa e informal.
 **Nova decisão:** a chave volta ao centro do cabeçalho público, entre a marca e a única ação do topo,
 `Entrar`. Login, cadastro, recuperação e redefinição trocam o cabeçalho e o rodapé grandes por uma barra
 enxuta — voltar à esquerda, tema à direita — e um cartão único com título curto e subtítulo objetivo.
-O cadastro sai do cabeçalho e continua como link no rodapé da tela de entrada e no fecho da boas-vindas.
+O cadastro sai do cabeçalho e passa a viver no rodapé da tela de entrada; o link no fecho da boas-vindas foi retirado na decisão seguinte.
 
 **Motivo:** o usuário pediu explicitamente o tema centralizado, a remoção de `Criar conta` do topo,
 textos/cards profissionais e a conformidade com `https://nexus-business-manager.vercel.app/`. A referência
@@ -36,8 +61,8 @@ Blade de acesso receberam a cópia da referência; `welcome.blade.php` foi reesc
 cards curtos, mantendo os seis passos do ciclo e o CTA final. A animação da marca que ficava acima do título
 de entrada saiu junto com a casca antiga, e o CSS morto foi removido. Nenhuma cor, token, permissão,
 integração ou consulta foi alterada; o formulário de cadastro continua com apenas nome, e‑mail, senha e
-confirmação — os checkboxes de Termos/Privacidade da referência não foram adicionados. Suíte: 407 testes /
-3801 asserções.
+confirmação — os checkboxes de Termos/Privacidade da referência não foram adicionados. Suíte: 408 testes /
+3812 asserções.
 
 **Restrições mantidas:** credencial da conta raiz fora de código, teste, doc, log e commit; prosa hifenizada
 com U+2011 (`e‑mail`, `check‑in`, `bem‑vindo`); paleta e logotipo preservados; nenhum push.

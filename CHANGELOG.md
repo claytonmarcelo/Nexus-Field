@@ -14,10 +14,14 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   `Criar conta` saiu do topo e agora vive no link inferior da tela de entrada e no fecho da
   boas-vindas, como no site de referência. O flex com `justify-content: space-between` deu lugar
   ao grid de três colunas; o contrato de acessibilidade (`aria-pressed`) não mudou.
-- Boas-vindas: título, sublinha, cards e fecho reescritos no padrão B2B pesquisado — chamada curta,
-  benefício em uma frase e texto escaneável. O ciclo continua com seis passos e o CTA final é o
-  único `Criar conta` da página; o cabeçalho oferece somente `Entrar`. O teste de coerência visual
-  passou a exigir duas chamadas, nenhum botão no meio da página e hífen não quebrável em `e‑mail`.
+- Boas-vindas: título, sublinha e cards reescritos no padrão B2B pesquisado — chamada curta,
+  benefício em uma frase e texto escaneável. O ciclo continua com seis passos; o bloco final
+  `Comece pela operação que já existe` e seu `Criar conta` saíram da página, que agora oferece
+  somente `Entrar` no cabeçalho. O teste de coerência visual passou a exigir uma única chamada,
+  nenhum botão no meio da página e hífen não quebrável em `e‑mail`.
+- Login: `autocomplete="off"` no formulário e nos campos de e‑mail e senha. O navegador continua
+  podendo guardar a credencial, mas a tela não a reapresenta preenchida depois do logout; os
+  placeholders seguem genéricos e a senha continua fora de `old()`.
 - Telas de acesso: login, cadastro, recuperação e redefinição trocaram o cabeçalho e o rodapé da
   apresentação por `auth-topbar.blade.php` — barra enxuta com voltar à esquerda e tema à direita —
   e pela cópia da referência (`Seja bem‑vindo`, `Insira os seus dados para continuar`, `Recuperar
@@ -26,7 +30,7 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   próprio lado (30 no sidebar e no cabeçalho, 22 no rodapé). A logo do sidebar deixa de ser cortada
   pela faixa de 35px e o rodapé público fecha nos mesmos 38px do rodapé autenticado, medidos no
   navegador. A animação da marca acima do título de entrada saiu com a casca antiga, e o CSS dela
-  foi removido. Suíte: 407 testes / 3801 asserções.
+  foi removido. Suíte: 408 testes / 3812 asserções.
 - Cadastro de empresas: o fluxo saiu do grupo `guest` e passou a viver em **Cadastros › Empresas**
   (`/cadastros/empresas`), com `auth`, tenant e `organization.create`, casca autenticada e trilha do
   menu lateral. O endpoint tokenizado de confirmação por e-mail ficou fora dos grupos de acesso, sem

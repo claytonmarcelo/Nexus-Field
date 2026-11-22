@@ -38,6 +38,25 @@ class AccessScreenTest extends TestCase
             ->assertSee($user->email);
     }
 
+    public function test_a_entrada_nao_devolve_credencial_preenchida_depois_do_logout(): void
+    {
+        $html = $this->get(route('login'))->assertOk()->getContent();
+
+        preg_match('/<form\b[^>]*action="'.preg_quote(route('login'), '/').'"[^>]*>/', $html, $formulario);
+        $this->assertNotSame([], $formulario);
+        $this->assertStringContainsString('autocomplete="off"', $formulario[0]);
+
+        preg_match('/<input\b[^>]*name="email"[^>]*>/', $html, $email);
+        $this->assertNotSame([], $email);
+        $this->assertStringContainsString('autocomplete="off"', $email[0]);
+        $this->assertStringContainsString('value=""', $email[0]);
+
+        preg_match('/<input\b[^>]*name="password"[^>]*>/', $html, $senha);
+        $this->assertNotSame([], $senha);
+        $this->assertStringContainsString('autocomplete="off"', $senha[0]);
+        $this->assertStringNotContainsString('value=', $senha[0]);
+    }
+
     public function test_usuario_autenticado_nao_ve_o_formulario_de_entrada(): void
     {
         $user = $this->makeUser('administrator', $this->makeCompany('ja-entr'), 'dentro@test.local');
