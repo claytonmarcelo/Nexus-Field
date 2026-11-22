@@ -40,6 +40,10 @@
     </form>
 
     <p class="nf-auth-back">
+        <a href="{{ route('register') }}"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Ainda não tem conta? Criar conta</a>
+    </p>
+
+    <p class="nf-auth-back">
         <a href="{{ route('welcome') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar para a apresentação</a>
     </p>
 </x-auth-shell>

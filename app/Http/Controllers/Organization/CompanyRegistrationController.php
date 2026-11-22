@@ -23,7 +23,10 @@ class CompanyRegistrationController extends Controller
 
     public function create(): View
     {
-        return view('organization.registration.inicio');
+        return view('organization.registration.inicio', [
+            'nome' => auth()->user()?->name,
+            'email' => auth()->user()?->email,
+        ]);
     }
 
     public function store(IniciarCadastroRequest $request): RedirectResponse
@@ -33,6 +36,7 @@ class CompanyRegistrationController extends Controller
                 $request->validated(),
                 $request->ip(),
                 $request->userAgent(),
+                $request->user(),
             );
         } catch (Recusa $recusa) {
             return $this->recusar($recusa);

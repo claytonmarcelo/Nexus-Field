@@ -2,6 +2,31 @@
 
 Registro de mudanças de direção que afetam regra de negócio, com data e motivo.
 
+## 21/11/2026 — Cadastro público de acesso e ambiente inicial
+
+**Decisão anterior:** não havia `/register`; as contas vinham do seeder ou da criação manual pelo
+administrador, e o README registrava que não existia cadastro aberto para a plataforma.
+
+**Nova decisão:** `/register` é o cadastro de site comum, com nome, e-mail, senha e confirmação. A
+conta é autenticada na hora e ganha um ambiente inicial ativo; a empresa definitiva é cadastrada
+depois, em **Cadastros › Empresas**, dentro do painel.
+
+**Motivo:** o usuário pediu acesso comum primeiro e empresa depois, sem expor o cadastro de empresas
+na página inicial nem nas telas de acesso. `users.company_id` é obrigatório com `restrictOnDelete` e
+`LoginController` recusa login sem empresa ativa, então uma conta sem ambiente não poderia entrar nem
+ser gravada com integridade. O questionamento foi feito antes da implementação; a resposta foi
+"somente dados cadastrais, nome, e-mail, senha, confirmar senha".
+
+**Implementação:** `RegistradorDeAcesso` cria a conta, o ambiente trial, os papéis e a estrutura
+mínima numa transação; `RegisterController` autentica, regenera a sessão, resolve o tenant e registra
+auditoria; `RegistroRequest` valida os quatro campos; `CadastroAprovadoContaExistente` cobre a
+aprovação sem link de reset. `GestorDeCadastro::iniciar` passou a receber o ator para permitir que a
+própria pessoa cadastre a empresa da conta dela, e `aprovar` reaproveita essa conta em vez de criar
+e-mail duplicado.
+
+**Restrições mantidas:** senha nunca enviada por e-mail, conta raiz intocável, segredos fora do Git,
+dados fictícios, MySQL compatível e suíte verde (405 testes / 3760 asserções).
+
 ## 21/11/2026 — Cadastro de empresas sai da área pública
 
 **Decisão anterior:** o fluxo de quatro etapas vivia em `/cadastro`, no mesmo grupo de rotas de login,

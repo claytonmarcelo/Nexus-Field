@@ -191,12 +191,12 @@
                         <div>
                             <h2 class="nf-display nf-cta-title">Comece pela operação que já existe</h2>
                             <p class="nf-cta-text mb-0">
-                                A conta chega pela sua empresa: quem administra o ambiente cria o usuário e mede o
-                                alcance de cada papel. Não há cadastro aberto para esta plataforma.
+                                Crie sua conta com nome, e‑mail e senha. Depois, dentro do painel, envie o cadastro
+                                da sua empresa para análise — acesso comum primeiro, empresa depois.
                             </p>
                         </div>
-                        <x-ui.button href="{{ route('login') }}" variant="primary" size="lg" icon="fa-solid fa-arrow-right">
-                            Acessar
+                        <x-ui.button href="{{ route('register') }}" variant="primary" size="lg" icon="fa-solid fa-user-plus">
+                            Criar conta
                         </x-ui.button>
                     </div>
                 </div>

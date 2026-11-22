@@ -1,4 +1,4 @@
-{{-- Casca das telas abertas de acesso: login e recuperação de senha. --}}
+{{-- Casca das telas abertas de acesso: cadastro, login e recuperação de senha. --}}
 @props([
     'title',
     'subtitle' => null,

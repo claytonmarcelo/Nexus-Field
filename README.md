@@ -929,6 +929,14 @@ senha por dentro da aplicação. Se a senha contiver `#`, escreva o valor entre 
 aspas o dotenv lê o `#` como início de comentário e a senha chega truncada. Em produção o seeder
 recusa senha gerada automaticamente; credencial nunca entra no código nem no Git.
 
+**Cadastro de acesso:** `/register` é o cadastro público de usuário comum e pede somente nome, e-mail,
+senha e confirmação. A conta entra no painel imediatamente e recebe um ambiente inicial ativo — plano
+`operacao`, trial de 30 dias, papéis e estrutura organizacional mínima — porque `users.company_id` é
+obrigatório e o login recusa empresa inativa. Esse ambiente não substitui a empresa definitiva: em
+**Cadastros › Empresas** a pessoa envia o cadastro real; quando aprovado, a conta existente é
+reaproveitada pelo e-mail, mantém a senha escolhida e passa a administrar a nova empresa. A recuperação
+de senha continua disponível em `/forgot-password` para quem já tem conta e esqueceu a senha.
+
 **Cadastro de empresa:** o fluxo fica em **Cadastros › Empresas** (`/cadastros/empresas`), dentro do
 painel autenticado — nunca na página inicial nem junto de login, cadastro de usuário ou recuperação.
 São quatro etapas: dados da empresa e do administrador inicial, confirmação de e-mail, envio de
@@ -936,10 +944,10 @@ documentos privados e acompanhamento do pedido. O pedido nasce antes da empresa:
 `company_registrations` com protocolo `NF-CAD-ANO-0001`, CNPJ/e-mail em hash, tokens com expiração e IP
 em hash. O link de confirmação vai por e-mail; só depois de confirmado o solicitante pode anexar
 documentos (disco `local`, nunca `public`), aceitar os termos e enviar para análise. A aprovação pela
-plataforma cria empresa, papéis, estrutura organizacional mínima e administrador na mesma transação; o
-e-mail de aprovação traz o link de definição de senha. Nenhuma senha é enviada por e-mail. A recuperação
-de acesso continua disponível em `/forgot-password` para quem já tem conta e esqueceu a senha. As contas
-internas de demonstração seguem vindo do seeder.
+plataforma cria empresa, papéis, estrutura organizacional mínima e administrador na mesma transação. O
+e-mail de aprovação traz o link de definição de senha apenas quando a conta nasceu do próprio pedido;
+se o solicitante já tinha acesso comum, o aviso não contém link nem troca a senha. Nenhuma senha é
+enviada por e-mail. As contas internas de demonstração seguem vindo do seeder.
 
 ---
 

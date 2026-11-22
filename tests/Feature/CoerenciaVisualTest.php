@@ -288,26 +288,27 @@ class CoerenciaVisualTest extends TestCase
     }
 
     /**
-     * A tela aberta tem uma porta só por altura de página: o canto superior direito
-     * chama para entrar e o bloco final fecha a chamada. Um terceiro botão no meio do
-     * hero não leva a lugar novo nenhum — só disputa o clique com os outros dois.
+     * A tela aberta tem uma porta por altura de página: o canto superior direito
+     * oferece as duas ações de acesso (criar conta e entrar) e o bloco final fecha
+     * com uma única chamada. O meio do hero não repete nenhuma delas — só disputaria
+     * o clique com as portas que já estão à vista.
      */
-    public function test_a_boas_vindas_abre_uma_soa_porta_em_vez_de_tres(): void
+    public function test_a_boas_vindas_abre_as_portas_de_acesso_sem_repeti_las_no_hero(): void
     {
         $html = $this->get(route('welcome'))->assertOk()->getContent();
 
-        $this->assertSame(2, substr_count($html, 'class="btn btn-'),
-            'A página aberta voltou a oferecer mais de uma chamada para entrar.');
+        $this->assertSame(3, substr_count($html, 'class="btn btn-'),
+            'A página aberta ofereceu uma chamada a mais além do par do cabeçalho e do fecho final.');
 
         $hero = $this->recorte($html, 'class="nf-hero"', '</section>');
         $this->assertStringNotContainsString('class="btn', $hero,
-            'O meio da página chamou o clique de novo: a porta é do cabeçalho.');
+            'O meio da página chamou o clique de novo: as portas são do cabeçalho e do fecho.');
         $this->assertStringNotContainsString('Acessar a plataforma', $html);
         $this->assertStringNotContainsString('Ver os módulos', $html);
 
-        // O que saiu foi o botão, não o destino: a âncora da vitrine continua lá
-        // para quem chega por um link externo.
+        // O que saiu foi o botão do meio, não os destinos.
         $this->assertStringContainsString('id="modulos"', $html);
+        $this->assertStringContainsString('href="'.route('register').'"', $html);
         $this->assertStringContainsString('href="'.route('login').'"', $html);
     }
 

@@ -6,7 +6,9 @@ use App\Models\Company;
 use App\Models\CompanyRegistration;
 use App\Models\User;
 use App\Notifications\CadastroAprovado;
+use App\Notifications\CadastroAprovadoContaExistente;
 use App\Notifications\ConfirmacaoDeCadastro;
+use App\Services\Auth\RegistradorDeAcesso;
 use App\Services\Cadastro\GestorDeCadastro;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -259,5 +261,50 @@ class CadastroEmpresaTest extends TestCase
 
         $this->assertTrue(Hash::check('Nova-Senha-Forte-123', $admin->fresh()->password));
         $this->assertSame($empresa->id, $admin->fresh()->company_id);
+    }
+
+    public function test_aprovacao_reaproveita_conta_de_acesso_e_mantem_a_senha(): void
+    {
+        Notification::fake();
+        Storage::fake('local');
+        $this->seedPermissions();
+
+        $usuario = app(RegistradorDeAcesso::class)->registrar([
+            'name' => 'Marina Cliente',
+            'email' => 'marina@exemplo.local',
+            'password' => 'Senha-Forte-123',
+        ]);
+        $empresaInicial = $usuario->company_id;
+
+        $gestor = app(GestorDeCadastro::class);
+        $resultado = $gestor->iniciar($this->dados($usuario->email), '127.0.0.1', 'Test', $usuario);
+        $registro = $resultado['registro'];
+
+        $gestor->confirmarEmail($resultado['email_token'], '127.0.0.1', 'Test');
+        $gestor->anexarDocumento(
+            $registro->fresh(),
+            UploadedFile::fake()->createWithContent('cnpj.pdf', '%PDF-1.4 teste'),
+            'cnpj',
+            '127.0.0.1',
+            'Test',
+        );
+        $gestor->registrarAceite($registro->fresh(), 'termos_de_uso', '2026-11', '127.0.0.1', 'Test');
+        $gestor->registrarAceite($registro->fresh(), 'politica_de_privacidade', '2026-11', '127.0.0.1', 'Test');
+        $gestor->submeter($registro->fresh(), '127.0.0.1', 'Test');
+
+        $raiz = $this->makeUser('administrator', $this->makeCompany('raiz-reuso'), 'raiz-reuso@test.local');
+        $raiz->forceFill(['is_root' => true])->save();
+
+        $empresa = $gestor->aprovar($registro->fresh(), $raiz);
+        $usuario->refresh();
+
+        $this->assertNotSame($empresaInicial, $usuario->company_id);
+        $this->assertSame($empresa->id, $usuario->company_id);
+        $this->assertTrue(Hash::check('Senha-Forte-123', $usuario->password));
+        $this->assertSame(1, User::where('email', $usuario->email)->count());
+        $this->assertTrue($usuario->hasRole('administrator'));
+
+        Notification::assertSentOnDemandOnce(CadastroAprovadoContaExistente::class);
+        Notification::assertSentOnDemandTimes(CadastroAprovado::class, 0);
     }
 }

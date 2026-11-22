@@ -10,6 +10,7 @@ use App\Models\Permission;
 use App\Models\Plan;
 use App\Models\User;
 use App\Notifications\CadastroAprovado;
+use App\Notifications\CadastroAprovadoContaExistente;
 use App\Notifications\CadastroEmAnalise;
 use App\Notifications\CadastroReprovado;
 use App\Notifications\ConfirmacaoDeCadastro;
@@ -53,7 +54,7 @@ final class GestorDeCadastro
      * @param array<string, mixed> $dados
      * @return array{registro: CompanyRegistration, email_token: string, access_token: string}
      */
-    public function iniciar(array $dados, ?string $ip, ?string $userAgent): array
+    public function iniciar(array $dados, ?string $ip, ?string $userAgent, ?User $ator = null): array
     {
         $dados = $this->normalizar($dados);
         $cnpjHash = hash('sha256', (string) $dados['cnpj']);
@@ -65,7 +66,13 @@ final class GestorDeCadastro
             throw new Recusa('Este CNPJ já possui um cadastro na plataforma.');
         }
 
-        if (User::withTrashed()->where('email', $dados['email'])->exists()) {
+        $conta = User::withTrashed()->where('email', $dados['email'])->first();
+
+        if ($conta !== null && ! $conta->isRoot() && $ator?->is($conta)) {
+            $conta = null; // A própria pessoa está cadastrando a empresa da conta dela.
+        }
+
+        if ($conta !== null) {
             throw new Recusa('Este e-mail já possui uma conta na plataforma.');
         }
 
@@ -263,7 +270,17 @@ final class GestorDeCadastro
         $email = mb_strtolower((string) ($dados['email'] ?? ''));
         $razao = (string) ($dados['razao_social'] ?? 'Empresa');
 
-        $empresa = DB::transaction(function () use ($registro, $dados, $email, $razao, $ator, $motivo, $ip, $userAgent): Company {
+        $conta = User::withTrashed()->where('email', $email)->first();
+
+        if ($conta?->isRoot()) {
+            throw new Recusa('A conta raiz não pode ser usada como administradora de outra empresa.');
+        }
+
+        if ($conta?->trashed()) {
+            throw new Recusa('Esta conta foi removida e não pode administrar a empresa aprovada.');
+        }
+
+        $resultado = DB::transaction(function () use ($registro, $dados, $email, $razao, $ator, $motivo, $ip, $userAgent, $conta): array {
             $plano = Plan::query()->where('slug', 'operacao')->first()
                 ?? Plan::query()->where('is_active', true)->first();
 
@@ -300,16 +317,29 @@ final class GestorDeCadastro
                 Permission::query()->pluck('id', 'slug')->all(),
             );
 
-            // Senha aleatória e nunca enviada: o e-mail dá o link de definição,
-            // que o broker do Laravel grava como token hasheado com expiração.
-            $administrador = User::create([
-                'company_id' => $empresa->id,
-                'name' => (string) ($dados['admin_nome'] ?? $razao),
-                'email' => $email,
-                'password' => Str::password(24),
-                'phone' => $dados['telefone'] ?? null,
-                'status' => 'active',
-            ]);
+            $definirSenha = $conta === null;
+
+            if ($definirSenha) {
+                // Conta nova: senha aleatória e nunca enviada. O e-mail dá o link
+                // de definição, gravado pelo broker como token hasheado.
+                $administrador = User::create([
+                    'company_id' => $empresa->id,
+                    'name' => (string) ($dados['admin_nome'] ?? $razao),
+                    'email' => $email,
+                    'password' => Str::password(24),
+                    'phone' => $dados['telefone'] ?? null,
+                    'status' => 'active',
+                ]);
+            } else {
+                // Quem já tem acesso comum não troca de senha nem recebe link de
+                // redefinição: a aprovação apenas move a conta para a empresa.
+                $administrador = $conta;
+                $administrador->forceFill([
+                    'company_id' => $empresa->id,
+                    'status' => 'active',
+                ])->save();
+            }
+
             $administrador->forceFill(['email_verified_at' => now()])->save();
             $administrador->roles()->sync([$papeis['administrator']->id]);
 
@@ -332,17 +362,26 @@ final class GestorDeCadastro
 
             Auditor::gravar('cadastro aprovado', $empresa, [], "Protocolo {$registro->protocol}.");
 
-            return $empresa;
+            return ['empresa' => $empresa, 'administrador' => $administrador, 'definir_senha' => $definirSenha];
         });
 
-        $token = Password::broker()->createToken($administrador = User::where('email', $email)->firstOrFail());
-        $link = route('password.reset', ['token' => $token, 'email' => $email]);
+        $empresa = $resultado['empresa'];
 
-        Notification::route('mail', $email)->notify(new CadastroAprovado(
-            $registro->protocol,
-            $empresa->name,
-            $link,
-        ));
+        if ($resultado['definir_senha']) {
+            $token = Password::broker()->createToken($resultado['administrador']);
+            $link = route('password.reset', ['token' => $token, 'email' => $email]);
+
+            Notification::route('mail', $email)->notify(new CadastroAprovado(
+                $registro->protocol,
+                $empresa->name,
+                $link,
+            ));
+        } else {
+            Notification::route('mail', $email)->notify(new CadastroAprovadoContaExistente(
+                $registro->protocol,
+                $empresa->name,
+            ));
+        }
 
         return $empresa;
     }

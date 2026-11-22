@@ -39,10 +39,10 @@
 
         <div class="row g-3">
             <div class="col-12">
-                <x-ui.input label="Nome completo" name="admin_nome" required autocomplete="name" />
+                <x-ui.input label="Nome completo" name="admin_nome" :value="$nome" required autocomplete="name" />
             </div>
             <div class="col-md-6">
-                <x-ui.input label="E-mail" name="email" type="email" required autocomplete="username" inputmode="email" placeholder="admin@empresa.com.br" />
+                <x-ui.input label="E-mail" name="email" type="email" :value="$email" required autocomplete="username" inputmode="email" placeholder="admin@empresa.com.br" />
             </div>
             <div class="col-md-6">
                 <x-ui.input label="Telefone" name="telefone" required inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" />

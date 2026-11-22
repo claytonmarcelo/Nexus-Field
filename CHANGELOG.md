@@ -10,6 +10,10 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Alterado
 
+- Boas-vindas: com a abertura do cadastro comum, o cabeçalho passou a oferecer `Criar conta` e
+  `Entrar`, e o bloco final fechou com um único `Criar conta`; o hero continua sem botão. O teste de
+  coerência visual passou a exigir três chamadas, os destinos de registro e login, nenhum botão no meio
+  da página e hífen não quebrável em `e‑mail`. Suíte: 405 testes / 3760 asserções.
 - Cadastro de empresas: o fluxo saiu do grupo `guest` e passou a viver em **Cadastros › Empresas**
   (`/cadastros/empresas`), com `auth`, tenant e `organization.create`, casca autenticada e trilha do
   menu lateral. O endpoint tokenizado de confirmação por e-mail ficou fora dos grupos de acesso, sem
@@ -31,6 +35,11 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Adicionado
 
+- Cadastro público de acesso: `/register` cria conta comum com nome, e-mail, senha e confirmação,
+  autentica na hora e prepara um ambiente inicial ativo para respeitar a FK obrigatória de
+  `company_id` e a regra de login com empresa ativa. A regra vive em `RegistradorDeAcesso`, o controller
+  só cuida da casca HTTP, e a aprovação da empresa reaproveita a conta pelo e-mail, mantendo a senha e
+  enviando `CadastroAprovadoContaExistente` sem link de redefinição. Suíte: 405 testes / 3760 asserções.
 - Etapa 6 (E6) do módulo de organização: cadastro público de empresas em `/cadastro`, com quatro
   etapas, confirmação de e-mail, tokens hasheados com expiração, CNPJ validado por dígito verificador,
   anti-abuso por IP em hash, documentos privados no disco `local`, aceites legais versionados, trilha

@@ -23,10 +23,16 @@
                     <x-ui.button href="{{ route('dashboard') }}" variant="primary" size="sm" icon="fa-solid fa-gauge-high">
                         Painel
                     </x-ui.button>
-                @elseif ($withLogin && Route::has('login'))
-                    <x-ui.button href="{{ route('login') }}" variant="primary" size="sm" icon="fa-solid fa-key">
-                        Entrar
+                @elseif ($withLogin && Route::has('register'))
+                    <x-ui.button href="{{ route('register') }}" variant="outline-primary" size="sm" icon="fa-solid fa-user-plus">
+                        Criar conta
                     </x-ui.button>
+
+                    @if (Route::has('login'))
+                        <x-ui.button href="{{ route('login') }}" variant="primary" size="sm" icon="fa-solid fa-key">
+                            Entrar
+                        </x-ui.button>
+                    @endif
                 @endif
             </div>
         </div>

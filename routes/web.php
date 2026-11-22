@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Organization\CompanyRegistrationController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Catalog\ProductController;
 use App\Http\Controllers\Catalog\ServiceCategoryController;
 use App\Http\Controllers\Catalog\ServiceController;
@@ -57,6 +58,11 @@ Route::get('cadastros/empresas/confirmar/{token}', [CompanyRegistrationControlle
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store'])->middleware('throttle:10,1');
+
+    // Cadastro de acesso de site comum: separado do cadastro de empresas, que
+    // só existe dentro do painel em Cadastros › Empresas.
+    Route::get('register', [RegisterController::class, 'create'])->name('register');
+    Route::post('register', [RegisterController::class, 'store'])->middleware('throttle:6,1')->name('register.store');
 
     Route::get('forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
     Route::post('forgot-password', [PasswordResetController::class, 'email'])->name('password.email')->middleware('throttle:5,1');
