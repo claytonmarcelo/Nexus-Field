@@ -19,21 +19,15 @@
 }
 
 /* Mesma altura e o mesmo forro do topo autenticado: `--nf-header-height` é a fonte única.
-   As duas colunas laterais `1fr` dividem o espaço livre por igual, então a coluna
-   do meio — a chave de tema — fica no centro da barra, e não no meio do espaço
-   que sobrou entre a marca e as ações. */
+   A marca fica à esquerda e todo o grupo de ações — chave de tema incluída, como
+   no painel — cola à direita; o espaço livre fica entre os dois. */
 .nf-public-header-inner {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: .75rem;
     min-height: var(--nf-header-height);
     padding-block: .25rem;
-}
-
-.nf-public-header-tema {
-    display: flex;
-    justify-content: center;
 }
 
 .nf-public-header-actions {

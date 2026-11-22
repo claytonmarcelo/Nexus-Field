@@ -11,12 +11,12 @@
                 </span>
             </a>
 
-            {{-- A chave de tema fica no centro da barra: marca à esquerda, ações à direita. --}}
-            <div class="nf-public-header-tema">
-                <x-ui.theme-toggle />
-            </div>
-
             <div class="nf-public-header-actions">
+                {{-- Padrão de mercado: a chave de tema abre o grupo de ações no canto
+                     superior direito, antes de criar conta/entrar; a marca fica sozinha
+                     à esquerda. --}}
+                <x-ui.theme-toggle />
+
                 @auth
                     {{-- Sessão aberta não tem motivo para ver a tela de entrada; o
                          caminho honesto é o painel. --}}

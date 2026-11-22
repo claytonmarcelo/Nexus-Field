@@ -2,6 +2,27 @@
 
 Registro de mudanças de direção que afetam regra de negócio, com data e motivo.
 
+## 22/11/2026 — Chave de tema no canto superior direito
+
+**Decisão anterior:** a chave de tema morava na coluna central do cabeçalho público
+(`.nf-public-header-tema`), com marca à esquerda e ações à direita.
+
+**Nova decisão:** a chave passa a ser o primeiro item de `.nf-public-header-actions`, antes de
+`Criar conta` e `Entrar`, no canto superior direito — o mesmo grupo de ações usado no painel.
+
+**Motivo:** o usuário pediu o controle global no topo direito, fora do meio do cabeçalho. A
+pesquisa de mercado (Bootstrap 5, Chrome Modern Web Guidance para dark-mode toggle, MDN sobre
+`aria-pressed` e padrões de colocação em header) confirma o canto superior direito como posição
+convencional e o grupo de ações da conta como vizinho natural. O componente já tem `aria-pressed`
+e `aria-label`, então nenhum contrato de acessibilidade mudou.
+
+**Implementação:** `public-header.blade.php` move `<x-ui.theme-toggle />` para dentro de
+`.nf-public-header-actions`; `public.css` troca o grid de três colunas por flex com
+`space-between` e remove a classe central órfã. Comentários em `navbar.blade.php` e
+`components.css` acompanham a nova regra. `CoerenciaVisualTest` passa a exigir a chave antes das
+portas de acesso, a ausência da coluna central e o flex com `space-between`. Nenhuma cor, token,
+permissão ou consulta foi alterada; suíte: 405 testes / 3769 asserções.
+
 ## 21/11/2026 — Cadastro público de acesso e ambiente inicial
 
 **Decisão anterior:** não havia `/register`; as contas vinham do seeder ou da criação manual pelo
@@ -25,7 +46,7 @@ própria pessoa cadastre a empresa da conta dela, e `aprovar` reaproveita essa c
 e-mail duplicado.
 
 **Restrições mantidas:** senha nunca enviada por e-mail, conta raiz intocável, segredos fora do Git,
-dados fictícios, MySQL compatível e suíte verde (405 testes / 3760 asserções).
+dados fictícios, MySQL compatível e suíte verde (405 testes / 3769 asserções).
 
 ## 21/11/2026 — Cadastro de empresas sai da área pública
 

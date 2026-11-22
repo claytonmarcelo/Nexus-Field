@@ -297,6 +297,22 @@ class CoerenciaVisualTest extends TestCase
     {
         $html = $this->get(route('welcome'))->assertOk()->getContent();
 
+        $cabecalho = $this->recorte($html, 'class="nf-public-header-actions"', '</div>');
+        $this->assertStringContainsString('data-nf-theme-toggle', $cabecalho);
+        $this->assertLessThan(strpos($cabecalho, 'Criar conta'), strpos($cabecalho, 'data-nf-theme-toggle'),
+            'A chave de tema tem de abrir o grupo do canto superior direito, antes das contas de acesso.');
+        $this->assertLessThan(strpos($cabecalho, '>Entrar<'), strpos($cabecalho, 'data-nf-theme-toggle'));
+        $this->assertStringNotContainsString('nf-public-header-tema', $html,
+            'A coluna central que isolava a chave do grupo de ações voltou.');
+
+        $publica = $this->folha('public');
+        $this->assertMatchesRegularExpression(
+            '/\.nf-public-header-inner\s*\{[^}]*justify-content:\s*space-between/s',
+            $publica,
+            'Marca à esquerda e ações à direita: o grid centralizador voltou.'
+        );
+        $this->assertDoesNotMatchRegularExpression('/\.nf-public-header-tema/', $publica);
+
         $this->assertSame(3, substr_count($html, 'class="btn btn-'),
             'A página aberta ofereceu uma chamada a mais além do par do cabeçalho e do fecho final.');
 

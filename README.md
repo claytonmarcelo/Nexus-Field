@@ -929,6 +929,11 @@ senha por dentro da aplicação. Se a senha contiver `#`, escreva o valor entre 
 aspas o dotenv lê o `#` como início de comentário e a senha chega truncada. Em produção o seeder
 recusa senha gerada automaticamente; credencial nunca entra no código nem no Git.
 
+O alternador de tema fica no canto superior direito do cabeçalho, tanto nas telas abertas quanto
+no painel: nas telas abertas ele abre a fila de ações, antes de `Criar conta` e `Entrar`; no painel
+divide a fila com o sino. A preferência continua no mesmo contrato JavaScript e no mesmo atributo
+`data-bs-theme` de sempre.
+
 **Cadastro de acesso:** `/register` é o cadastro público de usuário comum e pede somente nome, e-mail,
 senha e confirmação. A conta entra no painel imediatamente e recebe um ambiente inicial ativo — plano
 `operacao`, trial de 30 dias, papéis e estrutura organizacional mínima — porque `users.company_id` é
