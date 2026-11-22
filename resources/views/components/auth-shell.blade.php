@@ -1,8 +1,11 @@
-{{-- Casca das telas abertas de acesso: cadastro, login e recuperação de senha. --}}
+{{-- Casca das telas abertas de acesso: cadastro, login, recuperação, redefinição
+     e páginas de erro. Segue o padrão do site de referência: barra enxuta com
+     voltar e tema, cartão único com título e subtítulo, sem rodapé. --}}
 @props([
     'title',
     'subtitle' => null,
-    'withLogin' => false,
+    'back' => null,
+    'label' => 'Voltar',
 ])
 
 <!DOCTYPE html>
@@ -14,17 +17,10 @@
     <x-skip-links />
 
     <div class="nf-public">
-        <x-public-header :with-login="$withLogin" />
+        <x-auth-topbar :back="$back ?? route('welcome')" :label="$label" />
 
         <main class="nf-auth" id="conteudo">
             <div class="nf-auth-card">
-                {{-- A mesma marca da página de boas-vindas, aqui no respiro curto:
-                     balança pouco e para nivelada antes do formulário. --}}
-                <div class="nf-auth-brand">
-                    <x-ui.brand-mark arquivo="marca-nexus-128" lado="128" animacao="nivelando" />
-                    <span class="nf-auth-brand-nivel" aria-hidden="true"></span>
-                </div>
-
                 <h1 class="nf-display nf-auth-title">{{ $title }}</h1>
 
                 @if ($subtitle)
@@ -34,8 +30,6 @@
                 {{ $slot }}
             </div>
         </main>
-
-        <x-public-footer />
     </div>
 
     <x-flash-messages />

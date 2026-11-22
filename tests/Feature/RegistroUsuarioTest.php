@@ -27,7 +27,7 @@ class RegistroUsuarioTest extends TestCase
     {
         $this->get(route('register'))
             ->assertOk()
-            ->assertSee('Criar sua conta')
+            ->assertSee('Criar conta')
             ->assertSee('Confirmar senha')
             ->assertDontSee('Cadastro de empresa')
             ->assertDontSee('cadastros/empresas', false);

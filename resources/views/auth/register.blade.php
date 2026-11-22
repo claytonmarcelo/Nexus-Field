@@ -1,6 +1,8 @@
 <x-auth-shell
-    title="Criar sua conta"
-    subtitle="Nome, e-mail e senha para começar a usar a plataforma."
+    title="Criar conta"
+    subtitle="Inicie a sua jornada conosco"
+    :back="route('login')"
+    label="Voltar para a entrada"
 >
     <form method="POST" action="{{ route('register.store') }}" data-nf-guard novalidate>
         @csrf
@@ -10,7 +12,7 @@
             name="name"
             required
             autocomplete="name"
-            placeholder="Como você quer ser chamado"
+            placeholder="Seu nome"
         />
 
         <x-ui.input
@@ -20,7 +22,7 @@
             required
             autocomplete="username"
             inputmode="email"
-            placeholder="seu.email@empresa.com.br"
+            placeholder="seu@email.com"
         />
 
         <x-ui.input
@@ -40,16 +42,16 @@
             autocomplete="new-password"
         />
 
-        <x-ui.button type="submit" variant="primary" size="lg" wide icon="fa-solid fa-user-plus">
+        <x-ui.button type="submit" variant="primary" size="lg" wide>
             Criar conta
         </x-ui.button>
     </form>
 
     <p class="nf-cadastro-dica">
-        Depois de entrar, o cadastro da sua empresa fica em <strong>Cadastros › Empresas</strong>, no painel.
+        O cadastro da empresa vem depois, em <strong>Cadastros › Empresas</strong>, dentro do painel.
     </p>
 
     <p class="nf-auth-back">
-        <a href="{{ route('login') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Já tenho conta: entrar</a>
+        <a href="{{ route('login') }}">Já tem uma conta? Entrar</a>
     </p>
 </x-auth-shell>

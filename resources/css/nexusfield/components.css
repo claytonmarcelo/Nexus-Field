@@ -64,9 +64,9 @@
 }
 
 /*
- * A chave de tema é uma ação da barra nos dois lados da aplicação: aqui ela
- * divide a fila direita com o sino, e no topo das telas abertas abre o grupo de
- * ações antes de `Criar conta`/`Entrar` (ver `.nf-public-header-inner` em public.css).
+ * A chave de tema divide a fila direita com o sino aqui no painel; na página
+ * inicial ela fica no centro do cabeçalho (ver `.nf-public-header-inner` em
+ * public.css). Nas telas de acesso vive na barra enxuta do topo.
  */
 .app-header .navbar-nav.ms-auto {
     align-items: center;

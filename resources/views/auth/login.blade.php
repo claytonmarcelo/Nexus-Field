@@ -1,6 +1,8 @@
 <x-auth-shell
-    title="Entrar na plataforma"
-    subtitle="Acesso restrito às empresas da plataforma."
+    title="Seja bem‑vindo"
+    subtitle="Insira os seus dados para continuar"
+    :back="route('welcome')"
+    label="Voltar para a apresentação"
 >
     <form method="POST" action="{{ route('login') }}" data-nf-guard novalidate>
         @csrf
@@ -12,7 +14,7 @@
             :required="true"
             autocomplete="username"
             inputmode="email"
-            placeholder="seu.email@empresa.com.br"
+            placeholder="seu@email.com"
         />
 
         <x-ui.input
@@ -26,24 +28,20 @@
         <div class="nf-auth-row">
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="remember" id="remember" value="1" @checked(old('remember'))>
-                <label class="form-check-label" for="remember">Manter conectado</label>
+                <label class="form-check-label" for="remember">Lembrar de mim</label>
             </div>
 
             @if (Route::has('password.request'))
-                <a class="nf-auth-link" href="{{ route('password.request') }}">Esqueci minha senha</a>
+                <a class="nf-auth-link" href="{{ route('password.request') }}">Esqueceu a senha?</a>
             @endif
         </div>
 
-        <x-ui.button type="submit" variant="primary" size="lg" wide icon="fa-solid fa-key">
+        <x-ui.button type="submit" variant="primary" size="lg" wide>
             Entrar
         </x-ui.button>
     </form>
 
     <p class="nf-auth-back">
-        <a href="{{ route('register') }}"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Ainda não tem conta? Criar conta</a>
-    </p>
-
-    <p class="nf-auth-back">
-        <a href="{{ route('welcome') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar para a apresentação</a>
+        <a href="{{ route('register') }}">Não tem uma conta? Criar conta</a>
     </p>
 </x-auth-shell>

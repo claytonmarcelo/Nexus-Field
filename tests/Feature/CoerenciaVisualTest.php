@@ -288,33 +288,36 @@ class CoerenciaVisualTest extends TestCase
     }
 
     /**
-     * A tela aberta tem uma porta por altura de página: o canto superior direito
-     * oferece as duas ações de acesso (criar conta e entrar) e o bloco final fecha
-     * com uma única chamada. O meio do hero não repete nenhuma delas — só disputaria
-     * o clique com as portas que já estão à vista.
+     * A boas-vindas tem duas portas, e só duas: `Entrar` no cabeçalho e `Criar conta`
+     * no fecho final. A chave de tema mora no centro da barra, separada das ações, e
+     * o cadastro não aparece no topo — o padrão do site de referência oferece a
+     * entrada no cabeçalho e o cadastro no rodapé da tela de login.
      */
     public function test_a_boas_vindas_abre_as_portas_de_acesso_sem_repeti_las_no_hero(): void
     {
         $html = $this->get(route('welcome'))->assertOk()->getContent();
 
-        $cabecalho = $this->recorte($html, 'class="nf-public-header-actions"', '</div>');
-        $this->assertStringContainsString('data-nf-theme-toggle', $cabecalho);
-        $this->assertLessThan(strpos($cabecalho, 'Criar conta'), strpos($cabecalho, 'data-nf-theme-toggle'),
-            'A chave de tema tem de abrir o grupo do canto superior direito, antes das contas de acesso.');
-        $this->assertLessThan(strpos($cabecalho, '>Entrar<'), strpos($cabecalho, 'data-nf-theme-toggle'));
-        $this->assertStringNotContainsString('nf-public-header-tema', $html,
-            'A coluna central que isolava a chave do grupo de ações voltou.');
+        $tema = $this->recorte($html, 'class="nf-public-header-tema"', '</div>');
+        $this->assertStringContainsString('data-nf-theme-toggle', $tema,
+            'A chave de tema saiu da coluna central do cabeçalho.');
+
+        $acoes = $this->recorte($html, 'class="nf-public-header-actions"', '</div>');
+        $this->assertStringContainsString('>Entrar<', $acoes);
+        $this->assertStringNotContainsString('Criar conta', $acoes,
+            'O cadastro voltou ao cabeçalho: aqui a porta é somente de quem já tem conta.');
+        $this->assertStringNotContainsString('data-nf-theme-toggle', $acoes,
+            'A chave de tema tem de ficar entre a marca e as ações, não dentro delas.');
 
         $publica = $this->folha('public');
         $this->assertMatchesRegularExpression(
-            '/\.nf-public-header-inner\s*\{[^}]*justify-content:\s*space-between/s',
+            '/\.nf-public-header-inner\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto minmax\(0, 1fr\)/s',
             $publica,
-            'Marca à esquerda e ações à direita: o grid centralizador voltou.'
+            'As duas colunas laterais iguais são o que assenta a chave no centro.'
         );
-        $this->assertDoesNotMatchRegularExpression('/\.nf-public-header-tema/', $publica);
+        $this->assertMatchesRegularExpression('/\.nf-public-header-tema\s*\{[^}]*justify-content:\s*center/s', $publica);
 
-        $this->assertSame(3, substr_count($html, 'class="btn btn-'),
-            'A página aberta ofereceu uma chamada a mais além do par do cabeçalho e do fecho final.');
+        $this->assertSame(2, substr_count($html, 'class="btn btn-'),
+            'A página aberta ofereceu uma chamada além da entrada no cabeçalho e do fecho final.');
 
         $hero = $this->recorte($html, 'class="nf-hero"', '</section>');
         $this->assertStringNotContainsString('class="btn', $hero,
@@ -326,6 +329,52 @@ class CoerenciaVisualTest extends TestCase
         $this->assertStringContainsString('id="modulos"', $html);
         $this->assertStringContainsString('href="'.route('register').'"', $html);
         $this->assertStringContainsString('href="'.route('login').'"', $html);
+    }
+
+    /**
+     * A marca era desenhada duas vezes: a folha pedia 1,875rem, mas o componente
+     * gravava 4rem no atributo style e ganhava sempre. No sidebar ela era cortada
+     * pela faixa de 35px; no rodapé público, o medalhão inchado empurrava a linha
+     * para 74px contra os 38px do rodapé autenticado. Agora cada contexto pede o
+     * próprio lado e o rodapé usa o mesmo forro das páginas internas.
+     */
+    public function test_a_marca_e_o_rodapé_publico_vestem_a_mesma_medida_do_painel(): void
+    {
+        $sidebar = file_get_contents(base_path('resources/views/components/app/sidebar.blade.php'));
+        $cabecalho = file_get_contents(base_path('resources/views/components/public-header.blade.php'));
+        $rodape = file_get_contents(base_path('resources/views/components/public-footer.blade.php'));
+
+        $this->assertStringContainsString('<x-ui.brand-mark lado="30" />', $sidebar);
+        $this->assertStringContainsString('<x-ui.brand-mark lado="30" />', $cabecalho);
+        $this->assertStringContainsString('<x-ui.brand-mark lado="22" />', $rodape);
+
+        $publica = $this->folha('public');
+        $this->assertStringContainsString('padding-block: .75rem', $this->bloco($publica, '.nf-public-footer'));
+        $this->assertStringContainsString('width: 1.375rem', $this->bloco($publica, '.nf-public-footer .nf-brand-mark'));
+    }
+
+    /**
+     * As telas de acesso largaram o cabeçalho e o rodapé da apresentação: a barra
+     * enxuta só tem voltar e tema, e o cartão traz o título e a ação da página.
+     */
+    public function test_as_telas_de_acesso_usam_a_barra_enxuta_do_site_de_referencia(): void
+    {
+        $paginas = [
+            route('login') => ['Seja bem‑vindo', route('welcome')],
+            route('register') => ['Criar conta', route('login')],
+            route('password.request') => ['Recuperar senha', route('login')],
+        ];
+
+        foreach ($paginas as $url => [$titulo, $voltar]) {
+            $html = $this->get($url)->assertOk()->getContent();
+
+            $this->assertStringContainsString('class="nf-auth-topbar"', $html);
+            $this->assertStringContainsString('href="'.$voltar.'"', $html);
+            $this->assertStringContainsString('data-nf-theme-toggle', $html);
+            $this->assertStringContainsString($titulo, $html);
+            $this->assertStringNotContainsString('nf-public-header', $html);
+            $this->assertStringNotContainsString('nf-public-footer', $html);
+        }
     }
 
     /**

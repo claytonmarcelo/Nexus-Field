@@ -7,7 +7,7 @@
 <footer class="nf-public-footer">
     <div class="container nf-public-footer-row">
         <span class="nf-brand nf-public-footer-brand">
-            <x-ui.brand-mark />
+            <x-ui.brand-mark lado="22" />
             <span class="nf-wordmark nf-wordmark-neutro">
                 <span class="nf-wordmark-lead">NEXUS</span><span class="nf-wordmark-tail">-FIELD</span>
             </span>

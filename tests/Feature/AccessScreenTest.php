@@ -19,14 +19,15 @@ class AccessScreenTest extends TestCase
     {
         $this->get(route('welcome'))
             ->assertOk()
-            ->assertSee('A operação externa inteira em um só lugar')
+            ->assertSee('Gestão de campo sem planilhas paralelas')
+            ->assertSee('Um sistema, ponta a ponta')
             ->assertSee('Gestão de operações em campo');
     }
 
     public function test_as_telas_de_acesso_abrem_para_convidado(): void
     {
-        $this->get(route('login'))->assertOk()->assertSee('Entrar na plataforma');
-        $this->get(route('password.request'))->assertOk()->assertSee('Recuperar acesso');
+        $this->get(route('login'))->assertOk()->assertSee('Seja bem‑vindo');
+        $this->get(route('password.request'))->assertOk()->assertSee('Recuperar senha');
 
         $user = $this->makeUser('administrator', $this->makeCompany('tela-acesso'), 'tela@test.local');
         $token = Password::broker()->createToken($user);

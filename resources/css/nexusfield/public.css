@@ -19,15 +19,20 @@
 }
 
 /* Mesma altura e o mesmo forro do topo autenticado: `--nf-header-height` é a fonte única.
-   A marca fica à esquerda e todo o grupo de ações — chave de tema incluída, como
-   no painel — cola à direita; o espaço livre fica entre os dois. */
+   Três colunas com laterais `1fr` dividem o espaço livre por igual, então a chave
+   de tema assenta no centro da barra — marca à esquerda, entrada à direita. */
 .nf-public-header-inner {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
     gap: .75rem;
     min-height: var(--nf-header-height);
     padding-block: .25rem;
+}
+
+.nf-public-header-tema {
+    display: flex;
+    justify-content: center;
 }
 
 .nf-public-header-actions {
@@ -59,12 +64,6 @@
 
 .nf-brand:hover .nf-brand-mark {
     transform: translateY(-1px);
-}
-
-/* Marca das telas de acesso: o mesmo auto nível, em amplitude de relógio de pulso. */
-.nf-brand-mark--nivelando {
-    transform-origin: 50% 8%;
-    animation: nf-nivelando 9s var(--nf-ease) infinite;
 }
 
 .nf-public > main {
@@ -315,7 +314,9 @@
 .nf-public-footer {
     border-top: 1px solid var(--nf-line);
     background: var(--nf-surface);
-    padding-block: .85rem;
+    /* O forro do rodapé autenticado é a régua das duas pontas da aplicação:
+       com a marca no tamanho certo, 0.75rem fecha a mesma altura dos dois lados. */
+    padding-block: .75rem;
     font-size: .78rem;
 }
 
@@ -356,12 +357,44 @@
     }
 }
 
+/* Barra das telas de acesso: a mesma largura do cartão, voltar à esquerda e
+   tema à direita. Ela substitui o cabeçalho grande — aqui a página só tem uma
+   tarefa, e o nome dela já está no título do cartão. */
+.nf-auth-topbar {
+    display: flex;
+    width: 100%;
+    max-width: 26.875rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-inline: auto;
+    padding-block: .75rem;
+}
+
+.nf-auth-back-link {
+    display: inline-grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    border: 1px solid var(--nf-line);
+    border-radius: var(--bs-border-radius-lg);
+    color: var(--nf-text-muted);
+    text-decoration: none;
+    transition: color var(--nf-duration) var(--nf-ease),
+        border-color var(--nf-duration) var(--nf-ease);
+}
+
+.nf-auth-back-link:hover,
+.nf-auth-back-link:focus-visible {
+    border-color: var(--nf-primary);
+    color: var(--nf-primary);
+}
+
 .nf-auth {
     display: flex;
     flex: 1 1 auto;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding-block: clamp(2rem, 6vw, 4rem);
+    padding-block: clamp(1rem, 4vw, 2.5rem);
 }
 
 .nf-auth-card {
@@ -375,24 +408,11 @@
     padding: clamp(1.5rem, 4vw, 2.25rem);
 }
 
-.nf-auth-brand {
-    display: grid;
-    margin-bottom: 1.1rem;
-    place-items: center;
-}
-
-.nf-auth-brand .nf-brand-mark {
-    width: 3.625rem;
-    height: 3.625rem;
-    filter: drop-shadow(0 .375rem .875rem color-mix(in srgb, var(--nf-primary) 20%, transparent));
-}
-
-.nf-auth-brand-nivel {
-    width: 4.75rem;
-    height: 1px;
-    margin-top: .6rem;
-    background: linear-gradient(90deg, transparent, var(--nf-line-strong), transparent);
-    opacity: .6;
+/* O rótulo da ação de acesso é escrito em caixa alta no site de referência: a
+   caixa vem do CSS, então o texto continua legível para leitor de tela. */
+.nf-auth-card .btn {
+    text-transform: uppercase;
+    letter-spacing: .06em;
 }
 
 .nf-auth-title {
@@ -580,14 +600,6 @@
     42% { transform: rotate(-.7deg); }
     53% { transform: rotate(.3deg); }
     64%, 100% { transform: rotate(0deg); }
-}
-
-@keyframes nf-nivelando {
-    0% { transform: rotate(-2.4deg); }
-    12% { transform: rotate(1.7deg); }
-    26% { transform: rotate(-.9deg); }
-    40% { transform: rotate(.4deg); }
-    52%, 100% { transform: rotate(0deg); }
 }
 
 /* O halo acompanha o assentamento: fraco enquanto balança, aceso quando nivela. */

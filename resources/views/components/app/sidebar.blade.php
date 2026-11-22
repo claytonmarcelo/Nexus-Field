@@ -18,7 +18,7 @@
                      da plataforma continua sendo o endereço do link. --}}
                 <img class="nf-sidebar-logo" src="{{ $marca }}" alt="" aria-hidden="true">
             @else
-                <x-ui.brand-mark />
+                <x-ui.brand-mark lado="30" />
             @endif
             <span class="brand-text">
                 <span class="nf-wordmark-lead">NEXUS</span><span class="nf-wordmark-tail">-FIELD</span>

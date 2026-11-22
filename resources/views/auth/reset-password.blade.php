@@ -1,6 +1,8 @@
 <x-auth-shell
     title="Definir nova senha"
-    subtitle="Escolha uma senha que só você saiba. O link usado aqui vale uma única vez."
+    subtitle="Escolha uma senha forte. O link usado aqui vale uma única vez."
+    :back="route('login')"
+    label="Voltar para a entrada"
 >
     <form method="POST" action="{{ route('password.update') }}" data-nf-guard novalidate>
         @csrf
