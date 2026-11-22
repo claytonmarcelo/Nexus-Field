@@ -19,12 +19,12 @@
 }
 
 /* Mesma altura e o mesmo forro do topo autenticado: `--nf-header-height` é a fonte única.
-   Três colunas com laterais `1fr` dividem o espaço livre por igual, então a chave
-   de tema assenta no centro da barra — marca à esquerda, entrada à direita. */
+   A marca fica à esquerda; tema e entrada formam o grupo da direita, na mesma ordem
+   do site de referência. */
 .nf-public-header-inner {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: .75rem;
     min-height: var(--nf-header-height);
     padding-block: .25rem;
@@ -32,7 +32,7 @@
 
 .nf-public-header-tema {
     display: flex;
-    justify-content: center;
+    align-items: center;
 }
 
 .nf-public-header-actions {
@@ -283,7 +283,7 @@
 }
 
 /*
- * Rodapé de uma linha: a marca em cima do fio de borda, o crédito no mesmo eixo.
+ * Rodapé de uma linha: marca e direito autoral à esquerda, crédito à direita.
  * A altura é a da própria marca mais o forro do pé autenticado (.55rem), para as
  * duas pontas da aplicação fecharem no mesmo corte.
  */
@@ -304,6 +304,13 @@
     gap: .3rem 1rem;
 }
 
+.nf-public-footer-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .3rem .8rem;
+}
+
 .nf-public-footer .nf-brand-mark {
     width: 1.375rem;
     height: 1.375rem;
@@ -318,11 +325,11 @@
     gap: .5rem;
 }
 
+.nf-public-footer-copyright {
+    color: var(--nf-text-muted);
+}
+
 .nf-public-footer-credit {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: .35rem .8rem;
     margin: 0;
     color: var(--nf-text-muted);
 }

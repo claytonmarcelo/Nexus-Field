@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-408%20testes%20%2F%203815%20asser%C3%A7%C3%B5es-brightgreen" alt="408 testes, 3815 asserções">
+  <img src="https://img.shields.io/badge/testes-408%20testes%20%2F%203820%20asser%C3%A7%C3%B5es-brightgreen" alt="408 testes, 3820 asserções">
 </p>
 
 <p align="center">
@@ -476,9 +476,10 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   da borda de marca, o fio entre os passos desvanece, e o cartão de login e a faixa de chamada têm a
   luz na quina dos cartões autenticados. O auto nível do medalhão continua só na abertura
 - Topo e pé enxutos: o cabeçalho público tem a mesma altura do cabeçalho do painel, com a marca à
-  esquerda, o tema no centro e `Entrar` à direita; o rodapé público fecha na mesma altura do rodapé
-  autenticado. Login, cadastro, recuperação e redefinição não carregam esse rodapé — levam só a barra
-  enxuta com voltar à esquerda e tema à direita, como no site de referência
+  esquerda e o par tema + `Acessar` à direita — a ordem medida na referência. O rodapé traz marca e
+  `© {{ now()->format('Y') }} NEXUS-FIELD` à esquerda e `Desenvolvido por Clayton Marcelo` à direita,
+  fechando na mesma altura do rodapé autenticado. Login, cadastro, recuperação e redefinição não
+  carregam esse rodapé — levam só a barra enxuta com voltar à esquerda e tema à direita
 - A micro-visualização veste o cartão, não o contrário: traço, área e anel usam `--nf-tone` e
   `--nf-tone-soft` do registro único de tom (`.tone-*`), sem uma tinta fora do que os dois temas já
   definem, e o traço de espessura fixa (`vector-effect: non-scaling-stroke`) conta a mesma história no
@@ -492,7 +493,7 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - A virada de tema desliza em 200ms, e só ela: o script veste `nf-tema-virando` no `<html>` durante o
   clique e solta 260ms depois. Transição permanente faria a página subir do branco em toda recarga, e o
   cookie com o script inline do `<head>` existem justamente para o tema chegar antes da primeira pintura
-- A folha não guarda peça de vitrine: as 205 classes `nf-` dos seis arquivos de estilo são varridas em
+- A folha não guarda peça de vitrine: as classes `nf-` dos seis arquivos de estilo são varridas em
   teste contra Blade, JavaScript, controller e seeder — o que ninguém veste sai da folha, porque duas
   maneiras de escrever a mesma coisa, uma delas nunca lida, é exatamente a repetição que este desenho vetou
 - A folha também não se desmente: nenhum seletor de topo declara a mesma propriedade duas vezes. Vinte
@@ -510,7 +511,7 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   de fatos é `flex: 0 0 auto` e o valor tem folga (`flex: 0 1 auto; min-width: 0`) para descer inteiro. A outra
   ponta é a linha que sobra: `text-wrap: pretty` nos parágrafos e `balance` nos títulos, porque última linha
   com uma palavra órfã é acidente de largura, não decisão de leitura
-- A boas-vindas tem uma única porta: `Entrar` no cabeçalho. O bloco final que explicava como criar
+- A boas-vindas tem uma única porta: `Acessar` no cabeçalho. O bloco final que explicava como criar
   conta foi removido; o cadastro aparece como link inferior na tela de entrada (`Não tem uma conta?
   Criar conta`), no padrão do site de referência. O meio do hero não repete nenhum endereço
 - O botão do menu desenha o estado em vez de trocar de glifo: três barras em CSS dentro de um ícone próprio,
@@ -934,10 +935,12 @@ senha por dentro da aplicação. Se a senha contiver `#`, escreva o valor entre 
 aspas o dotenv lê o `#` como início de comentário e a senha chega truncada. Em produção o seeder
 recusa senha gerada automaticamente; credencial nunca entra no código nem no Git.
 
-O alternador de tema fica no centro do cabeçalho público, entre a marca e a única ação (`Entrar`);
-no painel continua na fila da direita, ao lado do sino. Nas telas de acesso ele vai para o canto
-direito da barra enxuta, com `Voltar` à esquerda, seguindo o site de referência. A preferência
-continua no mesmo contrato JavaScript e no mesmo atributo `data-bs-theme` de sempre.
+O alternador de tema fica à direita do cabeçalho público, imediatamente antes da única ação
+(`Acessar`); no painel continua na fila da direita, ao lado do sino. Nas telas de acesso ele vai
+para o canto direito da barra enxuta, com `Voltar` à esquerda, seguindo o site de referência. A
+preferência continua no mesmo contrato JavaScript e no mesmo atributo `data-bs-theme` de sempre.
+O sino da barra abre o dropdown com os avisos pendentes da própria conta e leva à central em
+`/notificacoes`; a contagem e a leitura continuam filtradas por `user_id` no servidor.
 
 **Cadastro de acesso:** `/register` é o cadastro público de usuário comum e pede somente nome, e-mail,
 senha e confirmação. A conta entra no painel imediatamente e recebe um ambiente inicial ativo — plano

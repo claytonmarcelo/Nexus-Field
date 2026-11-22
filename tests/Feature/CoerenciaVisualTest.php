@@ -288,33 +288,34 @@ class CoerenciaVisualTest extends TestCase
     }
 
     /**
-     * A boas-vindas tem uma única porta: `Entrar` no cabeçalho. O bloco final que
+     * A boas-vindas tem uma única porta: `Acessar` no cabeçalho. O bloco final que
      * explicava como criar conta saiu da página — o cadastro é oferecido no rodapé
-     * da tela de entrada, como no site de referência. A chave de tema mora no centro
-     * da barra, separada das ações, e o texto da página só descreve a entrega.
+     * da tela de entrada. Tema e porta dividem o mesmo grupo à direita, na ordem do
+     * site de referência, e o texto da página só descreve a entrega.
      */
     public function test_a_boas_vindas_abre_as_portas_de_acesso_sem_repeti_las_no_hero(): void
     {
         $html = $this->get(route('welcome'))->assertOk()->getContent();
 
-        $tema = $this->recorte($html, 'class="nf-public-header-tema"', '</div>');
-        $this->assertStringContainsString('data-nf-theme-toggle', $tema,
-            'A chave de tema saiu da coluna central do cabeçalho.');
-
         $acoes = $this->recorte($html, 'class="nf-public-header-actions"', '</div>');
-        $this->assertStringContainsString('>Entrar<', $acoes);
+        $this->assertStringContainsString('data-nf-theme-toggle', $acoes,
+            'A chave de tema saiu do grupo de ações do cabeçalho.');
+        $this->assertStringContainsString('>Acessar<', $acoes);
         $this->assertStringNotContainsString('Criar conta', $acoes,
             'O cadastro voltou ao cabeçalho: aqui a porta é somente de quem já tem conta.');
-        $this->assertStringNotContainsString('data-nf-theme-toggle', $acoes,
-            'A chave de tema tem de ficar entre a marca e as ações, não dentro delas.');
+        $this->assertLessThan(
+            strpos($acoes, '>Acessar<'),
+            strpos($acoes, 'data-nf-theme-toggle'),
+            'A chave de tema precisa vir antes da porta, como na referência.'
+        );
 
         $publica = $this->folha('public');
         $this->assertMatchesRegularExpression(
-            '/\.nf-public-header-inner\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto minmax\(0, 1fr\)/s',
+            '/\.nf-public-header-inner\s*\{[^}]*justify-content:\s*space-between/s',
             $publica,
-            'As duas colunas laterais iguais são o que assenta a chave no centro.'
+            'A marca à esquerda e o grupo de ações à direita assentam nas pontas da barra.'
         );
-        $this->assertMatchesRegularExpression('/\.nf-public-header-tema\s*\{[^}]*justify-content:\s*center/s', $publica);
+        $this->assertStringNotContainsString('grid-template-columns', $this->bloco($publica, '.nf-public-header-inner'));
 
         $this->assertSame(1, substr_count($html, 'class="btn btn-'),
             'Só a entrada do cabeçalho pode ser botão na apresentação.');
@@ -350,10 +351,16 @@ class CoerenciaVisualTest extends TestCase
         $this->assertStringContainsString('<x-ui.brand-mark lado="30" />', $sidebar);
         $this->assertStringContainsString('<x-ui.brand-mark lado="30" />', $cabecalho);
         $this->assertStringContainsString('<x-ui.brand-mark lado="22" />', $rodape);
+        $this->assertStringContainsString('nf-public-footer-left', $rodape);
+        $this->assertStringContainsString("© {{ now()->format('Y') }} NEXUS-FIELD", $rodape);
+        $this->assertStringContainsString('Desenvolvido por Clayton Marcelo', $rodape);
+        $this->assertStringNotContainsString('Gestão de operações em campo', $rodape,
+            'O rodapé voltou a descrever o produto: a referência só traz direito autoral e crédito.');
 
         $publica = $this->folha('public');
         $this->assertStringContainsString('padding-block: .75rem', $this->bloco($publica, '.nf-public-footer'));
         $this->assertStringContainsString('width: 1.375rem', $this->bloco($publica, '.nf-public-footer .nf-brand-mark'));
+        $this->assertStringContainsString('justify-content: space-between', $this->bloco($publica, '.nf-public-footer-row'));
     }
 
     /**

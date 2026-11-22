@@ -1,7 +1,7 @@
-{{-- Cabeçalho da página inicial: marca à esquerda, tema no centro e a única
-     porta de entrada à direita. O cadastro não vive aqui — ele é oferecido no
-     rodapé da tela de entrada e no fecho da apresentação, como no site de
-     referência. --}}
+{{-- Cabeçalho da página inicial: marca à esquerda e, na mesma fila à direita,
+     a chave de tema seguida da única porta de entrada — a ordem e o alinhamento
+     do site de referência. O cadastro não vive aqui: ele fica no rodapé da tela
+     de entrada. --}}
 <header class="nf-public-header">
     <div class="container">
         <div class="nf-public-header-inner">
@@ -12,13 +12,11 @@
                 </span>
             </a>
 
-            {{-- A chave volta ao centro da barra. Fora dela, o pedido anterior de
-                 "topo direito" só disputava espaço com a ação de entrada. --}}
-            <div class="nf-public-header-tema">
-                <x-ui.theme-toggle />
-            </div>
-
             <div class="nf-public-header-actions">
+                {{-- A chave mora imediatamente antes da ação, como na referência:
+                     os dois controles formam o mesmo grupo no canto direito. --}}
+                <x-ui.theme-toggle class="nf-public-header-tema" />
+
                 @auth
                     {{-- Sessão aberta não tem motivo para ver a tela de entrada; o
                          caminho honesto é o painel. --}}
@@ -27,7 +25,7 @@
                     </x-ui.button>
                 @elseif (Route::has('login'))
                     <x-ui.button href="{{ route('login') }}" variant="primary" size="sm" icon="fa-solid fa-key">
-                        Entrar
+                        Acessar
                     </x-ui.button>
                 @endif
             </div>

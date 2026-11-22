@@ -2,6 +2,37 @@
 
 Registro de mudanças de direção que afetam regra de negócio, com data e motivo.
 
+## 22/11/2026 — Cabeçalho e rodapé da referência, com sino na barra
+
+**Decisão anterior:** o cabeçalho público usava grid de três colunas com a chave de tema no centro e
+`Entrar` à direita; o rodapé mostrava marca, `Gestão de operações em campo` e assinatura. A decisão de
+22/11 que centralizou a chave fica superada por esta.
+
+**Nova decisão:** a marca continua à esquerda, mas tema e porta formam o grupo da direita, nessa ordem,
+e a porta passa a se chamar `Acessar`. O rodapé passa a ter marca e `© {{ now()->format('Y') }}
+NEXUS-FIELD` à esquerda e `Desenvolvido por Clayton Marcelo` à direita. O sino da barra autenticada
+continua lendo apenas os avisos da conta logada e abrindo a central em `/notificacoes`.
+
+**Motivo:** o usuário pediu cabeçalho e rodapé iguais aos de
+`https://nexus-business-manager.vercel.app/`, com os botões na mesma posição, e um sino funcional.
+A referência foi medida no navegador: nela o controle de tema vem antes de `Acessar`, no canto
+direito, e o pé traz direito autoral à esquerda e crédito à direita. A implementação foi conferida no
+navegador com usuário fictício e aviso de teste: contador `1`, `aria-label`
+`Notificações: 1 pendentes de leitura`, dropdown visível, item com o título do aviso e link `Centro
+de notificações` abrindo a central com o mesmo texto.
+
+**Implementação:** `public-header.blade.php` move a chave para dentro de `.nf-public-header-actions`
+antes do botão e troca o rótulo; `public-footer.blade.php` ganha `.nf-public-footer-left` com o direito
+autoral e o crédito fixo; `public.css` troca o grid por flex e estende o rodapé com as duas colunas.
+`CoerenciaVisualTest` e `AccessScreenTest` passam a exigir a ordem tema → `Acessar`, o texto do pé e
+a ausência da descrição antiga. Nenhuma consulta, permissão, rota, integração, cor ou token foi
+alterado; o sino já era filtrado por `user_id` e já usava `notifications.view`. Suíte: 408 testes /
+3820 asserções.
+
+**Restrições mantidas:** credencial da conta raiz fora de código, teste, doc, log e commit; usuário e
+aviso fictícios removidos ao final da validação; prosa hifenizada com U+2011; paleta e logotipo
+preservados; nenhum push.
+
 ## 22/11/2026 — Hambúrguer com rótulo e estado desenhado
 
 **Decisão anterior:** o controle era uma caixa de 2,35×2,15rem com três barras iguais, sem rótulo e
@@ -19,7 +50,7 @@ mas quem abre e fecha o painel continua sendo o template.
 **Implementação:** `navbar.blade.php` passa a embrulhar as barras em `.nf-nav-toggle-icone` e acrescenta
 `.nf-nav-toggle-texto`; `components.css` redesilha a pílula com tokens dos dois temas, transições e
 foco visível; `CoerenciaVisualTest` passa a exigir o invólucro, o rótulo e o contorno de foco. Suíte:
-408 testes / 3815 asserções.
+408 testes / 3820 asserções.
 
 **Restrições mantidas:** paleta e logotipo preservados, `data-lte-toggle="sidebar"` intacto, nenhum
 glifo de biblioteca no lugar das barras, nenhum push.
@@ -44,7 +75,7 @@ placeholders genéricos e a regra de que senha nunca volta em `old()`.
 passaram a exigir um único botão na página e a ausência do texto e do destino de cadastro. Um teste
 novo em `AccessScreenTest` verifica `autocomplete="off"` no formulário, e‑mail e senha, valor vazio no
 e‑mail e nenhum `value` na senha. Nenhuma cor, token, permissão, integração ou consulta foi alterada.
-Suíte: 408 testes / 3815 asserções.
+Suíte: 408 testes / 3820 asserções.
 
 **Restrições mantidas:** credencial da conta raiz fora de código, teste, doc, log e commit; prosa
 hifenizada com U+2011; paleta e logotipo preservados; nenhum push.

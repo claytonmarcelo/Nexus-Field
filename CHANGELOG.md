@@ -14,14 +14,20 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   rótulo some no celular), barras em degrau que se dobram em 45°, elevação no hover, recuo no clique
   e contorno de foco com `--nf-primary`. O estado continua vindo de `sidebar-collapse`/`sidebar-open`
   e o contrato `data-lte-toggle="sidebar"` não foi tocado. Suíte: 408 testes / 3815 asserções.
-- Cabeçalho público: a chave de tema voltou para o centro da barra, entre a marca e `Entrar`;
-  `Criar conta` saiu do topo e agora vive no link inferior da tela de entrada, como no site de
-  referência. O flex com `justify-content: space-between` deu lugar ao grid de três colunas; o
-  contrato de acessibilidade (`aria-pressed`) não mudou.
+- Cabeçalho público: marca à esquerda e, no mesmo grupo à direita, chave de tema seguida de `Acessar`
+  — a ordem e o alinhamento medidos em `https://nexus-business-manager.vercel.app/`. O grid de três
+  colunas deu lugar ao flex com `justify-content: space-between`; o contrato de acessibilidade
+  (`aria-pressed`) não mudou. A porta da boas-vindas também passou a se chamar `Acessar`.
+- Rodapé público: marca e `© {{ now()->format('Y') }} NEXUS-FIELD` à esquerda, `Desenvolvido por
+  Clayton Marcelo` à direita. O texto `Gestão de operações em campo` saiu do pé das telas públicas.
+- Sino: validado no navegador com aviso real da conta — contador `1`, `aria-label`
+  `Notificações: 1 pendentes de leitura`, dropdown visível e link para `/notificacoes` abrindo a central
+  com o aviso. A consulta já filtrava por `user_id` e a rota já exigia `notifications.view`; nenhuma
+  consulta, permissão ou escrita foi alterada.
 - Boas-vindas: título, sublinha e cards reescritos no padrão B2B pesquisado — chamada curta,
   benefício em uma frase e texto escaneável. O ciclo continua com seis passos; o bloco final
   `Comece pela operação que já existe` e seu `Criar conta` saíram da página, que agora oferece
-  somente `Entrar` no cabeçalho. O teste de coerência visual passou a exigir uma única chamada,
+  somente `Acessar` no cabeçalho. O teste de coerência visual passou a exigir uma única chamada,
   nenhum botão no meio da página e hífen não quebrável em `e‑mail`.
 - Login: `autocomplete="off"` no formulário e nos campos de e‑mail e senha. O navegador continua
   podendo guardar a credencial, mas a tela não a reapresenta preenchida depois do logout; os
@@ -34,7 +40,7 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   próprio lado (30 no sidebar e no cabeçalho, 22 no rodapé). A logo do sidebar deixa de ser cortada
   pela faixa de 35px e o rodapé público fecha nos mesmos 38px do rodapé autenticado, medidos no
   navegador. A animação da marca acima do título de entrada saiu com a casca antiga, e o CSS dela
-  foi removido. Suíte: 408 testes / 3815 asserções.
+  foi removido. Suíte: 408 testes / 3820 asserções.
 - Cadastro de empresas: o fluxo saiu do grupo `guest` e passou a viver em **Cadastros › Empresas**
   (`/cadastros/empresas`), com `auth`, tenant e `organization.create`, casca autenticada e trilha do
   menu lateral. O endpoint tokenizado de confirmação por e-mail ficou fora dos grupos de acesso, sem
