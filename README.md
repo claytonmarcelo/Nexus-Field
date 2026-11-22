@@ -472,11 +472,13 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   item com luz na quina e o foco subindo do campo para a linha, valor monetário inteiro numa linha só
   (`.nf-valor` — frase explicativa continua quebrando), e no polegar o par "Total" empilha rótulo e
   número em vez de partir o número ao meio
-- A casca pública veste a mesma matéria: a caixa "O ciclo de um serviço" traz o trilho de 2px no lugar
+- A casca pública veste a mesma matéria: a faixa "Ciclo do serviço" traz o trilho de 2px no lugar
   da borda de marca, o fio entre os passos desvanece, e o cartão de login e a faixa de chamada têm a
-  luz na quina dos cartões autenticados. O auto nível do medalhão continua intocado
-- Topo e pé enxutos: 44px de altura no cabeçalho (a mesma nos dois lados da aplicação) e uma linha no
-  rodapé das telas abertas
+  luz na quina dos cartões autenticados. O auto nível do medalhão continua só na abertura
+- Topo e pé enxutos: o cabeçalho público tem a mesma altura do cabeçalho do painel, com a marca à
+  esquerda, o tema no centro e `Entrar` à direita; o rodapé público fecha na mesma altura do rodapé
+  autenticado. Login, cadastro, recuperação e redefinição não carregam esse rodapé — levam só a barra
+  enxuta com voltar à esquerda e tema à direita, como no site de referência
 - A micro-visualização veste o cartão, não o contrário: traço, área e anel usam `--nf-tone` e
   `--nf-tone-soft` do registro único de tom (`.tone-*`), sem uma tinta fora do que os dois temas já
   definem, e o traço de espessura fixa (`vector-effect: non-scaling-stroke`) conta a mesma história no
@@ -508,9 +510,9 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   de fatos é `flex: 0 0 auto` e o valor tem folga (`flex: 0 1 auto; min-width: 0`) para descer inteiro. A outra
   ponta é a linha que sobra: `text-wrap: pretty` nos parágrafos e `balance` nos títulos, porque última linha
   com uma palavra órfã é acidente de largura, não decisão de leitura
-- A tela aberta tem uma porta de entrada, não três: o cabeçalho chama para entrar e o bloco final fecha a
-  chamada. O meio do hero não repete o endereço que já está no canto superior direito — duas portas para o
-  mesmo lugar, na mesma tela, só disputam o clique entre si
+- A boas-vindas tem duas portas, e só duas: `Entrar` no cabeçalho e `Criar conta` no fecho final. O
+  cadastro saiu do topo — na tela de entrada ele aparece como link inferior (`Não tem uma conta? Criar
+  conta`), no padrão do site de referência. O meio do hero não repete nenhum dos dois endereços
 - O botão do menu desenha o estado em vez de trocar de glifo: três barras em CSS, uma moldura e uma variável,
   `--nf-dobra`, preenchida pelos quebradores do template (`sidebar-collapse` no desktop largo, `sidebar-open`
   no celular). Aberto, as barras paralelas com a do meio mais curta são o menu recolhido em miniatura; fechado,
@@ -530,9 +532,10 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   ativo, no escuro encosta no preto e só o fio de borda separa as duas áreas
 - Marca nos navegadores: `favicon.ico` com 16, 32 e 48 embutidos, PNGs de 32 e 192 servidos por
   `<link rel="icon">` e `apple-touch-icon` achatado sobre preto, todos gerados do medalhão oficial
-- Auto nível nas telas abertas: a logo do hero balança em amplitude decrescente e para nivelada, com o
-  halo acendendo no assentamento; o mesmo gesto, menor, acima do título de entrada. É CSS, não GIF, para
-  continuar legível nos dois temas e respeitar `prefers-reduced-motion`
+- Auto nível na abertura: a logo do hero balança em amplitude decrescente e para nivelada, com o halo
+  acendendo no assentamento. É CSS, não GIF, para continuar legível nos dois temas e respeitar
+  `prefers-reduced-motion`; as telas de acesso não repetem o gesto — a barra enxuta substituiu a marca
+  que ficava acima do título
 - Diálogos e avisos só por SweetAlert2 e Toastr — `alert()`, `confirm()` e `prompt()` nativos são
   vetados no projeto e cobertos por teste
 - Layout responsivo, com o painel em uma coluna no celular e a linha de listagem virando ficha: cada
@@ -929,10 +932,10 @@ senha por dentro da aplicação. Se a senha contiver `#`, escreva o valor entre 
 aspas o dotenv lê o `#` como início de comentário e a senha chega truncada. Em produção o seeder
 recusa senha gerada automaticamente; credencial nunca entra no código nem no Git.
 
-O alternador de tema fica no canto superior direito do cabeçalho, tanto nas telas abertas quanto
-no painel: nas telas abertas ele abre a fila de ações, antes de `Criar conta` e `Entrar`; no painel
-divide a fila com o sino. A preferência continua no mesmo contrato JavaScript e no mesmo atributo
-`data-bs-theme` de sempre.
+O alternador de tema fica no centro do cabeçalho público, entre a marca e a única ação (`Entrar`);
+no painel continua na fila da direita, ao lado do sino. Nas telas de acesso ele vai para o canto
+direito da barra enxuta, com `Voltar` à esquerda, seguindo o site de referência. A preferência
+continua no mesmo contrato JavaScript e no mesmo atributo `data-bs-theme` de sempre.
 
 **Cadastro de acesso:** `/register` é o cadastro público de usuário comum e pede somente nome, e-mail,
 senha e confirmação. A conta entra no painel imediatamente e recebe um ambiente inicial ativo — plano

@@ -10,14 +10,23 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Alterado
 
-- Cabeçalho público: a chave de tema saiu da coluna central e passou a abrir o grupo de ações no
-  canto superior direito, antes de `Criar conta`/`Entrar`, alinhada ao painel. O grid de três
-  colunas deu lugar a flex com `justify-content: space-between`; classe central, comentários e
-  teste de coerência atualizados. contrato de acessibilidade (`aria-pressed`) preservado.
-- Boas-vindas: com a abertura do cadastro comum, o cabeçalho passou a oferecer `Criar conta` e
-  `Entrar`, e o bloco final fechou com um único `Criar conta`; o hero continua sem botão. O teste de
-  coerência visual passou a exigir três chamadas, os destinos de registro e login, nenhum botão no meio
-  da página e hífen não quebrável em `e‑mail`. Suíte: 405 testes / 3769 asserções.
+- Cabeçalho público: a chave de tema voltou para o centro da barra, entre a marca e `Entrar`;
+  `Criar conta` saiu do topo e agora vive no link inferior da tela de entrada e no fecho da
+  boas-vindas, como no site de referência. O flex com `justify-content: space-between` deu lugar
+  ao grid de três colunas; o contrato de acessibilidade (`aria-pressed`) não mudou.
+- Boas-vindas: título, sublinha, cards e fecho reescritos no padrão B2B pesquisado — chamada curta,
+  benefício em uma frase e texto escaneável. O ciclo continua com seis passos e o CTA final é o
+  único `Criar conta` da página; o cabeçalho oferece somente `Entrar`. O teste de coerência visual
+  passou a exigir duas chamadas, nenhum botão no meio da página e hífen não quebrável em `e‑mail`.
+- Telas de acesso: login, cadastro, recuperação e redefinição trocaram o cabeçalho e o rodapé da
+  apresentação por `auth-topbar.blade.php` — barra enxuta com voltar à esquerda e tema à direita —
+  e pela cópia da referência (`Seja bem‑vindo`, `Insira os seus dados para continuar`, `Recuperar
+  senha`, `Informe o e‑mail da sua conta`, `ENVIAR`). O formulário de cadastro segue com quatro campos.
+- Marca e rodapé: `<x-ui.brand-mark />` não força mais 4rem no estilo inline; cada chamada passa o
+  próprio lado (30 no sidebar e no cabeçalho, 22 no rodapé). A logo do sidebar deixa de ser cortada
+  pela faixa de 35px e o rodapé público fecha nos mesmos 38px do rodapé autenticado, medidos no
+  navegador. A animação da marca acima do título de entrada saiu com a casca antiga, e o CSS dela
+  foi removido. Suíte: 407 testes / 3801 asserções.
 - Cadastro de empresas: o fluxo saiu do grupo `guest` e passou a viver em **Cadastros › Empresas**
   (`/cadastros/empresas`), com `auth`, tenant e `organization.create`, casca autenticada e trilha do
   menu lateral. O endpoint tokenizado de confirmação por e-mail ficou fora dos grupos de acesso, sem

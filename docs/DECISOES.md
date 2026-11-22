@@ -2,6 +2,46 @@
 
 Registro de mudanças de direção que afetam regra de negócio, com data e motivo.
 
+## 22/11/2026 — Casca pública no padrão da referência
+
+**Decisão anterior:** a chave de tema havia ido para o canto superior direito do cabeçalho, ao lado
+de `Criar conta` e `Entrar`; as telas de acesso vestiam o mesmo cabeçalho e o mesmo rodapé da boas-vindas,
+com cópia longa e informal.
+
+**Nova decisão:** a chave volta ao centro do cabeçalho público, entre a marca e a única ação do topo,
+`Entrar`. Login, cadastro, recuperação e redefinição trocam o cabeçalho e o rodapé grandes por uma barra
+enxuta — voltar à esquerda, tema à direita — e um cartão único com título curto e subtítulo objetivo.
+O cadastro sai do cabeçalho e continua como link no rodapé da tela de entrada e no fecho da boas-vindas.
+
+**Motivo:** o usuário pediu explicitamente o tema centralizado, a remoção de `Criar conta` do topo,
+textos/cards profissionais e a conformidade com `https://nexus-business-manager.vercel.app/`. A referência
+foi aberta no navegador: no landing só existe `Acessar`; `/login` traz `Seja bem‑vindo`, `Insira os seus
+dados para continuar`, `ENTRAR` e `Não tem uma conta? Criar conta`; `/cadastro` traz `Criar conta` e
+`Inicie a sua jornada conosco`; `/recuperar-senha` traz `Recuperar senha`, `Informe o e‑mail da sua conta`
+e `ENVIAR`. A pesquisa de mercado em landing B2B aponta headline curta, sublinha objetiva e cartões
+escaneáveis — foi o que substituiu os textos longos. As perguntas sobre o destino da chave e sobre o que
+sobraria no cabeçalho foram respondidas antes da implementação: centro do cabeçalho público e somente
+`Entrar`.
+
+**Causa raiz da marca e do rodapé:** `<x-ui.brand-mark />` gravava `style="width: 4rem; height: 4rem"`
+no `<img>`, e esse estilo inline vencia o CSS de 1,875rem do sidebar/cabeçalho e de 1,375rem do rodapé.
+No sidebar a logo de 51px era cortada pela faixa de 35px; no rodapé público o medalhão inchado empurrava
+a linha para 74px contra os 38px do rodapé autenticado. Agora cada contexto passa o próprio `lado` (30
+no sidebar e no cabeçalho, 22 no rodapé) e o forro do rodapé foi calibrado no navegador para os mesmos
+38px. A marca da empresa no sidebar já usava 1,875rem e segue intacta.
+
+**Implementação:** `public-header.blade.php` virou grade de três colunas com a chave isolada no meio;
+`auth-topbar.blade.php` é o novo componente das telas abertas, usado por `auth-shell.blade.php`; os quatro
+Blade de acesso receberam a cópia da referência; `welcome.blade.php` foi reescrito com título, sublinha e
+cards curtos, mantendo os seis passos do ciclo e o CTA final. A animação da marca que ficava acima do título
+de entrada saiu junto com a casca antiga, e o CSS morto foi removido. Nenhuma cor, token, permissão,
+integração ou consulta foi alterada; o formulário de cadastro continua com apenas nome, e‑mail, senha e
+confirmação — os checkboxes de Termos/Privacidade da referência não foram adicionados. Suíte: 407 testes /
+3801 asserções.
+
+**Restrições mantidas:** credencial da conta raiz fora de código, teste, doc, log e commit; prosa hifenizada
+com U+2011 (`e‑mail`, `check‑in`, `bem‑vindo`); paleta e logotipo preservados; nenhum push.
+
 ## 22/11/2026 — Chave de tema no canto superior direito
 
 **Decisão anterior:** a chave de tema morava na coluna central do cabeçalho público
