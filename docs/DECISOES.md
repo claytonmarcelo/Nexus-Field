@@ -2,6 +2,28 @@
 
 Registro de mudanças de direção que afetam regra de negócio, com data e motivo.
 
+## 22/11/2026 — Hambúrguer com rótulo e estado desenhado
+
+**Decisão anterior:** o controle era uma caixa de 2,35×2,15rem com três barras iguais, sem rótulo e
+sem tratamento de foco próprio — ele já obedecia ao AdminLTE, mas tinha cara de botão genérico.
+
+**Nova decisão:** o botão vira pílula com ícone em casa própria e rótulo `Menu` no desktop; no celular
+o rótulo some e o ícone fica sozinho. As três barras continuam desenhadas em CSS, agora com larguras
+em degrau, dobra de 45°, elevação no hover, contorno de foco com `--nf-primary` e recuo no clique.
+O estado continua lido de `sidebar-collapse`/`sidebar-open`, sem segunda fonte de verdade.
+
+**Motivo:** o usuário pediu um menu hambúrguer atualizado e bonito. A atualização foi feita sem trocar
+o contrato do AdminLTE 4 nem o espelho de acessibilidade do `menu.js`: a peça ganhou presença visual,
+mas quem abre e fecha o painel continua sendo o template.
+
+**Implementação:** `navbar.blade.php` passa a embrulhar as barras em `.nf-nav-toggle-icone` e acrescenta
+`.nf-nav-toggle-texto`; `components.css` redesilha a pílula com tokens dos dois temas, transições e
+foco visível; `CoerenciaVisualTest` passa a exigir o invólucro, o rótulo e o contorno de foco. Suíte:
+408 testes / 3815 asserções.
+
+**Restrições mantidas:** paleta e logotipo preservados, `data-lte-toggle="sidebar"` intacto, nenhum
+glifo de biblioteca no lugar das barras, nenhum push.
+
 ## 22/11/2026 — Fecho da boas-vindas e credenciais no login
 
 **Decisão anterior:** a apresentação terminava com `Comece pela operação que já existe`, explicava
@@ -22,7 +44,7 @@ placeholders genéricos e a regra de que senha nunca volta em `old()`.
 passaram a exigir um único botão na página e a ausência do texto e do destino de cadastro. Um teste
 novo em `AccessScreenTest` verifica `autocomplete="off"` no formulário, e‑mail e senha, valor vazio no
 e‑mail e nenhum `value` na senha. Nenhuma cor, token, permissão, integração ou consulta foi alterada.
-Suíte: 408 testes / 3812 asserções.
+Suíte: 408 testes / 3815 asserções.
 
 **Restrições mantidas:** credencial da conta raiz fora de código, teste, doc, log e commit; prosa
 hifenizada com U+2011; paleta e logotipo preservados; nenhum push.

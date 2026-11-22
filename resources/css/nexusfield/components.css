@@ -82,12 +82,12 @@
  * Botão do menu lateral — três barras que dizem em que pé o menu está
  *
  * Antes era um glifo do FontAwesome solto na barra: sem moldura, sem estado e
- * sem nenhuma pista de que o menu ao lado ia fechar. Aqui ele vira peça da casa,
- * com o mesmo fio de borda e o mesmo fundo elevado da pílula de tema, e lê o
- * estado de onde o AdminLTE 4 o guarda: `sidebar-collapse` no desktop,
- * `sidebar-open` no celular. O botão obedece ao contrato do template — não
- * existe segunda fonte de verdade, e o JavaScript só traduz isso para
- * `aria-expanded`.
+ * sem nenhuma pista de que o menu ao lado ia fechar. Aqui ele vira pílula da casa,
+ * com o ícone de três barras e o rótulo `Menu` no desktop; no celular só o ícone
+ * fica, para não roubar espaço da barra. A peça lê o estado de onde o AdminLTE 4
+ * o guarda: `sidebar-collapse` no desktop, `sidebar-open` no celular. O botão
+ * obedece ao contrato do template — não existe segunda fonte de verdade, e o
+ * JavaScript só traduz isso para `aria-expanded`.
  *
  * Fechado, as duas barras externas se dobram sobre a do meio e a figura que
  * sobra é uma ponta de seta: "puxe o menu", que é exatamente o que o clique faz.
@@ -98,26 +98,44 @@
     --nf-dobra: 0;
 
     display: inline-flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: .25rem;
-    width: 2.35rem;
-    height: 2.15rem;
-    padding: 0 .55rem;
+    align-items: center;
+    gap: .55rem;
+    min-height: 2.4rem;
+    padding: .4rem .8rem .4rem .65rem;
     border: 1px solid var(--nf-line-strong);
-    border-radius: var(--bs-border-radius);
+    border-radius: 999px;
     background:
-        linear-gradient(180deg, color-mix(in srgb, var(--nf-primary) 8%, transparent), transparent),
+        radial-gradient(circle at 20% 0, color-mix(in srgb, var(--nf-primary) 16%, transparent), transparent 65%),
         var(--nf-elevated);
     color: var(--nf-text-muted);
-    box-shadow: var(--nf-shadow-sm);
+    box-shadow: var(--nf-shadow-sm), inset 0 1px 0 var(--nf-sheen);
     cursor: pointer;
     transition: border-color var(--nf-duration) var(--nf-ease),
-        color var(--nf-duration) var(--nf-ease);
+        color var(--nf-duration) var(--nf-ease),
+        transform var(--nf-duration) var(--nf-ease);
+}
+
+.nf-nav-toggle-icone {
+    display: inline-flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    justify-content: center;
+    gap: .2rem;
+    width: 1.15rem;
+    height: 1.05rem;
+}
+
+.nf-nav-toggle-texto {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    line-height: 1;
+    text-transform: uppercase;
 }
 
 .nf-nav-toggle-bar {
     display: block;
+    width: 100%;
     height: 2px;
     border-radius: 999px;
     background-color: currentColor;
@@ -127,15 +145,20 @@
         width var(--nf-duration) var(--nf-ease);
 }
 
-/* A barra do meio é mais curta: é o próprio menu recolhido, desenhado em miniatura. */
-.nf-nav-toggle-bar:nth-child(2) {
-    width: 62%;
-}
-
 .nf-nav-toggle:hover,
 .nf-nav-toggle:focus-visible {
     border-color: var(--nf-primary);
     color: var(--nf-primary);
+    transform: translateY(-1px);
+}
+
+.nf-nav-toggle:focus-visible {
+    outline: 2px solid var(--nf-primary);
+    outline-offset: 2px;
+}
+
+.nf-nav-toggle:active {
+    transform: translateY(0) scale(.97);
 }
 
 .nf-nav-toggle:hover .nf-nav-toggle-bar:nth-child(2) {
@@ -143,15 +166,19 @@
 }
 
 .nf-nav-toggle-bar:nth-child(1) {
-    transform: translateY(calc(var(--nf-dobra) * .375rem)) rotate(calc(var(--nf-dobra) * 40deg));
+    transform: translateY(calc(var(--nf-dobra) * .325rem)) rotate(calc(var(--nf-dobra) * 45deg));
 }
 
+/* A barra do meio é mais curta: é o próprio menu recolhido, desenhado em miniatura. */
 .nf-nav-toggle-bar:nth-child(2) {
+    width: 62%;
     opacity: calc(1 - var(--nf-dobra));
 }
 
+/* A terceira encosta sem igualar a primeira: o degrau dá ritmo ao ícone. */
 .nf-nav-toggle-bar:nth-child(3) {
-    transform: translateY(calc(var(--nf-dobra) * -.375rem)) rotate(calc(var(--nf-dobra) * -40deg));
+    width: 82%;
+    transform: translateY(calc(var(--nf-dobra) * -.325rem)) rotate(calc(var(--nf-dobra) * -45deg));
 }
 
 /* No desktop a coleção é a exceção: o corpo marca `sidebar-collapse`. */
@@ -169,6 +196,17 @@
 
     body.sidebar-open .nf-nav-toggle {
         --nf-dobra: 0;
+    }
+}
+
+/* A palavra é apoio no desktop; na tela estreita o ícone fala sozinho. */
+@media (max-width: 575.98px) {
+    .nf-nav-toggle-texto {
+        display: none;
+    }
+
+    .nf-nav-toggle {
+        padding: .4rem .6rem;
     }
 }
 

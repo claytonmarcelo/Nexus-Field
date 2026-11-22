@@ -469,6 +469,10 @@ class CoerenciaVisualTest extends TestCase
             'O botão precisa dizer ao leitor de tela qual região ele governa.');
         $this->assertSame(3, substr_count($navbar, 'class="nf-nav-toggle-bar"'),
             'As três barras são o desenho da peça: faltou barra.');
+        $this->assertStringContainsString('class="nf-nav-toggle-icone"', $navbar,
+            'O ícone precisa de casa própria para o rótulo não empurrar as barras.');
+        $this->assertStringContainsString('class="nf-nav-toggle-texto"', $navbar,
+            'O rótulo `Menu` dá nome ao controle no desktop.');
 
         $componentes = $this->folha('components');
 
@@ -483,6 +487,8 @@ class CoerenciaVisualTest extends TestCase
         $this->assertStringContainsString('background-color: currentColor', $barra,
             'A barra herda a tinta do botão: uma propriedade só, sem jogo de classe.');
         $this->assertStringContainsString('transform-origin: right center', $barra);
+        $this->assertStringContainsString('outline: 2px solid var(--nf-primary)', $componentes,
+            'O foco do teclado precisa de contorno visível na peça nova.');
 
         foreach (['.nf-nav-toggle-bar:nth-child(1)', '.nf-nav-toggle-bar:nth-child(3)'] as $seletor) {
             $this->assertMatchesRegularExpression('/calc\(var\(--nf-dobra\)/', $this->bloco($componentes, $seletor),

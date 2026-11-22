@@ -2,10 +2,10 @@
      ([data-lte-toggle="sidebar"], estado no <body>), e sair é POST com CSRF:
      logout por GET é o que permite deslogar alguém com uma imagem quebrada.
 
-     As três barras são desenhadas em CSS, e não um glifo: a moldura e a dobra
-     existem para o clique ter cara de peça e o estado ter para onde ir. Quem lê o
-     `aria-expanded` é o menu.js, que só espelha a classe que o template já pôs no
-     <body> — ver resources/js/nexusfield/menu.js.
+     As três barras são desenhadas em CSS, e não um glifo: elas moram num ícone com
+     o rótulo `Menu` ao lado no desktop, e a dobra existe para o estado ter para onde
+     ir. Quem lê o `aria-expanded` é o menu.js, que só espelha a classe que o template
+     já pôs no <body> — ver resources/js/nexusfield/menu.js.
 
      A chave de tema fica no grupo de ações à direita aqui no painel; no cabeçalho
      da página inicial ela ocupa o centro da barra. O sino lê a bandeja de quem
@@ -29,9 +29,12 @@
                     aria-label="Recolher o menu lateral"
                     title="Recolher o menu lateral"
                 >
-                    <span class="nf-nav-toggle-bar" aria-hidden="true"></span>
-                    <span class="nf-nav-toggle-bar" aria-hidden="true"></span>
-                    <span class="nf-nav-toggle-bar" aria-hidden="true"></span>
+                    <span class="nf-nav-toggle-icone">
+                        <span class="nf-nav-toggle-bar" aria-hidden="true"></span>
+                        <span class="nf-nav-toggle-bar" aria-hidden="true"></span>
+                        <span class="nf-nav-toggle-bar" aria-hidden="true"></span>
+                    </span>
+                    <span class="nf-nav-toggle-texto" aria-hidden="true">Menu</span>
                 </button>
             </li>
         </ul>

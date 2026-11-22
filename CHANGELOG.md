@@ -10,10 +10,14 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Alterado
 
+- Menu lateral: o hambúrguer virou pílula com ícone em casa própria e rótulo `Menu` no desktop (o
+  rótulo some no celular), barras em degrau que se dobram em 45°, elevação no hover, recuo no clique
+  e contorno de foco com `--nf-primary`. O estado continua vindo de `sidebar-collapse`/`sidebar-open`
+  e o contrato `data-lte-toggle="sidebar"` não foi tocado. Suíte: 408 testes / 3815 asserções.
 - Cabeçalho público: a chave de tema voltou para o centro da barra, entre a marca e `Entrar`;
-  `Criar conta` saiu do topo e agora vive no link inferior da tela de entrada e no fecho da
-  boas-vindas, como no site de referência. O flex com `justify-content: space-between` deu lugar
-  ao grid de três colunas; o contrato de acessibilidade (`aria-pressed`) não mudou.
+  `Criar conta` saiu do topo e agora vive no link inferior da tela de entrada, como no site de
+  referência. O flex com `justify-content: space-between` deu lugar ao grid de três colunas; o
+  contrato de acessibilidade (`aria-pressed`) não mudou.
 - Boas-vindas: título, sublinha e cards reescritos no padrão B2B pesquisado — chamada curta,
   benefício em uma frase e texto escaneável. O ciclo continua com seis passos; o bloco final
   `Comece pela operação que já existe` e seu `Criar conta` saíram da página, que agora oferece
@@ -30,7 +34,7 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   próprio lado (30 no sidebar e no cabeçalho, 22 no rodapé). A logo do sidebar deixa de ser cortada
   pela faixa de 35px e o rodapé público fecha nos mesmos 38px do rodapé autenticado, medidos no
   navegador. A animação da marca acima do título de entrada saiu com a casca antiga, e o CSS dela
-  foi removido. Suíte: 408 testes / 3812 asserções.
+  foi removido. Suíte: 408 testes / 3815 asserções.
 - Cadastro de empresas: o fluxo saiu do grupo `guest` e passou a viver em **Cadastros › Empresas**
   (`/cadastros/empresas`), com `auth`, tenant e `organization.create`, casca autenticada e trilha do
   menu lateral. O endpoint tokenizado de confirmação por e-mail ficou fora dos grupos de acesso, sem

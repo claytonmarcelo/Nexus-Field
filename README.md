@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-408%20testes%20%2F%203812%20asser%C3%A7%C3%B5es-brightgreen" alt="408 testes, 3812 asserções">
+  <img src="https://img.shields.io/badge/testes-408%20testes%20%2F%203815%20asser%C3%A7%C3%B5es-brightgreen" alt="408 testes, 3815 asserções">
 </p>
 
 <p align="center">
@@ -513,11 +513,13 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - A boas-vindas tem uma única porta: `Entrar` no cabeçalho. O bloco final que explicava como criar
   conta foi removido; o cadastro aparece como link inferior na tela de entrada (`Não tem uma conta?
   Criar conta`), no padrão do site de referência. O meio do hero não repete nenhum endereço
-- O botão do menu desenha o estado em vez de trocar de glifo: três barras em CSS, uma moldura e uma variável,
-  `--nf-dobra`, preenchida pelos quebradores do template (`sidebar-collapse` no desktop largo, `sidebar-open`
-  no celular). Aberto, as barras paralelas com a do meio mais curta são o menu recolhido em miniatura; fechado,
-  elas se dobram num `>`. `menu.js` não manda no menu — espelha a classe do `<body>` em `aria-expanded`,
-  `aria-label` e `title`, para o leitor de tela não continuar dizendo "Expandir" depois de o menu ter aberto
+- O botão do menu desenha o estado em vez de trocar de glifo: três barras em CSS dentro de um ícone próprio,
+  ao lado do rótulo `Menu` no desktop largo (no celular só o ícone fica), e a variável `--nf-dobra`,
+  preenchida pelos quebradores do template (`sidebar-collapse` no desktop, `sidebar-open` no celular). Aberto,
+  as barras paralelas em degrau são o menu recolhido em miniatura; fechado, elas se dobram num `>` de 45°. A
+  pílula tem elevação no hover, recuo no clique e contorno de foco com `--nf-primary`. `menu.js` não manda no
+  menu — espelha a classe do `<body>` em `aria-expanded`, `aria-label` e `title`, para o leitor de tela não
+  continuar dizendo "Expandir" depois de o menu ter aberto
 - A abertura fecha em faixa própria, não em vão: a esteira do ciclo é irmã do row e atravessa a página
   inteira — seis passos numerados, o fio que nasce de um disco e morre no seguinte, e um fecho que diz onde ela
   desemboca. O serviço assinado é o que abre a cobrança da ordem, no valor que as próprias linhas somam: a
@@ -1065,7 +1067,7 @@ que o banco devolveu no dia, cobra a régua entre o número do cartão e o perí
 nascer onde não há série, nem anel nascer onde a ficha não tinha prazo, nem tinta nova entrar na folha dos
 componentes. A demonstração também é provada como história: a hora em que cada ordem terminou é a mesma hora
 gravada na trilha de estado, na saída da visita de campo e na liberação da comissão do técnico. E a camada de
-apresentação tem régua travada: `CoerenciaVisualTest` (14 testes / 195 asserções) varre as 205 classes `nf-`
+apresentação tem régua travada: `CoerenciaVisualTest` (14 testes / 198 asserções) varre as classes `nf-`
 da folha contra a interface, não deixa o layout partir palavra no meio nem o hífen cortá-la no meio da frase,
 conta uma — não duas — chamada na boas-vindas, prova que o botão do menu desenha o próprio estado
 em CSS com tinta só dos tokens, e prende a abertura da boas-vindas na faixa que a fecha: seis passos, fora da
