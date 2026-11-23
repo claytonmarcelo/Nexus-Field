@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureRoot;
+use App\Http\Middleware\NoStore;
 use App\Http\Middleware\ResolveCompany;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -42,6 +43,10 @@ $app = Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             ResolveCompany::class,
+            // Toda resposta da web carrega os cabeçalhos de não guardar: o
+            // formulário de entrada e as telas autenticadas não podem voltar do
+            // bfcache com o que a sessão anterior tinha escrito.
+            NoStore::class,
         ]);
 
         // O tenant tem de existir antes de a rota trocar o parâmetro por modelo:

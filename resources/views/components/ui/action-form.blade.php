@@ -14,7 +14,14 @@
     'texto' => null,
     'perigo' => true,
     'variante' => 'ghost',
+    'buttonClass' => null,
+    'buttonTitle' => null,
+    'buttonAriaLabel' => null,
 ])
+
+@php
+    $classesBotao = trim(($perigo ? 'nf-btn-acao-perigo ' : '').($buttonClass ?? ''));
+@endphp
 
 <form method="POST" action="{{ $acao }}" class="nf-inline-form" data-nf-confirm
     data-confirm-titulo="{{ $titulo }}"
@@ -29,7 +36,8 @@
 
     {{ $slot }}
 
-    <x-ui.button type="submit" :variant="$variante" size="sm" :icon="$icon" class="nf-btn-acao-perigo">
+    <x-ui.button type="submit" :variant="$variante" size="sm" :icon="$icon"
+        :class="$classesBotao" :title="$buttonTitle" :aria-label="$buttonAriaLabel">
         {{ $rotulo }}
     </x-ui.button>
 </form>

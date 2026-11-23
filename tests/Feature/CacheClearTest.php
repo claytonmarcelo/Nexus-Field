@@ -124,6 +124,22 @@ class CacheClearTest extends TestCase
         $this->assertStringContainsString('Nenhum dado de empresa, cliente, ordem ou arquivo será apagado', $htmlRaiz,
             'O modal precisa dizer explicitamente que nenhum dado de negócio é tocado.');
 
+        // O cache segue o mesmo padrão dos demais modais: `x-ui.action-form` com
+        // título, texto e rótulo próprios, mas sem o vermelho das ações destrutivas.
+        $this->assertMatchesRegularExpression(
+            '/<form[^>]*action="'.preg_quote($url, '/').'"[^>]*class="nf-inline-form"[^>]*data-confirm-perigo="false"/',
+            $htmlRaiz,
+            'A limpeza de cache precisa sair do componente padrão e abrir um modal não destrutivo.'
+        );
+        $this->assertStringContainsString('title="Limpar cache global"', $htmlRaiz);
+        $this->assertStringContainsString('aria-label="Limpar cache global"', $htmlRaiz);
+
+        $inicio = strpos($htmlRaiz, '<form method="POST" action="'.$url.'"');
+        $this->assertIsInt($inicio);
+        $form = substr($htmlRaiz, $inicio, strpos($htmlRaiz, '</form>', $inicio) - $inicio);
+        $this->assertStringNotContainsString('nf-btn-acao-perigo', $form,
+            'Limpar cache não apaga dado: o botão não pode herdar a tinta de perigo.');
+
         $htmlAdmin = $this->actingAs($this->administrador())
             ->get(route('dashboard'))
             ->assertOk()

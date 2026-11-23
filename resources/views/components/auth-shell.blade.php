@@ -1,6 +1,6 @@
 {{-- Casca das telas abertas de acesso: cadastro, login, recuperação, redefinição
      e páginas de erro. Segue o padrão do site de referência: barra enxuta com
-     voltar e tema, cartão único com título e subtítulo, sem rodapé. --}}
+     marca, voltar e tema, cartão único com medalhão, título e subtítulo, sem rodapé. --}}
 @props([
     'title',
     'subtitle' => null,
@@ -21,6 +21,12 @@
 
         <main class="nf-auth" id="conteudo">
             <div class="nf-auth-card">
+                {{-- O medalhão abre o cartão, como nas telas de acesso de referência.
+                     É informação visual: o nome da página já está no título. --}}
+                <div class="nf-auth-marca" aria-hidden="true">
+                    <x-ui.brand-mark lado="64" />
+                </div>
+
                 <h1 class="nf-display nf-auth-title">{{ $title }}</h1>
 
                 @if ($subtitle)

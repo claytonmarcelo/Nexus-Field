@@ -14,7 +14,7 @@
 <head>
     <x-site-head :title="$title.' — '.config('app.name', 'NEXUS-FIELD')" :description="$subtitle" />
 </head>
-<body class="hold-transition sidebar-mini sidebar-expand-lg layout-fixed">
+<body class="hold-transition sidebar-mini sidebar-expand-lg layout-fixed" data-nf-sessao="autenticada">
     <x-skip-links navigation />
 
     <div class="app-wrapper">

@@ -48,18 +48,19 @@
 
             @if ($user->isRoot() && Route::has('system.cache.clear'))
                 <li class="nav-item d-flex align-items-center">
-                    <form method="POST" action="{{ route('system.cache.clear') }}"
-                        data-nf-confirm
-                        data-confirm-titulo="Limpar o cache global?"
-                        data-confirm-texto="Nenhum dado de empresa, cliente, ordem ou arquivo será apagado. Somente a configuração, as rotas, os eventos e as views compiladas serão reconstruídos."
-                        data-confirm-rotulo="Limpar cache">
-                        @csrf
-                        <x-ui.button type="submit" variant="ghost" size="sm"
-                            icon="fa-solid fa-broom" class="nf-cache-toggle"
-                            title="Limpar cache global" aria-label="Limpar cache global">
-                            Limpar cache
-                        </x-ui.button>
-                    </form>
+                    <x-ui.action-form
+                        :acao="route('system.cache.clear')"
+                        metodo="POST"
+                        rotulo="Limpar cache"
+                        titulo="Limpar o cache global?"
+                        texto="Nenhum dado de empresa, cliente, ordem ou arquivo será apagado. Somente a configuração, as rotas, os eventos e as views compiladas serão reconstruídos."
+                        :perigo="false"
+                        variante="ghost"
+                        icon="fa-solid fa-broom"
+                        button-class="nf-cache-toggle"
+                        button-title="Limpar cache global"
+                        button-aria-label="Limpar cache global"
+                    />
                 </li>
             @endif
 

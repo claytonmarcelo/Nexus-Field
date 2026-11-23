@@ -330,9 +330,9 @@
 }
 
 
-/* Barra das telas de acesso: a mesma largura do cartão, voltar à esquerda e
-   tema à direita. Ela substitui o cabeçalho grande — aqui a página só tem uma
-   tarefa, e o nome dela já está no título do cartão. */
+/* Barra das telas de acesso: a mesma largura do cartão, marca e voltar à
+   esquerda e tema à direita. Ela substitui o cabeçalho grande — aqui a página só
+   tem uma tarefa, e o nome dela já está no título do cartão. */
 .nf-auth-topbar {
     display: flex;
     width: 100%;
@@ -341,6 +341,19 @@
     justify-content: space-between;
     margin-inline: auto;
     padding-block: .75rem;
+}
+
+/* A marca acompanha o voltar no mesmo grupo da esquerda, como no referencial.
+   Ela não é link: a barra continua com uma só porta e o tema no lugar de sempre. */
+.nf-auth-topbar-marca {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    min-width: 0;
+}
+
+.nf-auth-topbar-marca .nf-wordmark {
+    font-size: .95rem;
 }
 
 .nf-auth-back-link {
@@ -386,6 +399,14 @@
 .nf-auth-card .btn {
     text-transform: uppercase;
     letter-spacing: .06em;
+}
+
+/* O medalhão abre o cartão, centralizado acima do título, como nas telas de
+   acesso de referência. O tamanho vem do próprio `x-ui.brand-mark`. */
+.nf-auth-marca {
+    display: grid;
+    place-items: center;
+    margin-bottom: .9rem;
 }
 
 .nf-auth-title {

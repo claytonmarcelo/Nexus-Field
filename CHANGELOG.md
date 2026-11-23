@@ -10,6 +10,38 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Alterado
 
+- Telas de acesso no padrão das imagens de referência: a barra enxuta agora mostra a marca
+  NEXUS-FIELD ao lado do voltar, e o cartão abre com o medalhão centralizado acima do título —
+  antes, largava o título direto. Voltar, seletor de tema, botões principais em bloco largo e
+  links secundários ficaram onde estavam; a marca não virou link, então a única porta de entrada
+  continua sendo a de sempre. Suíte: 436 testes / 4343 asserções.
+- Modal de limpeza de cache no padrão do projeto: o formulário avulso do cabeçalho virou
+  `x-ui.action-form`, com o mesmo contrato `data-nf-confirm` do SweetAlert2 e título, texto e
+  rótulo personalizados. Como limpar cache não apaga dado, o modal e o botão abandonaram a tinta
+  vermelha das exclusões (`data-confirm-perigo="false"`); o componente passou a aplicar
+  `nf-btn-acao-perigo` só quando `perigo` é verdadeiro e a repassar classe, `title` e `aria-label`
+  ao botão. O `nf-cache-toggle`, o POST com CSRF e a auditoria seguem intactos. Suíte: 436 testes /
+  4343 asserções.
+- Miolo do seletor centralizado sem mover a pílula: o knob usava `inset-block: 3px` dentro de um
+  trilho de 1,7rem com borda e o tema escuro deslocava `translateX(1.55rem)`, número que não
+  descontava as bordas. Agora um único bloco em `components.css` serve a todas as páginas que têm a
+  chave: `inset-block: 0` com `margin-block: auto` centraliza o círculo no eixo vertical, a folga é
+  uma só variável `--nf-seletor-folga` usada nas duas pontas e o percurso é derivado de trilho, knob,
+  borda e folga. Ícone é grid dentro do grid, sem margin/padding herdados. O tamanho externo da
+  pílula, a posição do componente, voltar, menu, sino, dropdown, o script inline do `<head>`, o
+  cookie, o `localStorage` e a virada de 200ms não foram tocados.
+  A causa do formulário preenchido depois do logout era a ausência de `no-store` — que deixava o
+  bfcache devolver o DOM antigo — somada a um `autocomplete="off"` hostil ao gerenciador de senhas;
+  não havia valor fixo, `env`, seed ou JS gravando credencial. Agora o middleware `NoStore` cobre o
+  grupo `web` inteiro com `Cache-Control: no-store, no-cache, must-revalidate, max-age=0, private`,
+  `Pragma: no-cache` e `Expires: 0`. O logout continua POST com `@csrf`, faz `invalidate()` e
+  `regenerateToken()` e abre a entrada; e‑mail e senha voltam vazios, `old('email')` só vale após
+  falha de validação e a senha nunca é ecoada. Os campos anunciam `autocomplete="username"` e
+  `autocomplete="current-password"`, e o novo `session.js` — única camada `Nf` para `pageshow` com
+  `event.persisted === true` — limpa a entrada e recarrega o painel, sem guardar credencial em
+  `localStorage`, `sessionStorage` ou cookie próprio. Bcrypt, regeneração do ID no login, os dois
+  throttles, as regras da conta raiz e `lang/pt_BR` seguem intactos. Suíte: 436 testes / 4301
+  asserções.
 - Back‑up individual por empresa: cada empresa cadastrada passa a ter uma cópia automática da própria
   configuração — perfil, preferências, filiais, setores e cargos — gravada no disco privado com SHA‑256
   e metadados em `company_backups`. A primeira cópia nasce na aprovação do cadastro e a varredura diária

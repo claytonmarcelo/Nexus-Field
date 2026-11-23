@@ -173,7 +173,7 @@ class AuthenticatedLayoutTest extends TestCase
         );
         $this->assertStringContainsString('name="_token"', $html);
 
-        $this->actingAs($user)->post(route('logout'))->assertRedirect(route('welcome'));
+        $this->actingAs($user)->post(route('logout'))->assertRedirect(route('login'));
         $this->assertGuest();
     }
 
@@ -185,7 +185,7 @@ class AuthenticatedLayoutTest extends TestCase
 
         $this->actingAs($user)->get(route('dashboard'))
             ->assertSee('data-lte-color-mode="off"', false)
-            ->assertSee('class="hold-transition sidebar-mini sidebar-expand-lg layout-fixed"', false)
+            ->assertSee('class="hold-transition sidebar-mini sidebar-expand-lg layout-fixed" data-nf-sessao="autenticada"', false)
             ->assertSee('Ir para o conteúdo', false)
             ->assertSee('Ir para a navegação', false)
             ->assertDontSee('Skip to main content', false)

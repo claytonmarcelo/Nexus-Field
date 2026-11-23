@@ -105,8 +105,10 @@ class AuthenticationTest extends TestCase
         $this->seedPermissions();
         $user = $this->makeUser('administrator', $company, 'admin@test.local');
 
-        $this->actingAs($user)->post('/logout')->assertRedirect('/');
+        $this->actingAs($user)->post('/logout')->assertRedirect(route('login'));
         $this->assertGuest();
+
+        $this->get(route('dashboard'))->assertRedirect(route('login'));
     }
 
     public function test_troca_de_sessao_apos_login_impede_session_fixation(): void

@@ -4,10 +4,11 @@
     :back="route('welcome')"
     label="Voltar para a apresentação"
 >
-    {{-- O navegador pode guardar a credencial, mas a aplicação não deve devolvê-la
-         preenchida: `off` no formulário e nos campos evita que um logout deixe o
-         e‑mail e a senha da sessão anterior aparecendo na tela seguinte. --}}
-    <form method="POST" action="{{ route('login') }}" data-nf-guard novalidate autocomplete="off">
+    {{-- A aplicação nunca devolve credencial pronta: o e‑mail só volta por `old()`
+         depois de tentativa falha, e a senha nunca volta. Os valores de
+         `autocomplete` dizem ao gerenciador de senhas quais são os campos, sem
+         truques; o bfcache é limpo por resources/js/nexusfield/session.js. --}}
+    <form method="POST" action="{{ route('login') }}" data-nf-guard data-nf-login novalidate>
         @csrf
 
         <x-ui.input
@@ -15,7 +16,7 @@
             name="email"
             type="email"
             :required="true"
-            autocomplete="off"
+            autocomplete="username"
             inputmode="email"
             placeholder="seu@email.com"
         />
@@ -25,7 +26,7 @@
             name="password"
             type="password"
             :required="true"
-            autocomplete="off"
+            autocomplete="current-password"
         />
 
         <div class="nf-auth-row">

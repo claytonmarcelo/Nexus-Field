@@ -1444,8 +1444,24 @@
  *
  * O estado é lido do [data-bs-theme] do <html>, que o script de pré-pintura já
  * decidiu: a pílula nasce na posição certa, sem depender do JavaScript carregar.
+ *
+ * O knob não usa `top`/`left` fixos. A folga é uma só variável, aplicada à ponta
+ * inicial no tema claro e à ponta final no escuro; o percurso é a largura útil do
+ * trilho menos o knob, as duas bordas e as duas folgas. Assim a distância da
+ * borda esquerda no claro é exatamente a da borda direita no escuro, em qualquer
+ * tamanho de raiz. No eixo vertical, `inset-block: 0` com `margin-block: auto`
+ * centraliza o círculo dentro da caixa de conteúdo do trilho.
  * ------------------------------------------------------------------ */
 .nf-theme-toggle {
+    --nf-seletor-trilho: 3.35rem;
+    --nf-seletor-knob: 1.45rem;
+    --nf-seletor-borda: 1px;
+    --nf-seletor-folga: 3px;
+    --nf-seletor-curso: calc(
+        var(--nf-seletor-trilho) - var(--nf-seletor-knob) - var(--nf-seletor-borda)
+        - var(--nf-seletor-borda) - var(--nf-seletor-folga) - var(--nf-seletor-folga)
+    );
+
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1460,10 +1476,10 @@
 .nf-theme-toggle-track {
     position: relative;
     display: block;
-    width: 3.35rem;
+    width: var(--nf-seletor-trilho);
     height: 1.7rem;
     border-radius: 999px;
-    border: 1px solid var(--nf-line-strong);
+    border: var(--nf-seletor-borda) solid var(--nf-line-strong);
     background:
         linear-gradient(180deg, color-mix(in srgb, var(--nf-primary) 8%, transparent), transparent),
         var(--nf-elevated);
@@ -1474,11 +1490,12 @@
 
 .nf-theme-toggle-knob {
     position: absolute;
-    inset-block: 3px;
-    inset-inline-start: 3px;
-    inline-size: 1.45rem;
-    block-size: 1.45rem;
-    display: grid;
+    inset-block: 0;
+    margin-block: auto;
+    inset-inline-start: var(--nf-seletor-folga);
+    inline-size: var(--nf-seletor-knob);
+    block-size: var(--nf-seletor-knob);
+    display: inline-grid;
     place-items: center;
     border-radius: 50%;
     background: var(--nf-gradient-brand);
@@ -1489,6 +1506,10 @@
 
 .nf-theme-toggle-knob i {
     grid-area: 1 / 1;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    padding: 0;
     font-size: .68rem;
     line-height: 1;
 }
@@ -1504,7 +1525,7 @@
 }
 
 [data-bs-theme="dark"] .nf-theme-toggle-knob {
-    transform: translateX(1.55rem);
+    transform: translateX(var(--nf-seletor-curso));
 }
 
 [data-bs-theme="light"] .nf-theme-toggle .nf-icon-moon,

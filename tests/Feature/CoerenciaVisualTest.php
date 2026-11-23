@@ -368,7 +368,9 @@ class CoerenciaVisualTest extends TestCase
 
     /**
      * As telas de acesso largaram o cabeçalho e o rodapé da apresentação: a barra
-     * enxuta só tem voltar e tema, e o cartão traz o título e a ação da página.
+     * enxuta traz marca e voltar à esquerda e o tema à direita, e o cartão abre
+     * com o medalhão antes do título e da ação da página. A marca não é link: a
+     * porta continua sendo uma só, no mesmo lugar das imagens de referência.
      */
     public function test_as_telas_de_acesso_usam_a_barra_enxuta_do_site_de_referencia(): void
     {
@@ -387,7 +389,30 @@ class CoerenciaVisualTest extends TestCase
             $this->assertStringContainsString($titulo, $html);
             $this->assertStringNotContainsString('nf-public-header', $html);
             $this->assertStringNotContainsString('nf-public-footer', $html);
+
+            $barra = $this->recorte($html, 'class="nf-auth-topbar"', '</header>');
+            $this->assertStringContainsString('nf-auth-topbar-marca', $barra);
+            $this->assertStringContainsString('nf-wordmark-lead', $barra);
+            $this->assertLessThan(
+                strpos($barra, 'data-nf-theme-toggle'),
+                strpos($barra, 'nf-wordmark-lead'),
+                'A marca precisa vir antes do tema, no lado esquerdo da barra.'
+            );
+
+            $cartao = $this->recorte($html, 'class="nf-auth-card"', '</h1>');
+            $this->assertStringContainsString('nf-auth-marca', $cartao);
+            $this->assertStringContainsString('nf-brand-mark', $cartao);
+            $this->assertLessThan(
+                strpos($cartao, 'nf-auth-title'),
+                strpos($cartao, 'nf-auth-marca'),
+                'O medalhão abre o cartão, acima do título.'
+            );
         }
+
+        $publica = $this->folha('public');
+        $this->assertStringContainsString('gap: .65rem', $this->bloco($publica, '.nf-auth-topbar-marca'));
+        $this->assertStringContainsString('place-items: center', $this->bloco($publica, '.nf-auth-marca'));
+        $this->assertStringContainsString('margin-bottom: .9rem', $this->bloco($publica, '.nf-auth-marca'));
     }
 
     /**
@@ -530,6 +555,111 @@ class CoerenciaVisualTest extends TestCase
         $app = file_get_contents(base_path('resources/js/app.js'));
         $this->assertStringContainsString("import * as menu from './nexusfield/menu';", $app);
         $this->assertStringContainsString('menu.init();', $app);
+    }
+
+    /**
+     * O defeito era interno à pílula, não da barra: o knob usava `inset-block: 3px`
+     * num trilho de 1,7rem com borda e o deslocamento escuro era um número solto
+     * (1,55rem). Agora a folga é uma variável única, o eixo vertical é centralizado
+     * por `inset-block: 0` com `margin-block: auto`, e o ícone é grid dentro do grid.
+     * Um só bloco, em components.css, serve a todas as páginas que têm a chave.
+     */
+    public function test_o_knob_da_chave_e_centralizado_por_estrutura_em_um_so_bloco(): void
+    {
+        $componentes = $this->folha('components');
+        $publica = $this->folha('public');
+
+        $this->assertStringNotContainsString('nf-theme-toggle-knob', $publica,
+            'A casca pública voltou a duplicar o CSS do knob.');
+
+        $chave = $this->bloco($componentes, '.nf-theme-toggle');
+        $this->assertStringContainsString('--nf-seletor-folga: 3px', $chave);
+        $this->assertStringContainsString('--nf-seletor-curso: calc(', $chave);
+        foreach (['--nf-seletor-trilho', '--nf-seletor-knob', '--nf-seletor-borda', '--nf-seletor-folga'] as $variavel) {
+            $this->assertStringContainsString('var('.$variavel.')', $chave,
+                'O percurso precisa derivar de '.$variavel.', não de um número solto.');
+        }
+
+        $trilho = $this->bloco($componentes, '.nf-theme-toggle-track');
+        $this->assertStringContainsString('width: var(--nf-seletor-trilho)', $trilho);
+        $this->assertStringContainsString('height: 1.7rem', $trilho,
+            'O tamanho externo da pílula não pode mudar.');
+        $this->assertStringContainsString('border: var(--nf-seletor-borda) solid', $trilho);
+
+        $knob = $this->bloco($componentes, '.nf-theme-toggle-knob');
+        $this->assertStringContainsString('inset-block: 0', $knob);
+        $this->assertStringContainsString('margin-block: auto', $knob);
+        $this->assertStringContainsString('inset-inline-start: var(--nf-seletor-folga)', $knob);
+        $this->assertStringContainsString('inline-size: var(--nf-seletor-knob)', $knob);
+        $this->assertStringContainsString('display: inline-grid', $knob);
+        $this->assertStringContainsString('place-items: center', $knob);
+        $this->assertStringNotContainsString('inset-block: 3px', $knob);
+        $this->assertStringNotContainsString('inset-inline-start: 3px', $knob);
+        $this->assertStringNotContainsString('top:', $knob);
+        $this->assertStringNotContainsString('left:', $knob);
+
+        $icone = $this->bloco($componentes, '.nf-theme-toggle-knob i');
+        foreach (['display: grid', 'place-items: center', 'margin: 0', 'padding: 0', 'line-height: 1'] as $declaracao) {
+            $this->assertStringContainsString($declaracao, $icone,
+                'O ícone herdou espaçamento da folha: '.$declaracao);
+        }
+
+        $escuro = $this->bloco($componentes, '[data-bs-theme="dark"] .nf-theme-toggle-knob');
+        $this->assertStringContainsString('transform: translateX(var(--nf-seletor-curso))', $escuro);
+        $this->assertStringNotContainsString('1.55rem', $escuro);
+
+        $this->assertStringContainsString('min-height: var(--nf-header-height)', $this->bloco($componentes, '.app-header'),
+            'A barra autenticada continua nos 44px da variável única.');
+    }
+
+    /**
+     * Uma só marcação para a chave: o contrato `data-nf-theme-toggle` vive no
+     * componente, e apresentação, acesso, erro e painel apenas o chamam. A 503 é
+     * autocontida e continua sem seletor.
+     */
+    public function test_a_chave_de_tema_vem_do_mesmo_componente_em_todas_as_cascas(): void
+    {
+        $this->app['config']->set('app.debug', false);
+
+        $this->seedPermissions();
+        $usuario = $this->makeUser('administrator', $this->makeCompany('chave-unica'), 'chave@test.local');
+
+        $componente = file_get_contents(base_path('resources/views/components/ui/theme-toggle.blade.php'));
+        $this->assertStringContainsString('data-nf-theme-toggle', $componente);
+        $this->assertStringContainsString('nf-theme-toggle-knob', $componente);
+        $this->assertStringContainsString('aria-pressed="false"', $componente);
+
+        foreach (['components/public-header.blade.php', 'components/auth-topbar.blade.php', 'components/app/navbar.blade.php'] as $consumidor) {
+            $this->assertStringContainsString(
+                '<x-ui.theme-toggle',
+                file_get_contents(base_path('resources/views/'.$consumidor)),
+                $consumidor.' deixou de usar o componente único.'
+            );
+        }
+
+        foreach (['components/layouts/app.blade.php' => 'autenticada', 'auth/login.blade.php' => 'entrada', 'errors/404.blade.php' => 'erro'] as $caminho => $cascas) {
+            $this->assertStringNotContainsString('data-nf-theme-toggle',
+                file_get_contents(base_path('resources/views/'.$caminho)),
+                'A casca '.$cascas.' não pode duplicar a marcação do componente.');
+        }
+
+        $this->assertStringNotContainsString('theme-toggle',
+            file_get_contents(base_path('resources/views/errors/503.blade.php')),
+            'A 503 não tinha seletor e não deve ganhar um.');
+
+        $paginas = [
+            'apresentação' => $this->get(route('welcome'))->assertOk()->getContent(),
+            'entrada' => $this->get(route('login'))->assertOk()->getContent(),
+            'erro' => $this->get('/endereco-que-a-casa-nao-tem')->assertNotFound()->getContent(),
+            'painel' => $this->actingAs($usuario)->get(route('dashboard'))->assertOk()->getContent(),
+        ];
+
+        foreach ($paginas as $nome => $html) {
+            $this->assertSame(1, substr_count($html, 'data-nf-theme-toggle'),
+                'A casca '.$nome.' não mostrou exatamente uma chave.');
+            $this->assertStringContainsString('nf-theme-toggle-knob', $html);
+            $this->assertStringContainsString('aria-pressed="false"', $html);
+        }
     }
 
     /**

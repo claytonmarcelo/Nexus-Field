@@ -3,7 +3,6 @@
 use App\Http\Controllers\Agenda\AgendaController;
 use App\Http\Controllers\Audit\AuditController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Organization\CompanyRegistrationController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -19,15 +18,16 @@ use App\Http\Controllers\Field\GpsController;
 use App\Http\Controllers\Finance\FinancialRecordController;
 use App\Http\Controllers\Finance\PaymentController;
 use App\Http\Controllers\Notifications\NotificationController;
-use App\Http\Controllers\Organization\BranchController;
-use App\Http\Controllers\Organization\DepartmentController;
-use App\Http\Controllers\Organization\EmploymentController;
-use App\Http\Controllers\Organization\OrganizationController;
-use App\Http\Controllers\Organization\PositionController;
 use App\Http\Controllers\Orders\CheckinController;
 use App\Http\Controllers\Orders\OrderAssignmentController;
 use App\Http\Controllers\Orders\OrderController;
 use App\Http\Controllers\Orders\OrderItemController;
+use App\Http\Controllers\Organization\BranchController;
+use App\Http\Controllers\Organization\CompanyRegistrationController;
+use App\Http\Controllers\Organization\DepartmentController;
+use App\Http\Controllers\Organization\EmploymentController;
+use App\Http\Controllers\Organization\OrganizationController;
+use App\Http\Controllers\Organization\PositionController;
 use App\Http\Controllers\Reports\ReportController;
 use App\Http\Controllers\Settings\BackupController;
 use App\Http\Controllers\Settings\SettingController;
@@ -59,6 +59,8 @@ Route::get('cadastros/empresas/confirmar/{token}', [CompanyRegistrationControlle
     ->middleware('throttle:10,1')->name('registration.confirm');
 
 Route::middleware('guest')->group(function () {
+    // O middleware `no-store` entra no grupo `web` inteiro: a porta de entrada
+    // não volta do bfcache com o que a sessão anterior tinha digitado.
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store'])->middleware('throttle:10,1');
 
