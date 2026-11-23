@@ -21,7 +21,8 @@ class AccessScreenTest extends TestCase
             ->assertOk()
             ->assertSee('Gestão de campo sem planilhas paralelas')
             ->assertSee('Um sistema, ponta a ponta')
-            ->assertSee('Desenvolvido por Clayton Marcelo');
+            ->assertSee('© 2026 NEXUS-FIELD')
+            ->assertDontSee('Desenvolvido por Clayton Marcelo');
     }
 
     public function test_as_telas_de_acesso_abrem_para_convidado(): void

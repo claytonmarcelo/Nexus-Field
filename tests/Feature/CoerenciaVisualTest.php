@@ -352,15 +352,18 @@ class CoerenciaVisualTest extends TestCase
         $this->assertStringContainsString('<x-ui.brand-mark lado="30" />', $cabecalho);
         $this->assertStringContainsString('<x-ui.brand-mark lado="22" />', $rodape);
         $this->assertStringContainsString('nf-public-footer-left', $rodape);
-        $this->assertStringContainsString("© {{ now()->format('Y') }} NEXUS-FIELD", $rodape);
-        $this->assertStringContainsString('Desenvolvido por Clayton Marcelo', $rodape);
+        $this->assertStringContainsString('© 2026 NEXUS-FIELD', $rodape);
+        $this->assertStringNotContainsString('now()->format', $rodape,
+            'O texto do rodapé é literal: o pedido fixou 2026, não o ano da máquina.');
+        $this->assertStringNotContainsString('Desenvolvido por', $rodape);
+        $this->assertStringNotContainsString('Clayton Marcelo', $rodape);
         $this->assertStringNotContainsString('Gestão de operações em campo', $rodape,
-            'O rodapé voltou a descrever o produto: a referência só traz direito autoral e crédito.');
+            'O rodapé voltou a descrever o produto: o pedido só quer marca e direito autoral.');
 
         $publica = $this->folha('public');
         $this->assertStringContainsString('padding-block: .75rem', $this->bloco($publica, '.nf-public-footer'));
         $this->assertStringContainsString('width: 1.375rem', $this->bloco($publica, '.nf-public-footer .nf-brand-mark'));
-        $this->assertStringContainsString('justify-content: space-between', $this->bloco($publica, '.nf-public-footer-row'));
+        $this->assertStringContainsString('justify-content: flex-start', $this->bloco($publica, '.nf-public-footer-row'));
     }
 
     /**
