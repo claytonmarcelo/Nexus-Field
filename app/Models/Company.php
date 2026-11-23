@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\UserContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,6 +20,14 @@ class Company extends Model
         'tax_regime', 'segment', 'employee_count', 'field_technician_count',
         'contacts', 'legal_responsible', 'lifecycle_status', 'registration_id',
     ];
+
+    protected static function booted(): void
+    {
+        // Nome, logo, status e assinatura aparecem na identidade cacheada de
+        // todas as contas da empresa.
+        static::saved(static fn (): mixed => UserContext::invalidate());
+        static::deleted(static fn (): mixed => UserContext::invalidate());
+    }
 
     protected function casts(): array
     {

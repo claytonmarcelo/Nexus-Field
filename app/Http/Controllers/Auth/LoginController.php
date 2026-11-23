@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Support\TenantContext;
+use App\Support\UserContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,11 +49,14 @@ class LoginController extends Controller
         }
 
         $user->forceFill(['last_login_at' => now()])->save();
-        TenantContext::resolveFromUser($user);
 
-        if (! $user->company?->isActive()) {
+        // Só a assinatura da empresa importa aqui; papéis e plano entram no
+        // cache de identidade do primeiro clique autenticado.
+        if (! UserContext::companyIsActive($user)) {
             $this->reject($request, 'A assinatura desta empresa está inativa. Contate o suporte.');
         }
+
+        TenantContext::resolveFromUser($user);
 
         return redirect()->intended(route('dashboard'));
     }

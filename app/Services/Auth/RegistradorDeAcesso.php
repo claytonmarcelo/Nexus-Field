@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\BackfillOrganizacional;
 use App\Services\Recusa;
 use App\Support\Roles;
+use App\Support\UserContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -58,6 +59,7 @@ final class RegistradorDeAcesso
             ]);
             $usuario->forceFill(['email_verified_at' => now()])->save();
             $usuario->roles()->sync([$papeis['administrator']->id]);
+            UserContext::invalidate();
 
             $totais = ['empresas' => 0, 'filiais' => 0, 'setores' => 0, 'cargos' => 0, 'vinculos' => 0, 'alcances' => 0];
             (new BackfillOrganizacional)->paraEmpresa($empresa, $totais);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\UserContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -11,6 +12,12 @@ class Plan extends Model
         'name', 'slug', 'description', 'max_users', 'max_technicians', 'max_clients',
         'max_service_orders_per_month', 'price_monthly', 'features', 'is_active',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(static fn (): mixed => UserContext::invalidate());
+        static::deleted(static fn (): mixed => UserContext::invalidate());
+    }
 
     protected function casts(): array
     {

@@ -177,7 +177,7 @@ class AuthenticatedLayoutTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_o_color_mode_do_adminlte_fica_desligado_e_o_menu_de_atalhos_e_em_portugues(): void
+    public function test_o_color_mode_do_adminlte_fica_desligado_e_o_menu_de_atalhos_nao_e_exibido(): void
     {
         $this->seedPermissions();
         $company = $this->makeCompany('alfa');
@@ -186,9 +186,10 @@ class AuthenticatedLayoutTest extends TestCase
         $this->actingAs($user)->get(route('dashboard'))
             ->assertSee('data-lte-color-mode="off"', false)
             ->assertSee('class="hold-transition sidebar-mini sidebar-expand-lg layout-fixed" data-nf-sessao="autenticada"', false)
-            ->assertSee('Ir para o conteúdo', false)
-            ->assertSee('Ir para a navegação', false)
+            ->assertDontSee('Ir para o conteúdo', false)
+            ->assertDontSee('Ir para a navegação', false)
             ->assertDontSee('Skip to main content', false)
+            ->assertDontSee('Skip to navigation', false)
             ->assertSee('data-lte-toggle="sidebar"', false)
             ->assertSee('data-lte-toggle="treeview"', false)
             // O menu não declara tema próprio: ele herda o `data-bs-theme` do <html>,

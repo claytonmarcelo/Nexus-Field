@@ -61,7 +61,8 @@ próprio responsável no campo `MAIL_PASSWORD` da Vercel.
 
 `SESSION_DRIVER=cookie` mantém o login fora do banco remoto; por isso
 `SESSION_SECURE_COOKIE=true` é obrigatório em HTTPS. `CACHE_STORE=file` guarda
-o cache curto do painel e os artefatos do framework sob `APP_STORAGE_PATH`.
+o cache curto do painel, a identidade de navegação (papéis, permissões, empresa e
+plano), o sino de notificações e os artefatos do framework sob `APP_STORAGE_PATH`.
 A imagem já nasce com `SESSION_DRIVER=cookie`, `CACHE_STORE=file` e
 `FILESYSTEM_DISK=local`; as variáveis definidas na Vercel apenas confirmam ou
 sobrescrevem esses padrões. Em desenvolvimento continua valendo `database` para

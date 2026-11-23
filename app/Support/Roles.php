@@ -48,6 +48,8 @@ class Roles
             $criados[$slug] = $role;
         }
 
+        UserContext::invalidate();
+
         return $criados;
     }
 }

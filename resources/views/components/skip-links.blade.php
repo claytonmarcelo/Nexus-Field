@@ -1,14 +1,6 @@
 {{--
-    Links de salto do teclado. A classe .skip-links é a guarda que o AdminLTE
-    consulta antes de injetar os dele; entregar os nossos em português evita
-    o par duplicado e o texto em inglês.
+    Guarda de presença: o AdminLTE só deixa de injetar os links de salto em
+    inglês quando encontra `.skip-links` no documento. A div permanece vazia —
+    nenhum texto de atalho é exibido nas telas do site.
 --}}
-@props(['navigation' => false])
-
-<div class="skip-links">
-    <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
-
-    @if ($navigation)
-        <a class="skip-link" href="#navigation">Ir para a navegação</a>
-    @endif
-</div>
+<div class="skip-links" aria-hidden="true"></div>

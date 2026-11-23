@@ -11,6 +11,7 @@ use App\Support\Auditor;
 use App\Support\ListFilters;
 use App\Support\StatusCatalog;
 use App\Support\TenantContext;
+use App\Support\UserContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -92,6 +93,8 @@ class UserController extends Controller
 
             return $conta;
         });
+
+        UserContext::invalidate();
 
         Auditor::gravar(
             'conta criada',
@@ -191,6 +194,8 @@ class UserController extends Controller
                 $mudou[] = sprintf('e-mail: %s', $conta->email);
             }
         });
+
+        UserContext::invalidate();
 
         Auditor::gravar(
             'conta atualizada',

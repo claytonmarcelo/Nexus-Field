@@ -36,7 +36,7 @@ class Notifier
             return null;
         }
 
-        return Notification::query()->create([
+        $aviso = Notification::query()->create([
             'company_id' => $destino->company_id,
             'user_id' => $destino->id,
             'type' => $tipo,
@@ -45,6 +45,10 @@ class Notifier
             'link' => $link,
             'data' => $dados === [] ? null : $dados,
         ]);
+
+        NotificationBadge::invalidate();
+
+        return $aviso;
     }
 
     /**
@@ -123,16 +127,23 @@ class Notifier
      */
     public static function marcarTudoComoLida(User $usuario): int
     {
-        return Notification::query()
+        $lidas = Notification::query()
             ->where('user_id', $usuario->id)
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
+
+        if ($lidas > 0) {
+            NotificationBadge::invalidate();
+        }
+
+        return $lidas;
     }
 
     public static function marcarComoLida(Notification $aviso, User $quemLeu): void
     {
         if ((int) $aviso->user_id === $quemLeu->id && $aviso->read_at === null) {
             $aviso->forceFill(['read_at' => now()])->save();
+            NotificationBadge::invalidate();
         }
     }
 }

@@ -15,7 +15,7 @@
     <x-site-head :title="$title.' — '.config('app.name', 'NEXUS-FIELD')" :description="$subtitle" />
 </head>
 <body class="hold-transition sidebar-mini sidebar-expand-lg layout-fixed" data-nf-sessao="autenticada">
-    <x-skip-links navigation />
+    <x-skip-links />
 
     <div class="app-wrapper">
         <x-app.sidebar :user="$usuario" />

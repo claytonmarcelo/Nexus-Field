@@ -11,7 +11,7 @@ class DashboardController extends Controller
 {
     public function __invoke(Request $request): View
     {
-        $usuario = $request->user()->loadMissing(['roles', 'company.plan']);
+        $usuario = $request->user();
 
         // O painel reunia dezenas de contagens no TiDB a cada abertura. Em banco
         // remoto isso dominava o tempo da página. O TTL curto mantém os números

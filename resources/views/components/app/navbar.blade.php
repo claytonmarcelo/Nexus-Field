@@ -66,17 +66,9 @@
 
             @if ($user->hasPermission('notifications.view') && Route::has('notifications.index'))
                 @php
-                    $pendentes = \App\Models\Notification::query()
-                        ->where('user_id', $user->id)
-                        ->unread()
-                        ->count();
-
-                    $recentes = \App\Models\Notification::query()
-                        ->where('user_id', $user->id)
-                        ->orderByDesc('created_at')
-                        ->orderByDesc('id')
-                        ->limit(6)
-                        ->get();
+                    $sino = \App\Support\NotificationBadge::para($user);
+                    $pendentes = $sino['pendentes'];
+                    $recentes = $sino['recentes'];
                 @endphp
 
                 <li class="nav-item dropdown nf-nav-bell">

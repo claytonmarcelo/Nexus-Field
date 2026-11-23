@@ -1032,7 +1032,7 @@ em `vercel.json`, uma única região (`gru1`, São Paulo) e o cron diário `0 10
 | Migrações | Manuais e uma única vez, fora do startup; `RUN_MIGRATIONS` não existe mais no entrypoint |
 | Conta raiz | `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` definidos só no ambiente de seed; a senha nunca é impressa |
 | Sessão | `SESSION_DRIVER=cookie` com `SESSION_SECURE_COOKIE=true`: o login não lê nem grava no TiDB em cada request |
-| Cache | `CACHE_STORE=file` sob `APP_STORAGE_PATH=/tmp/nexusfield/storage`, com TTL curto no painel |
+| Cache | `CACHE_STORE=file` sob `APP_STORAGE_PATH=/tmp/nexusfield/storage`, com TTL curto no painel, na identidade (60s) e no sino (15s) |
 | Fila | `QUEUE_CONNECTION=database`, mantida só para uma job futura não se perder |
 | Uploads | `FILESYSTEM_DISK=local` enquanto não há credenciais S3: os arquivos vivem em `/tmp` e não sobrevivem a redeploy |
 | Confiança | `TRUSTED_HOSTS=^.*\.vercel\.app$` é regex PCRE; `TRUSTED_PROXIES` sem `*` para ninguém forjar `X-Forwarded-For` |
@@ -1051,11 +1051,15 @@ inteiro da aplicação para pintar um formulário de login.
 | Sessão no banco remoto em todo request | Cookie criptografado (`SESSION_DRIVER=cookie`) | O TiDB sai do caminho crítico da entrada |
 | 22 leituras iguais de escopo no painel | `Alcance::escopos()` memoiza por request e `esquecer()` invalida após escrita | Uma consulta no lugar de 22, com o mesmo alcance de leitura |
 | 79 contagens no dashboard | Cache de 15s por usuário e permissões, desligado nos testes | Números vivos sem pagar a bateria de queries em cada clique |
+| Papéis, permissões, empresa e plano em toda página | `UserContext::hydrate()` anexa a identidade cacheada (60s) ao usuário; mudanças de papel/empresa invalidam | A navegação autenticada não repete leitura de ACL nem da empresa |
+| Contador e lista do sino em toda página | `NotificationBadge` com cache de 15s, invalidado ao criar ou marcar aviso | Menos duas consultas por clique sem badge defasado |
+| Clique em "Entrar" pagando identidade completa | Login lê só o estado da assinatura; papéis e plano entram no primeiro clique | O POST `/login` fica com a consulta de usuário, a gravação de `last_login_at` e a empresa em cache |
 | CSS e JS sem compressão | `gzip` no nginx para CSS, JS, JSON e SVG, com `Vary: Accept-Encoding` | O navegador recebe poucos KB por página |
 | Bundle completo nas telas de acesso | `auth.css`/`auth.js` e avisos em `auth-flash.js`, sem AdminLTE, Summernote, Leaflet, Toastr ou jQuery | CSS de 341,71 KB (59,10 KB gzip) e JS de 0,86 KB, contra 583,06 KB + 458,56 KB antes |
 
 Nada disso muda a regra de negócio: o cache do painel é chaveado também pelas permissões, então uma
-mudança de papel aparece na hora; os testes desligam esse cache para que cada caso leia o que acabou
+mudança de papel aparece na hora; o mesmo vale para a identidade e o sino, ambos versionados e
+invalidados no ato da escrita. Os testes desligam esses caches para que cada caso leia o que acabou
 de gravar. O cookie leva o estado da sessão, não credencial de banco, e nenhuma senha entra em log,
 documentação ou chat — a App Password é digitada diretamente no campo `MAIL_PASSWORD` da Vercel.
 

@@ -69,6 +69,11 @@ class User extends Authenticatable
 
     private ?array $permissionCache = null;
 
+    /** Versão em processo: invalida o memo mesmo em modelos já carregados. */
+    private static int $permissionEpoch = 0;
+
+    private ?int $permissionEpochSeen = null;
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
@@ -110,6 +115,18 @@ class User extends Authenticatable
         );
     }
 
+    /** Recebe a identidade já lida do cache de navegação. */
+    public function setPermissionSlugs(array $slugs): void
+    {
+        $this->permissionCache = $slugs;
+        $this->permissionEpochSeen = static::$permissionEpoch;
+    }
+
+    public static function forgetPermissionCache(): void
+    {
+        static::$permissionEpoch++;
+    }
+
     /**
      * Permissões efetivas: união das permissões de todos os papéis do usuário.
      * A conta raiz tem o catálogo inteiro — domínio absoluto não pode depender de
@@ -118,18 +135,25 @@ class User extends Authenticatable
      */
     public function permissionSlugs(): array
     {
-        if ($this->permissionCache !== null) {
+        if ($this->permissionCache !== null && $this->permissionEpochSeen === static::$permissionEpoch) {
             return $this->permissionCache;
         }
+
+        $this->permissionEpochSeen = static::$permissionEpoch;
 
         if ($this->isRoot()) {
             return $this->permissionCache = Permission::query()->pluck('slug')->all();
         }
 
-        return $this->permissionCache = $this->roles()
-            ->with('permissions')
-            ->get()
-            ->pluck('permissions')
+        // A navegação já traz papéis e permissões do cache de identidade. Fora
+        // dela (testes, jobs), a relação pode vir sem `permissions`: só nesse
+        // caso voltamos a consultar.
+        $roles = $this->relationLoaded('roles')
+            && $this->roles->every(static fn (Role $role): bool => $role->relationLoaded('permissions'))
+                ? $this->roles
+                : $this->roles()->with('permissions')->get();
+
+        return $this->permissionCache = $roles->pluck('permissions')
             ->flatten()
             ->pluck('slug')
             ->unique()

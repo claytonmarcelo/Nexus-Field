@@ -11,6 +11,7 @@ use App\Support\ListFilters;
 use App\Support\PermissionCatalog;
 use App\Support\Roles;
 use App\Support\TenantContext;
+use App\Support\UserContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -95,6 +96,8 @@ class RoleController extends Controller
             return $papel;
         });
 
+        UserContext::invalidate();
+
         Auditor::gravar(
             'papel criado',
             $papel,
@@ -137,6 +140,8 @@ class RoleController extends Controller
         });
 
         $depois = $papel->permissions()->pluck('slug')->sort()->values()->all();
+
+        UserContext::invalidate();
 
         $mudancas = [];
         if ($papel->wasChanged('name')) {
