@@ -104,6 +104,54 @@ Route::get('__bench/rate', function () {
 
     return response()->json(['ms' => round((microtime(true) - $inicio) * 1000, 1)]);
 });
+Route::get('__bench/flock2', function () {
+    $dir = storage_path('framework/cache/data');
+    @mkdir($dir, 0777, true);
+    $file = $dir.'/bench-flock2-'.getmypid();
+    $out = [];
+
+    // fopen + flock LOCK_SH (blocking) + read + unlock + close
+    $t = microtime(true);
+    $h = fopen($file, 'c+');
+    flock($h, LOCK_SH);
+    fread($h, 8192);
+    flock($h, LOCK_UN);
+    fclose($h);
+    $out['flock_sh_blocking_ms'] = round((microtime(true) - $t) * 1000, 1);
+
+    // fopen + flock LOCK_SH|LOCK_NB + read + unlock + close
+    $t = microtime(true);
+    $h = fopen($file, 'c+');
+    flock($h, LOCK_SH | LOCK_NB);
+    fread($h, 8192);
+    flock($h, LOCK_UN);
+    fclose($h);
+    $out['flock_sh_nonblocking_ms'] = round((microtime(true) - $t) * 1000, 1);
+
+    // is_file + file_get_contents (no lock)
+    $t = microtime(true);
+    is_file($file);
+    file_get_contents($file);
+    $out['is_file_get_ms'] = round((microtime(true) - $t) * 1000, 1);
+
+    // clearstatcache + filesize
+    $t = microtime(true);
+    clearstatcache(true, $file);
+    filesize($file);
+    $out['clearstat_filesize_ms'] = round((microtime(true) - $t) * 1000, 1);
+
+    // LockableFile read (uses clearstatcache + filesize)
+    $t = microtime(true);
+    $lf = new \Illuminate\Filesystem\LockableFile($file, 'c+');
+    $lf->getExclusiveLock();
+    $lf->read(10);
+    $lf->close();
+    $out['lockable_file_ms'] = round((microtime(true) - $t) * 1000, 1);
+
+    @unlink($file);
+
+    return response()->json($out);
+});
 Route::get('__bench/flock', function () {
     $dir = storage_path('framework/cache/data');
     @mkdir($dir, 0777, true);
