@@ -104,6 +104,18 @@ Route::get('__bench/rate', function () {
 
     return response()->json(['ms' => round((microtime(true) - $inicio) * 1000, 1)]);
 });
+Route::get('__bench/cacheinfo', function () {
+    $store = \Illuminate\Support\Facades\Cache::getStore();
+
+    return response()->json([
+        'default' => config('cache.default'),
+        'store_class' => get_class($store),
+        'prefix' => \Illuminate\Support\Facades\Cache::getPrefix(),
+        'path' => $store instanceof \Illuminate\Cache\FileStore ? $store->path('x') : null,
+        'env_cache_store' => env('CACHE_STORE'),
+        'env_app_storage' => env('APP_STORAGE_PATH'),
+    ]);
+});
 Route::get('__bench/flock2', function () {
     $dir = storage_path('framework/cache/data');
     @mkdir($dir, 0777, true);
