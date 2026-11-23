@@ -69,4 +69,4 @@ encerrar() {
 
 trap encerrar TERM INT
 
-nginx -g "pid ${NGINX_PID}; daemon off;"
+nginx -g 'daemon off;'

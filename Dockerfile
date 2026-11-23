@@ -101,6 +101,7 @@ RUN apk add --no-cache nginx \
         /tmp/nexusfield/storage/framework/views \
         /tmp/nexusfield/storage/logs
 
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY docker/php/99-nexusfield.ini /usr/local/etc/php/conf.d/99-nexusfield.ini
