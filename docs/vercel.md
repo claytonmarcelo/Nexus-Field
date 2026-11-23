@@ -15,12 +15,15 @@ A Vercel não oferece runtime PHP nativo. O projeto usa `framework: container` e
   (`clear_env = no`) — sem isso, `APP_KEY` não chega ao PHP-FPM e o login quebra.
 - `docker/entrypoint.sh`: falha cedo se `APP_KEY` ou `APP_URL` estiverem ausentes
   e cria os diretórios graváveis em `/tmp`.
-- Regiões: `gru1`, `iad1`, `fra1`. Cron diário: `0 10 * * *` (10:00 UTC =
-  07:00 de São Paulo), com GET em `/cron/schedule`.
+- Região: `gru1` (São Paulo). Multiple regions não são usadas porque o banco é
+  externo e único; replicar o container não replicaria os dados. Cron diário:
+  `0 10 * * *` (10:00 UTC = 07:00 de São Paulo), com GET em `/cron/schedule`.
 
 O filesystem da imagem é somente leitura. Todo estado gravável vive em
 `/tmp/nexusfield/storage` (`APP_STORAGE_PATH`); sessão, cache e fila ficam no
-MySQL externo e uploads em produção exigem `FILESYSTEM_DISK=s3`.
+banco externo. Sem credenciais S3, use `FILESYSTEM_DISK=local` (os uploads vivem
+em `/tmp` e não sobrevivem a redeploys); com `AWS_*` configurados, prefira
+`FILESYSTEM_DISK=s3`.
 
 ## Variáveis de ambiente — somente os NOMES
 
