@@ -6,7 +6,8 @@
 # Vercel nao oferece runtime PHP nativo. Esta imagem roda nginx + PHP-FPM em um
 # unico container OCI, escutando na porta 80 (ou na porta definida por $PORT).
 # O filesystem da imagem e somente leitura; todo estado gravavel vai para /tmp
-# atraves de APP_STORAGE_PATH. Sessao, cache e fila ficam no banco externo.
+# atraves de APP_STORAGE_PATH. Sessao vai no cookie, cache em arquivo e a fila
+# fica no banco externo. Variaveis definidas na Vercel sobrescrevem estes padroes.
 # ---------------------------------------------------------------------------
 
 FROM php:8.4-fpm-alpine AS php-base
@@ -120,13 +121,13 @@ ENV APP_ENV=production \
     APP_DEBUG=false \
     APP_STORAGE_PATH=/tmp/nexusfield/storage \
     APP_MAINTENANCE_DRIVER=cache \
-    CACHE_STORE=database \
-    FILESYSTEM_DISK=s3 \
+    CACHE_STORE=file \
+    FILESYSTEM_DISK=local \
     LOG_CHANNEL=stderr \
     LOG_STACK=stderr \
     LOG_LEVEL=info \
     QUEUE_CONNECTION=database \
-    SESSION_DRIVER=database \
+    SESSION_DRIVER=cookie \
     SESSION_SECURE_COOKIE=true \
     PORT=80
 
