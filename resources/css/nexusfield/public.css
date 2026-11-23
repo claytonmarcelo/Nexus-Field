@@ -605,3 +605,46 @@
     72% { opacity: 1; }
     100% { opacity: .28; }
 }
+
+/* Avisos das telas de acesso. Substitui o Toastr nestas páginas: same look,
+   zero dependência de jQuery e de centenas de KB de bundle. */
+.nf-auth-avisos {
+    position: fixed;
+    z-index: 1080;
+    top: 1rem;
+    right: 1rem;
+    display: grid;
+    gap: .5rem;
+    width: min(22rem, calc(100vw - 2rem));
+}
+
+.nf-auth-aviso {
+    display: grid;
+    gap: .15rem;
+    padding: .75rem .9rem;
+    border: 1px solid var(--nf-line);
+    border-left-width: 4px;
+    border-radius: .5rem;
+    background: var(--nf-surface);
+    box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .16);
+    color: var(--nf-text);
+    font-size: .9rem;
+}
+
+.nf-auth-aviso strong {
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.nf-auth-aviso-sucesso { border-left-color: var(--nf-success); }
+.nf-auth-aviso-erro { border-left-color: var(--nf-danger); }
+.nf-auth-aviso-aviso { border-left-color: var(--nf-waiting); }
+.nf-auth-aviso-info { border-left-color: var(--nf-primary); }
+
+@media (max-width: 575.98px) {
+    .nf-auth-avisos {
+        top: auto;
+        bottom: 1rem;
+    }
+}

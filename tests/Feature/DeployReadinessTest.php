@@ -88,7 +88,7 @@ class DeployReadinessTest extends TestCase
         );
 
         $this->assertSame('container', $manifesto['framework']);
-        $this->assertSame(['gru1', 'iad1', 'fra1'], $manifesto['regions']);
+        $this->assertSame(['gru1'], $manifesto['regions']);
         $this->assertSame('/cron/schedule', $manifesto['crons'][0]['path']);
         $this->assertSame('0 10 * * *', $manifesto['crons'][0]['schedule']);
         $this->assertTrue(Route::has('cron.schedule'));

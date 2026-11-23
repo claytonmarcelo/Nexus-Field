@@ -23,9 +23,12 @@ A Vercel não oferece runtime PHP nativo. O projeto usa `framework: container` e
   `0 10 * * *` (10:00 UTC = 07:00 de São Paulo), com GET em `/cron/schedule`.
 
 O filesystem da imagem é somente leitura. Todo estado gravável vive em
-`/tmp/nexusfield/storage` (`APP_STORAGE_PATH`); sessão, cache e fila ficam no
-banco externo. Sem credenciais S3, use `FILESYSTEM_DISK=local` (os uploads vivem
-em `/tmp` e não sobrevivem a redeploys); com `AWS_*` configurados, prefira
+`/tmp/nexusfield/storage` (`APP_STORAGE_PATH`); a sessão vai no cookie
+criptografado (`SESSION_DRIVER=cookie`) e o cache em arquivo (`CACHE_STORE=file`)
+para que a latência de ida e volta ao TiDB não seja paga em cada request. A fila
+continua no banco (`QUEUE_CONNECTION=database`) só para não perder uma job
+futura. Sem credenciais S3, use `FILESYSTEM_DISK=local` (os uploads vivem em
+`/tmp` e não sobrevivem a redeploys); com `AWS_*` configurados, prefira
 `FILESYSTEM_DISK=s3`.
 
 ## Variáveis de ambiente — somente os NOMES
@@ -38,7 +41,7 @@ deve ser escrito em arquivo versionado, teste, documentação, log ou commit.**
 | `APP_ENV`, `APP_DEBUG`, `APP_URL` | Ambiente, modo e URL HTTPS pública |
 | `APP_KEY` | Chave de criptografia; gere com `php artisan key:generate` |
 | `APP_STORAGE_PATH` | Já definida na imagem como `/tmp/nexusfield/storage` |
-| `APP_MAINTENANCE_DRIVER`, `CACHE_STORE`, `QUEUE_CONNECTION`, `SESSION_DRIVER` | Use `cache`/`database`/`database`/`database` |
+| `APP_MAINTENANCE_DRIVER`, `CACHE_STORE`, `QUEUE_CONNECTION`, `SESSION_DRIVER` | Use `cache`/`file`/`database`/`cookie` |
 | `SESSION_SECURE_COOKIE` | `true` em produção; sem HTTPS o cookie não volta |
 | `TRUSTED_PROXIES` | TLS termina no edge; use `REMOTE_ADDR` |
 | `TRUSTED_HOSTS` | Expressões **regulares** PCRE, não nomes de domínio: `^.*\.vercel\.app$` (o host de `APP_URL` já é confiável) |
@@ -52,7 +55,15 @@ deve ser escrito em arquivo versionado, teste, documentação, log ou commit.**
 `MAIL_MAILER=log` **não** é aceitável em produção: o link de recuperação ficaria
 preso no log e o usuário nunca receberia o e-mail. A conta raiz não nasce com
 senha no código: o seeder lê `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` do
-ambiente e recusa semear em produção sem senha definida.
+ambiente e recusa semear em produção sem senha definida. Nenhum segredo é
+impresso em log, documentação ou chat: a App Password do Gmail é digitada pelo
+próprio responsável no campo `MAIL_PASSWORD` da Vercel.
+
+`SESSION_DRIVER=cookie` mantém o login fora do banco remoto; por isso
+`SESSION_SECURE_COOKIE=true` é obrigatório em HTTPS. `CACHE_STORE=file` guarda
+o cache curto do painel e os artefatos do framework sob `APP_STORAGE_PATH`.
+Em desenvolvimento continua valendo `database` para os dois — cada caso de
+teste monta o próprio banco e precisa ler o que acabou de gravar.
 
 ## Ordem de operação
 
@@ -76,7 +87,7 @@ ambiente e recusa semear em produção sem senha definida.
 
 ## Verificação executada neste repositório
 
-- Suíte completa: `453 testes / 4407 asserções` verdes em MySQL de teste.
+- Suíte completa: `453 testes / 4351 asserções` verdes em MySQL de teste.
 - `composer audit`: nenhuma vulnerabilidade.
 - `npm audit --omit=dev`: 0 vulnerabilidades.
 - `git diff --check`: sem erros de whitespace.
@@ -95,7 +106,7 @@ ambiente e recusa semear em produção sem senha definida.
   O `Dockerfile` foi revisado estaticamente, não compilado.
 - Deploy real na Vercel: depende de projeto, domínio e variáveis fornecidas.
 - Envio real de e-mail de recuperação: depende de provedor configurado.
-- Banco externo de produção e conexão SSL: depende de instância MySQL fornecida.
+- Banco externo de produção e conexão SSL: depende da instância TiDB Cloud (MySQL-compatible, TLS obrigatório).
 - Disparo real do cron pela Vercel e renovação de certificado: depende do projeto
   publicado.
 

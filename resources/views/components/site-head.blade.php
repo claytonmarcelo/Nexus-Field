@@ -1,5 +1,5 @@
 {{-- Cabeça comum às telas abertas: fontes, tema antes da pintura e assets do Vite. --}}
-@props(['title', 'description' => null])
+@props(['title', 'description' => null, 'leve' => false])
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,4 +20,8 @@
 
 @fonts
 <x-script.theme />
-@vite(['resources/css/app.css', 'resources/js/app.js'])
+{{-- Telas abertas de acesso não pagam pelo bundle da aplicação: AdminLTE,
+     Summernote, Leaflet e Toastr não existem num formulário de entrada. --}}
+@vite($leve
+    ? ['resources/css/auth.css', 'resources/js/auth.js']
+    : ['resources/css/app.css', 'resources/js/app.js'])

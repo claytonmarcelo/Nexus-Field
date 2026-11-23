@@ -1,0 +1,15 @@
+/*
+ * Entrada de estilo das telas abertas de acesso.
+ *
+ * O bundle da aplicação carrega AdminLTE, Summernote, Leaflet, Toastr e a
+ * listagem inteira — peso que nenhuma tela de login/cadastro/recuperação usa.
+ * Aqui entra apenas o que a casca pública e os componentes de formulário
+ * realmente precisam para pintar igual, com um fração do tamanho.
+ */
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "@fortawesome/fontawesome-free/css/fontawesome.min.css";
+@import "@fortawesome/fontawesome-free/css/solid.min.css";
+@import "./nexusfield/tokens.css";
+@import "./nexusfield/base.css";
+@import "./nexusfield/public.css";
+@import "./nexusfield/components.css";

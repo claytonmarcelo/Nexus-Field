@@ -10,6 +10,7 @@ use App\Models\OrganizationScope;
 use App\Models\Position;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Alcance;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -155,6 +156,7 @@ final class BackfillOrganizacional
                     'active' => true,
                 ],
             );
+            Alcance::esquecer($usuario);
             $totais['alcances']++;
         }
     }

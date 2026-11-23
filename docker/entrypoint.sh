@@ -37,13 +37,6 @@ if [ -z "${APP_URL:-}" ]; then
     exit 1
 fi
 
-# Migracoes de producao sob demanda: defina RUN_MIGRATIONS=true, reimplemente
-# e remova a variavel depois que o deploy terminar.
-if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
-    echo "Aplicando migracoes de producao..." >&2
-    php artisan migrate --force --no-interaction
-fi
-
 # -g do FPM e o caminho do arquivo de PID, nao uma diretiva "pid = ...;".
 php-fpm -D -g "${PHP_FPM_PID}"
 

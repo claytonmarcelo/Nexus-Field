@@ -15,25 +15,28 @@
   <img src="https://img.shields.io/badge/PHP-8.3-777BB4?logo=php&logoColor=white" alt="PHP 8.3">
   <img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white" alt="Laravel 13">
   <img src="https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white" alt="MySQL 8">
+  <img src="https://img.shields.io/badge/TiDB-Cloud-00A99D" alt="TiDB Cloud em produção">
+  <img src="https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white" alt="Vercel Container Runtime">
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-428%20testes%20%2F%204127%20asser%C3%A7%C3%B5es-brightgreen" alt="428 testes, 4127 asserções">
+  <img src="https://img.shields.io/badge/testes-453%20testes%20%2F%204351%20asser%C3%A7%C3%B5es-brightgreen" alt="453 testes, 4351 asserções">
 </p>
 
 <p align="center">
-  <sub>Estágio atual: o plano de reconstrução fechou. Da fundação (fases 1 a 8) aos cadastros e
-  ao catálogo (9 a 11), pela operação (12 a 18 — ordens, chamados, agenda, visita de campo, estoque,
-  financeiro e relatórios), pelo controle (19 a 22 — notificações, contas e papéis, configurações da
-  empresa e auditoria) e pela prontidão de deploy. A tabela
-  <a href="#módulos">Módulos</a> diz, um por um, o que está no ar.</sub>
+  <sub>Estágio atual: o plano de reconstrução fechou e a aplicação está publicada em
+  <code>https://nexus-field-inky.vercel.app/</code> com TiDB Cloud. Da fundação (fases 1 a 8) aos
+  cadastros e ao catálogo (9 a 11), pela operação (12 a 18 — ordens, chamados, agenda, visita de
+  campo, estoque, financeiro e relatórios), pelo controle (19 a 22 — notificações, contas e papéis,
+  configurações da empresa e auditoria), pela prontidão de deploy e pela afinagem de performance.
+  A tabela <a href="#módulos">Módulos</a> diz, um por um, o que está no ar.</sub>
 </p>
 
 ---
 
 ## Telas
 
-Capturas do aplicativo rodando (Laravel + AdminLTE 4 sobre MySQL), nos dois temas e em celular, todas
+Capturas do aplicativo rodando (Laravel + AdminLTE 4 sobre MySQL local e TiDB Cloud em produção), nos dois temas e em celular, todas
 no mesmo quadro de **1440×900**, duas por linha e na mesma escala de exibição. Cada imagem é um link:
 o clique abre o arquivo no tamanho capturado. O painel de celular é fotografado no viewport real dele
 (390×844) e montado sobre o mesmo quadro de 1440×900 — é o único quadro diferente da série, e a
@@ -90,7 +93,7 @@ cada etapa autorizada por permissão verificada no servidor e registrada em audi
 - **Rastreabilidade**: cada estado de ordem de serviço e de chamado fica registrado com autor e data
 - **Autorização real**: o servidor recusa antes de qualquer botão existir na tela
 - **Multiempresa de verdade**: isolamento por empresa em toda consulta, não por convenção de tela
-- **Indicador sem número inventado**: todo KPI do painel sai de uma contagem no MySQL daquela empresa
+- **Indicador sem número inventado**: todo KPI do painel sai de uma contagem no banco daquela empresa — MySQL local ou TiDB Cloud na publicação
 - **Interface nos dois temas**: claro e escuro, com a escolha persistida no navegador e no servidor
 - **Fechamento conferível**: o relatório agrega a mesma consulta que a listagem mostra, e o CSV é essa coleção inteira
 
@@ -104,11 +107,13 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 ### Autenticação
 
 - Login com e-mail e senha, hash bcrypt e custo definido em `BCRYPT_ROUNDS`
-- Sessão persistida em banco, com troca do identificador após entrar (contra session fixation)
+- Sessão persistida em banco no desenvolvimento e em cookie criptografado na Vercel
+  (`SESSION_DRIVER=cookie`), com regeneração no login contra session fixation
 - Bloqueio de usuário inativo e de empresa com assinatura vencida
 - Limite de 5 tentativas por e-mail e IP, e throttle de 10 requests/min na rota de entrada
 - Recuperação de acesso pelo password broker do framework: token de uso único, expiração própria e
-  senha nova com no mínimo 10 caracteres, letras e números
+  senha nova com no mínimo 10 caracteres, letras e números; em produção o link sai por SMTP, nunca
+  por `MAIL_MAILER=log`
 - Botão de revelar senha em todo campo de senha, inclusive na redefinição
 - Senha própria trocada por dentro da conta, com a senha atual como prova (ver "Perfil da conta")
 
@@ -133,6 +138,9 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - Catorze indicadores contados no banco da empresa logada, mais a fila de ordens da semana, a
   distribuição por estado, as contas que vencem nos próximos quinze dias e os cinco últimos pagamentos
   registrados
+- As contagens ficam em cache por 15 segundos, com chave por usuário e permissões; os escopos
+  organizacionais são lidos uma vez por request, em vez das 22 consultas repetidas que o banco remoto
+  pagava a cada abertura
 - Micro-visualização por cartão, desenhada pela casa em Blade + SVG, sem biblioteca de gráfico: o traço da
   série dia a dia embaixo de "Concluídas em 7 dias", "Agenda de hoje" e "Movimentações de hoje", e recebido
   contra pago em seis meses no cartão de caixa. Cada ponto é a contagem que o banco devolveu naquele dia ou
@@ -489,6 +497,10 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   `© {{ now()->format('Y') }} NEXUS-FIELD` à esquerda e `Desenvolvido por Clayton Marcelo` à direita,
   fechando na mesma altura do rodapé autenticado. Login, cadastro, recuperação e redefinição não
   carregam esse rodapé — levam só a barra enxuta com voltar à esquerda e tema à direita
+- As telas abertas de acesso têm folha e script próprios: `auth.css` (341,71 KB, 59,10 KB gzip) e
+  `auth.js` (0,86 KB), contra 583,06 KB + 458,56 KB do bundle completo. Nenhuma delas baixa
+  AdminLTE, Summernote, Leaflet, Toastr ou jQuery — basta o que o formulário usa, com os avisos em
+  `auth-flash.js` e o mesmo vocabulário de tom do painel
 - A micro-visualização veste o cartão, não o contrário: traço, área e anel usam `--nf-tone` e
   `--nf-tone-soft` do registro único de tom (`.tone-*`), sem uma tinta fora do que os dois temas já
   definem, e o traço de espessura fixa (`vector-effect: non-scaling-stroke`) conta a mesma história no
@@ -548,8 +560,9 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   acendendo no assentamento. É CSS, não GIF, para continuar legível nos dois temas e respeitar
   `prefers-reduced-motion`; as telas de acesso não repetem o gesto — a barra enxuta substituiu a marca
   que ficava acima do título
-- Diálogos e avisos só por SweetAlert2 e Toastr — `alert()`, `confirm()` e `prompt()` nativos são
-  vetados no projeto e cobertos por teste
+- No painel, diálogos e avisos só por SweetAlert2 e Toastr; nas telas abertas de acesso o aviso sai
+  de `auth-flash.js`, sem jQuery. `alert()`, `confirm()` e `prompt()` nativos são vetados no projeto
+  e cobertos por teste
 - Layout responsivo, com o painel em uma coluna no celular e a linha de listagem virando ficha: cada
   célula passa a mostrar o rótulo da própria coluna, lido do cabeçalho por `listas.js`. Sem
   JavaScript a ficha não veste nada — a tabela continua tabela, rolando onde já rolava
@@ -591,8 +604,9 @@ Legenda: ✅ no ar · 🚧 planejado, com a fase em que entra.
 
 O projeto já tem a base instalada para agentes e LLMs (`laravel/ai` + `laravel/mcp`), exportação em
 Excel e PDF e storage S3/R2, além das skills e do MCP server do Laravel Boost. Credenciais ficam só
-no `.env`, e a regra de tenant vale também para conversas de IA. O que entrou, o que ficou de fora e
-por quê está em [docs/integracoes-ia-e-apis.md](docs/integracoes-ia-e-apis.md).
+no `.env`, e a regra de tenant vale também para conversas de IA. Sem credenciais S3 na publicação,
+o disco permanece `local`. O que entrou, o que ficou de fora e por quê está em
+[docs/integracoes-ia-e-apis.md](docs/integracoes-ia-e-apis.md).
 
 ---
 
@@ -604,7 +618,9 @@ por quê está em [docs/integracoes-ia-e-apis.md](docs/integracoes-ia-e-apis.md)
 | --- | --- | --- |
 | PHP | 8.3 | Runtime da aplicação |
 | Laravel | 13 | Framework: rotas, Eloquent, autenticação, sessões, seeders |
-| MySQL | 8 | Banco relacional, InnoDB obrigatório por chave estrangeira e transação |
+| MySQL | 8 | Banco relacional local, InnoDB obrigatório por chave estrangeira e transação |
+| TiDB Cloud | MySQL-compatible | Banco gerenciado em produção: porta 4000, TLS obrigatório e o mesmo schema do MySQL local |
+| Vercel | Container Runtime | Deploy da imagem nginx + PHP-FPM na região `gru1`, com cron diário e variáveis no painel |
 | PHPUnit | 12 | Testes unitários e de feature contra o MySQL real |
 
 ### Frontend
@@ -638,7 +654,8 @@ por quê está em [docs/integracoes-ia-e-apis.md](docs/integracoes-ia-e-apis.md)
 | `PermissionCatalog` | Módulos e ações de permissão em um único lugar, lidos por seeder, menu e middleware |
 | `Roles` | Os cinco papéis de sistema e seus rótulos em português, para o seeder real e o de demonstração não divergirem |
 | `TenantContext` / `CompanyScope` / `ResolveCompany` | Isolamento por empresa em toda query |
-| `DashboardMetrics` | As contagens do painel, todas em SQL contra a empresa logada |
+| `Alcance` | Escopos organizacionais memoizados por request e invalidados após escrita: as 22 leituras repetidas do painel viram uma consulta |
+| `DashboardMetrics` | As contagens do painel, todas em SQL contra a empresa logada, com cache curto de 15s na aplicação |
 | `FichaHistorico` | A régua de leitura da ficha: as linhas mais recentes de um domínio, as janelas de agenda que ainda vêm com a última que passou, e a trilha gravada sobre aquela linha — cliente e técnico medidos pela mesma mão |
 | `StatusCatalog` / `Formatters` | Estados e formatações (dinheiro, decimal, data, hora, duração e unidade) num único lugar |
 | `ListFilters` | Busca, filtro por coluna, ordenação e por-página lidos do query string |
@@ -656,6 +673,7 @@ por quê está em [docs/integracoes-ia-e-apis.md](docs/integracoes-ia-e-apis.md)
 | `Navigation` | Menu montado por permissão e rota existente |
 | `EnsureRoot` / `CacheController` | Ação global da instalação: limpar cache compilado é coisa da conta raiz, não do `*` de um tenant — a rota recusa administrador de empresa e grava auditoria |
 | `Nf` (`theme`, `toast`, `confirm`, `forms`, `flash`, `passwords`, `editor`) | Únicos caminhos permitidos para tema, aviso, diálogo e texto rico na tela |
+| `auth-flash` | Aviso das telas de acesso em texto puro, sem Toastr nem jQuery, no mesmo vocabulário de tom do painel |
 
 ---
 
@@ -679,24 +697,28 @@ nexusfield/
 │   │                          ConversaDeChamado, LancamentoDeEstoque, LancamentoDeConta,
 │   │                          RegistroDePagamento, AgendamentoDeCompromisso e Recusa: a
 │   │                          escrita de cada módulo, entre a tela e o banco
-│   └── Support/             → PermissionCatalog, Roles, TenantContext, StatusCatalog, Formatters,
-│                              ListFilters, DashboardMetrics, Export, Auditor, TextoSeguro,
-│                              Distancia, Navigation, Notifier, Settings, SettingsCatalog,
-│                              Relatorio, MotivoErro e FichaHistorico
+│   └── Support/             → PermissionCatalog, Roles, TenantContext, Alcance,
+│                              BackfillOrganizacional, StatusCatalog, Formatters, ListFilters,
+│                              DashboardMetrics, Export, Auditor, TextoSeguro, Distancia, Navigation,
+│                              Notifier, Settings, SettingsCatalog, Relatorio, MotivoErro e
+│                              FichaHistorico
 ├── bootstrap/               → inicialização e registro de rotas
 ├── config/                  → banco, sessão, filesystem, temas
 ├── database/
-│   ├── migrations/          → 21 migrations do schema nexusfield
+│   ├── migrations/          → 25 migrations do schema nexusfield
 │   └── seeders/             → DatabaseSeeder (plano, empresa, RBAC, conta raiz) e DemoSeeder
 ├── docs/
 │   ├── branding/            → o medalhão e a arte completa da marca oficial
-│   └── screenshots/         → as seis capturas das telas
+│   ├── screenshots/         → as seis capturas das telas
+│   └── vercel.md            → guia operacional do Container Runtime, do TiDB Cloud e do SMTP
 ├── lang/pt_BR/              → validação e mensagens de senha em português
 ├── public/                  → index.php, favicon, img/ com a marca e assets compilados
 ├── resources/
-│   ├── css/nexusfield/      → tokens.css, base.css, components.css, listings.css, agenda.css, public.css
-│   ├── js/nexusfield/       → theme, notify, dialog, confirm, forms, flash, passwords, listas, editor,
-│   │                          agenda, checkin, jquery
+│   ├── css/                 → app.css e auth.css (entradas Vite); nexusfield/ reúne tokens.css,
+│   │                          base.css, components.css, listings.css, agenda.css e public.css
+│   ├── js/                  → app.js e auth.js (entradas Vite); nexusfield/ reúne theme, notify,
+│   │                          dialog, confirm, forms, flash, passwords, listas, editor, agenda,
+│   │                          checkin, jquery e auth-flash
 │   └── views/               → Blade: componentes ui/ e layouts, páginas públicas, de entrada,
 │                              de clientes, de técnicos, de equipes, de especialidades, de serviços,
 │                              de produtos, de categorias, de ordens de serviço, de chamados, de agenda,
@@ -734,7 +756,7 @@ nexusfield/
 └────────────────────────────┬─────────────────────────────┘
                              │
                              │ HTTPS
-                             │ Sessão armazenada no banco
+                             │ Sessão em cookie na Vercel, banco no desenvolvimento
                              │ Proteção CSRF
                              ▼
 ┌──────────────────────────────────────────────────────────┐
@@ -769,7 +791,7 @@ nexusfield/
 ┌──────────────────────────────────────────────────────────┐
 │                    3. CAMADA DE DADOS                    │
 ├──────────────────────────────────────────────────────────┤
-│  MySQL 8                                                 │
+│  MySQL 8 local / TiDB Cloud (MySQL-compatible)           │
 │  • InnoDB                                                │
 │  • utf8mb4                                               │
 │                                                          │
@@ -821,10 +843,12 @@ motivo escrito para quem leu — nunca como a exceção na cara do visitante.
 
 ## Banco de dados
 
-**MySQL 8+**, schema `nexusfield`, engine InnoDB obrigatória (chave estrangeira e transação), charset
-`utf8mb4` / `utf8mb4_unicode_ci`.
+**MySQL 8+ no desenvolvimento** (schema `nexusfield`, engine InnoDB obrigatória por chave estrangeira
+e transação, charset `utf8mb4` / `utf8mb4_unicode_ci`) e **TiDB Cloud MySQL-compatible em produção**
+(endpoint com TLS na porta 4000 e schema definido por `DB_DATABASE`). É o mesmo schema e a mesma
+camada Eloquent: a diferença é o endereço do banco e o certificado, não a regra de negócio.
 
-O schema é versionado em 21 migrations (`database/migrations/`) e cobre o domínio inteiro: planos e
+O schema é versionado em 25 migrations (`database/migrations/`) e cobre o domínio inteiro: planos e
 empresas, usuários e RBAC, clientes e endereços, técnicos e equipes, catálogo de serviços e produtos,
 ordens de serviço, estoque, check-in, chamados, agenda, financeiro, configurações, notificações,
 auditoria e anexos.
@@ -837,6 +861,11 @@ php artisan db:seed --class=DemoSeeder   # dados de demonstração, em empresa �
 
 `db:seed` não é opcional: sem ele não há permissão cadastrada nem papel atribuído, e o login cai em
 uma conta sem autorização nenhuma.
+
+Na publicação, migração e seed são passos manuais, executados uma única vez fora do container. O
+entrypoint só valida `APP_KEY` e `APP_URL`, cria os diretórios graváveis e sobe o PHP-FPM — nunca
+roda `migrate`. O endereço, as variáveis e a ordem de operação estão em
+[Deploy e performance](#deploy-e-performance).
 
 ---
 
@@ -915,8 +944,11 @@ php artisan config:cache && php artisan route:cache && php artisan view:cache &&
 ```
 
 - **`.env` de produção**: `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`
-  (exige HTTPS no proxy), `DB_CONNECTION=mysql` com credencial própria e `MAIL_*` de um SMTP de
-  verdade — com `MAIL_MAILER=log` o link de recuperação de senha morre no arquivo de log
+  (exige HTTPS no proxy), `DB_CONNECTION=mysql` apontando para o TiDB Cloud com TLS e `MAIL_*` de um
+  SMTP de verdade — com `MAIL_MAILER=log` o link de recuperação de senha morre no arquivo de log
+- **Vercel/Container**: `SESSION_DRIVER=cookie` e `CACHE_STORE=file` tiram sessão e cache do banco
+  remoto; `TRUSTED_HOSTS` é a regex `^.*\.vercel\.app$`, e `FILESYSTEM_DISK=local` vale enquanto não
+  há S3. O passo a passo está em [Deploy e performance](#deploy-e-performance)
 - **Cron**: uma linha, e a varredura diária das 07:00 (ordens vencidas, contas a vencer, agenda de
   amanhã) roda pelo relógio do servidor, nunca pelo navegador de alguém:
   `* * * * * cd /caminho/para/o/app && php artisan schedule:run >> /dev/null 2>&1`
@@ -981,6 +1013,54 @@ enviada por e-mail. As contas internas de demonstração seguem vindo do seeder.
 
 ---
 
+## Deploy e performance
+
+A instalação publicada vive em `https://nexus-field-inky.vercel.app/`. `/up`, `/login`, `/register` e
+`/forgot-password` respondem nessa URL, o login da conta raiz abre o painel e o cadastro público cria
+a conta com o ambiente inicial ativo. Ela usa o mesmo código do repositório, com `framework=container`
+em `vercel.json`, uma única região (`gru1`, São Paulo) e o cron diário `0 10 * * *` em
+`/cron/schedule` — 07:00 de São Paulo. O guia operacional completo está em
+[docs/vercel.md](docs/vercel.md); os valores ficam só no painel da Vercel.
+
+### Ambiente publicado
+
+| Peça | Como está |
+| --- | --- |
+| Container | Imagem única com nginx + PHP-FPM 8.4/Alpine, dependências de produção e assets Vite compilados no build |
+| Região | `gru1` apenas: o banco é externo e único, então replicar o container não replicaria os dados |
+| Banco | TiDB Cloud (MySQL-compatible), `DB_PORT=4000` e TLS obrigatório; nenhum Neon/Postgres |
+| Migrações | Manuais e uma única vez, fora do startup; `RUN_MIGRATIONS` não existe mais no entrypoint |
+| Conta raiz | `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` definidos só no ambiente de seed; a senha nunca é impressa |
+| Sessão | `SESSION_DRIVER=cookie` com `SESSION_SECURE_COOKIE=true`: o login não lê nem grava no TiDB em cada request |
+| Cache | `CACHE_STORE=file` sob `APP_STORAGE_PATH=/tmp/nexusfield/storage`, com TTL curto no painel |
+| Fila | `QUEUE_CONNECTION=database`, mantida só para uma job futura não se perder |
+| Uploads | `FILESYSTEM_DISK=local` enquanto não há credenciais S3: os arquivos vivem em `/tmp` e não sobrevivem a redeploy |
+| Confiança | `TRUSTED_HOSTS=^.*\.vercel\.app$` é regex PCRE; `TRUSTED_PROXIES` sem `*` para ninguém forjar `X-Forwarded-For` |
+| E-mail | `MAIL_MAILER=smtp` em produção (Gmail `smtp.gmail.com:587`, `tls` e App Password de 16 caracteres digitada na Vercel); `log` só local |
+| Cron | `CRON_SECRET` no header `Authorization: Bearer` da rota `/cron/schedule` |
+
+### O que a atualização mudou
+
+A medição em produção mostrava `/up` perto de 0,15s e as telas abertas de acesso entre 1,7s e 1,9s de
+TTFB. Uma instrução `SELECT 1` no SQL Editor do TiDB levava de 0,6s a 0,8s; o painel fazia 79
+consultas por abertura, 22 delas repetindo `organization_scopes`, e o navegador ainda baixava o bundle
+inteiro da aplicação para pintar um formulário de login.
+
+| Sintoma | Correção | Efeito |
+| --- | --- | --- |
+| Sessão no banco remoto em todo request | Cookie criptografado (`SESSION_DRIVER=cookie`) | O TiDB sai do caminho crítico da entrada |
+| 22 leituras iguais de escopo no painel | `Alcance::escopos()` memoiza por request e `esquecer()` invalida após escrita | Uma consulta no lugar de 22, com o mesmo alcance de leitura |
+| 79 contagens no dashboard | Cache de 15s por usuário e permissões, desligado nos testes | Números vivos sem pagar a bateria de queries em cada clique |
+| CSS e JS sem compressão | `gzip` no nginx para CSS, JS, JSON e SVG, com `Vary: Accept-Encoding` | O navegador recebe poucos KB por página |
+| Bundle completo nas telas de acesso | `auth.css`/`auth.js` e avisos em `auth-flash.js`, sem AdminLTE, Summernote, Leaflet, Toastr ou jQuery | CSS de 341,71 KB (59,10 KB gzip) e JS de 0,86 KB, contra 583,06 KB + 458,56 KB antes |
+
+Nada disso muda a regra de negócio: o cache do painel é chaveado também pelas permissões, então uma
+mudança de papel aparece na hora; os testes desligam esse cache para que cada caso leia o que acabou
+de gravar. O cookie leva o estado da sessão, não credencial de banco, e nenhuma senha entra em log,
+documentação ou chat — a App Password é digitada diretamente no campo `MAIL_PASSWORD` da Vercel.
+
+---
+
 ## Configuração
 
 As variáveis de ambiente vivem no `.env`, que **não** é versionado; só o `.env.example` entra no Git,
@@ -991,12 +1071,14 @@ com as chaves nomeadas e nenhuma credencial preenchida.
 | `APP_NAME`, `APP_URL`, `APP_ENV`, `APP_DEBUG` | Identidade e modo de execução |
 | `APP_LOCALE` | Idioma da aplicação (`pt_BR`) |
 | `APP_TIMEZONE` | Fuso da operação (`America/Sao_Paulo`); precisa bater com o `time_zone` do MySQL para as leituras de data do painel e da agenda |
-| `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Conexão MySQL |
-| `DB_ENGINE` | Engine das tabelas; deve ser `InnoDB` |
-| `SESSION_DRIVER`, `SESSION_LIFETIME` | Persistência e expiração de sessão |
-| `CACHE_STORE`, `QUEUE_CONNECTION` | Cache e filas |
-| `FILESYSTEM_DISK` | Disco padrão de upload |
-| `MAIL_*` | Envio de e-mail (recuperação de acesso, notificações) |
+| `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Conexão MySQL; em produção aponta para o TiDB Cloud, na porta `4000` |
+| `DB_ENGINE` | Engine das tabelas no MySQL local; deve ser `InnoDB` |
+| `MYSQL_ATTR_SSL_CA` | Bundle de CAs para o TLS do TiDB Cloud: `/etc/ssl/certs/ca-certificates.crt` na imagem |
+| `SESSION_DRIVER`, `SESSION_LIFETIME`, `SESSION_SECURE_COOKIE` | Persistência e expiração de sessão: `database` no desenvolvimento, `cookie` na Vercel |
+| `CACHE_STORE`, `QUEUE_CONNECTION` | Cache (`database` local, `file` na Vercel) e filas |
+| `TRUSTED_HOSTS`, `TRUSTED_PROXIES` | Hosts e proxies confiáveis; `TRUSTED_HOSTS` é regex PCRE, não nome de domínio |
+| `FILESYSTEM_DISK` | Disco padrão de upload: `local` enquanto não há credenciais S3 |
+| `MAIL_*` | Envio de e-mail (recuperação de acesso, notificações); `smtp` em produção |
 | `BCRYPT_ROUNDS` | Custo do hash de senha; em teste usa valor baixo de propósito |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Credenciais do administrador semeado pela instalação |
 | `SEED_DEMO_PASSWORD` | Senha dos usuários da empresa de demonstração (`DemoSeeder`) |
@@ -1008,7 +1090,9 @@ com as chaves nomeadas e nenhuma credencial preenchida.
 | Camada | Como está implementado |
 | --- | --- |
 | Senha | Hash bcrypt com custo em `BCRYPT_ROUNDS`; nunca em texto claro e nunca ecoada em `old()` |
-| Sessão | Guardada em banco, com regeneração do ID no login e `invalidate` + `regenerateToken` no logout |
+| Sessão | Cookie criptografado na Vercel (`SESSION_DRIVER=cookie`, `SESSION_SECURE_COOKIE=true`) e banco no desenvolvimento, com regeneração no login e `invalidate` + `regenerateToken` no logout |
+| Banco | TiDB Cloud por TLS em produção; `MYSQL_ATTR_SSL_CA` vem do bundle da imagem e nenhuma credencial é versionada |
+| Proxy confiável | `TRUSTED_HOSTS` como regex PCRE e `TRUSTED_PROXIES` sem curinga, para `X-Forwarded-*` não ser forjado |
 | CSRF | Token em todo formulário de escrita — inclusive os que não usam o componente compartilhado — e no arrasto do calendário, que envia `X-CSRF-TOKEN`; `CsrfTokenTest` varre as views e recusa formulário POST sem `@csrf` |
 | Força bruta | 5 tentativas por e-mail e IP, mais throttle de 10 requests/min na rota de entrada |
 | Autorização | `EnsurePermission` no servidor, por permissão do catálogo; a tela não decide nada |
@@ -1019,7 +1103,7 @@ com as chaves nomeadas e nenhuma credencial preenchida.
 | Tenancy | `CompanyScope` global; leitura fora da empresa exige `anyCompany()` explícito |
 | Conta raiz | `is_root` não é atribuível por request e a conta raiz resiste a exclusão, desativação, remanejamento e a perder a própria bandeira |
 | Diálogos | `alert()`, `confirm()` e `prompt()` nativos vetados e cobertos por teste; SweetAlert2 e Toastr escapam HTML |
-| Segredos | `.env` fora do Git; `.env.example` sem valor; nenhuma credencial em código, seed ou teste |
+| Segredos | `.env` fora do Git; `.env.example` sem valor; nenhuma credencial em código, seed, teste, log ou documentação — `MAIL_PASSWORD` e a senha da raiz são digitados no painel da Vercel |
 
 ---
 
@@ -1037,7 +1121,7 @@ Depois:
 php artisan test
 ```
 
-Hoje são **318 testes / 3050 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
+Hoje são **453 testes / 4351 asserções**, cobrindo login válido e inválido, usuário inativo, assinatura
 vencida, throttle, troca de ID de sessão, logout, gate de permissão por papel, reset de senha com token
 válido/forgiado/fraco, perfil próprio com chave e senha trocadas só mediante a senha atual, isolamento entre tenants, as três telas abertas de acesso, o contrato do seletor
 de tema entre Blade e JavaScript, a paleta dos dois temas calculada até o contraste WCAG — inclusive a
@@ -1091,7 +1175,9 @@ apresentação tem régua travada: `CoerenciaVisualTest` (14 testes / 198 asser�
 da folha contra a interface, não deixa o layout partir palavra no meio nem o hífen cortá-la no meio da frase,
 conta uma — não duas — chamada na boas-vindas, prova que o botão do menu desenha o próprio estado
 em CSS com tinta só dos tokens, e prende a abertura da boas-vindas na faixa que a fecha: seis passos, fora da
-coluna do medalhão, desembocando na cobrança.
+coluna do medalhão, desembocando na cobrança. A camada de deploy também é provada: o manifesto da
+Vercel exige `framework=container`, região única `gru1` e o cron às 10:00 UTC, e o cache do painel é
+desligado nos testes para que cada caso leia o que acabou de gravar.
 
 No Windows, se `php artisan test` falhar ao compilar views com o aviso
 `tempnam(): file created in the system's temporary directory`, rode o PHPUnit direto pelo
@@ -1106,8 +1192,8 @@ php vendor/phpunit/phpunit/phpunit
 
 ## Demonstração
 
-Não há demonstração online: o projeto roda localmente. A demonstração de dados é um seeder, grava
-tudo numa empresa à parte (`nexusfield-demo`) e recusa produção:
+A instalação publicada na Vercel é a aplicação real, não uma vitrine de demonstração. A demonstração
+de dados é local: um seeder grava tudo numa empresa à parte (`nexusfield-demo`) e recusa produção:
 
 ```bash
 php artisan db:seed --class=DemoSeeder
@@ -1191,6 +1277,9 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
   sessões demais encerradas na renovação e "Meu perfil" no dropdown do cabeçalho
 - [x] **Prontidão de deploy** — caches de configuração, rota, view e evento validados, páginas de erro
   403/404/419/500/503 vestindo a marca sem vazar stack, e o passo a passo de produção documentado
+- [x] **Deploy na Vercel e performance** — Container Runtime em `gru1` com TiDB Cloud, migrações
+  manuais, sessão em cookie, cache em arquivo, gzip no nginx e bundles próprios para login, cadastro e
+  recuperação
 - [x] **Fase 23** — Micro-visualização do painel: série por período e anel de proporção em SVG próprio,
   saído da mesma consulta dos indicadores, sem biblioteca de gráfico, sem tinta nova e sem desenho onde não
   há dado
@@ -1219,9 +1308,9 @@ demonstração e regrava — é fixture de tela, não histórico de operação.
 
 ### A seguir
 
-O plano de reconstrução fechou: da fase 1 à 27, mais a prontidão de deploy e a camada de serviços,
-tudo no ar. O que vem depois é decisão de operação, não fase: publicar numa máquina real, contratar o
-primeiro tenant e bater o martelo da licença.
+O plano de reconstrução fechou: da fase 1 à 27, mais a prontidão de deploy, a camada de serviços e a
+publicação na Vercel, tudo no ar. O que vem depois é decisão de operação, não fase: manter o SMTP de
+produção, contratar o primeiro tenant e bater o martelo da licença.
 
 ---
 
@@ -1242,7 +1331,7 @@ dizendo o que mudou e por quê.
     </td>
     <td>
       <strong>Clayton Marcelo</strong><br>
-      Full stack — Laravel, MySQL, JavaScript<br><br>
+      Full stack — Laravel, MySQL/TiDB Cloud, JavaScript<br><br>
       <a href="https://github.com/claytonmarcelo"><img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=flat-square&logo=github" alt="GitHub"></a>
       <a href="https://www.linkedin.com/in/clayton-marcelo-dev/"><img src="https://img.shields.io/badge/LinkedIn-clayton--marcelo--dev-0A66C2?style=flat-square&logo=linkedin&logoColor=white" alt="LinkedIn"></a>
       <a href="https://www.youtube.com/@c.marcelodev.brasil"><img src="https://img.shields.io/badge/YouTube-C.%20Marcelo%20Dev.%20Brasil-FF0000?style=flat-square&logo=youtube&logoColor=white" alt="Canal C. Marcelo Dev. Brasil no YouTube"></a>

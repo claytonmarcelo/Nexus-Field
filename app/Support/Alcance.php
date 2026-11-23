@@ -22,6 +22,15 @@ use Illuminate\Support\Facades\DB;
  */
 final class Alcance
 {
+    /**
+     * Os escopos de uma pessoa não mudam durante uma requisição. Sem este
+     * memo, cada `visiveisPara()` do painel — 22 deles — repetia a mesma
+     * consulta ao TiDB; em banco remoto isso custava mais que todo o resto.
+     *
+     * @var array<int, Collection<int, OrganizationScope>>
+     */
+    private static array $escoposEmMemoria = [];
+
     public const EMPRESA = 'company';
     public const FILIAL = 'branch';
     public const SETOR = 'department';
@@ -33,6 +42,12 @@ final class Alcance
     /** @return Collection<int, OrganizationScope> */
     public static function escopos(User $usuario): Collection
     {
+        $chave = (int) $usuario->id;
+
+        if (isset(self::$escoposEmMemoria[$chave])) {
+            return self::$escoposEmMemoria[$chave];
+        }
+
         $gravados = OrganizationScope::query()
             ->where('user_id', $usuario->id)
             ->where('active', true)
@@ -40,11 +55,11 @@ final class Alcance
             ->get();
 
         if ($gravados->isNotEmpty()) {
-            return $gravados;
+            return self::$escoposEmMemoria[$chave] = $gravados;
         }
 
         if ($usuario->client_id !== null) {
-            return collect([new OrganizationScope([
+            return self::$escoposEmMemoria[$chave] = collect([new OrganizationScope([
                 'scope' => self::CLIENTE,
                 'scope_id' => $usuario->client_id,
                 'active' => true,
@@ -52,14 +67,28 @@ final class Alcance
         }
 
         if ($usuario->technician !== null) {
-            return collect([new OrganizationScope([
+            return self::$escoposEmMemoria[$chave] = collect([new OrganizationScope([
                 'scope' => self::PROPRIO,
                 'scope_id' => $usuario->id,
                 'active' => true,
             ])]);
         }
 
-        return collect([new OrganizationScope(['scope' => self::EMPRESA, 'active' => true])]);
+        return self::$escoposEmMemoria[$chave] = collect([
+            new OrganizationScope(['scope' => self::EMPRESA, 'active' => true]),
+        ]);
+    }
+
+    /** Descarta o memo após uma escrita de escopo no mesmo request. */
+    public static function esquecer(?User $usuario = null): void
+    {
+        if ($usuario === null) {
+            self::$escoposEmMemoria = [];
+
+            return;
+        }
+
+        unset(self::$escoposEmMemoria[(int) $usuario->id]);
     }
 
     public static function tem(User $usuario, string $alcance): bool
