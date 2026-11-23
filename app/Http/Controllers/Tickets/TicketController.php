@@ -310,7 +310,13 @@ class TicketController extends Controller
     /** @return array<int, string> */
     private function responsaveis(): array
     {
-        return User::query()->where('status', 'active')->orderBy('name')->pluck('name', 'id')->all();
+        return User::query()
+            ->where('company_id', TenantContext::id())
+            ->whereNull('deleted_at')
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
     }
 
     /** Ordens que este usuário alcança: é a elas que um chamado pode estar preso. */

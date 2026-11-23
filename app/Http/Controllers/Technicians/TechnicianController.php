@@ -242,6 +242,8 @@ class TechnicianController extends Controller
         $tomadas = Technician::query()->whereNotNull('user_id')->pluck('user_id')->all();
 
         $opcoes = User::query()
+            ->where('company_id', TenantContext::id())
+            ->whereNull('deleted_at')
             ->whereNotIn('id', $tomadas)
             ->orderBy('name')
             ->pluck('name', 'id');

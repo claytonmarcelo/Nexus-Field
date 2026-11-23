@@ -11,6 +11,7 @@ use App\Services\Cadastro\GestorDeCadastro;
 use App\Services\Recusa;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -61,15 +62,30 @@ class CompanyRegistrationController extends Controller
 
     public function confirmarToken(Request $request, string $token): RedirectResponse
     {
+        $acesso = (string) $request->query('acesso', '');
+        $registroDeAcesso = null;
+
         try {
+            // Os dois segredos viajam juntos no e-mail. Conferir os dois antes de
+            // transitar impede que um link montado com tokens de cadastros
+            // diferentes confirme o e-mail e depois só então seja recusado.
+            $registro = $this->gestor->porTokenDeEmail($token);
+
+            if ($acesso !== '') {
+                $registroDeAcesso = $this->gestor->porTokenDeAcesso($acesso);
+
+                if (! $registroDeAcesso->is($registro)) {
+                    throw new Recusa('O link de acesso não pertence a este cadastro.');
+                }
+            }
+
             $this->gestor->confirmarEmail($token, $request->ip(), $request->userAgent());
+
+            if ($registroDeAcesso !== null) {
+                $request->session()->put('cadastro.access_token', $acesso);
+            }
         } catch (Recusa $recusa) {
             return $this->recusar($recusa);
-        }
-
-        $acesso = (string) $request->query('acesso', '');
-        if ($acesso !== '') {
-            $request->session()->put('cadastro.access_token', $acesso);
         }
 
         return redirect()->route('cadastro.documentos')
@@ -87,6 +103,12 @@ class CompanyRegistrationController extends Controller
 
         try {
             $registro = $this->gestor->porTokenDeAcesso($token);
+
+            // O token de acesso é emitido junto com a confirmação; sem ela o
+            // rascunho não pode abrir a etapa de documentos nem pela URL.
+            if ($registro->estaEm(CompanyRegistration::RASCUNHO)) {
+                throw new Recusa('Confirme o e-mail antes de abrir os documentos.');
+            }
         } catch (Recusa $recusa) {
             return $this->recusar($recusa);
         }
@@ -166,8 +188,14 @@ class CompanyRegistrationController extends Controller
 
         $request->session()->forget('cadastro.access_token');
 
-        return redirect()->route('cadastro.enviado', $registro->protocol)
-            ->with('status', 'Cadastro enviado para análise.');
+        // O protocolo é número de acompanhamento, não credencial: ainda assim a
+        // tela de confirmação não pode ser aberta só por chutar o código. O link
+        // sai assinado e com prazo curto, e a rota exige a assinatura.
+        return redirect()->to(URL::temporarySignedRoute(
+            'cadastro.enviado',
+            now()->addMinutes(30),
+            ['protocolo' => $registro->protocol],
+        ))->with('status', 'Cadastro enviado para análise.');
     }
 
     public function enviado(string $protocolo): View

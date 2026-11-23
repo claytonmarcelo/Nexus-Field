@@ -119,7 +119,8 @@ final class GestorDeCadastro
         return $resultado;
     }
 
-    public function confirmarEmail(string $token, ?string $ip, ?string $userAgent): CompanyRegistration
+    /** Consulta o token do e-mail sem mudar o estado; usada antes de qualquer transição. */
+    public function porTokenDeEmail(string $token): CompanyRegistration
     {
         $registro = CompanyRegistration::query()
             ->where('email_token_hash', hash('sha256', $token))
@@ -133,6 +134,13 @@ final class GestorDeCadastro
         if (! $registro->estaEm(CompanyRegistration::RASCUNHO)) {
             throw new Recusa('Este cadastro já foi confirmado.');
         }
+
+        return $registro;
+    }
+
+    public function confirmarEmail(string $token, ?string $ip, ?string $userAgent): CompanyRegistration
+    {
+        $registro = $this->porTokenDeEmail($token);
 
         $this->transitar(
             $registro,

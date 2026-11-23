@@ -107,7 +107,9 @@ Route::middleware(['auth', 'company'])->group(function () {
                 ->middleware('throttle:20,1')->name('documentos.anexar');
             Route::post('aceitar', [CompanyRegistrationController::class, 'aceitar'])->name('aceitar');
             Route::post('enviar', [CompanyRegistrationController::class, 'submeter'])->name('enviar');
-            Route::get('enviado/{protocolo}', [CompanyRegistrationController::class, 'enviado'])->name('enviado');
+            Route::get('enviado/{protocolo}', [CompanyRegistrationController::class, 'enviado'])
+                ->middleware('signed')
+                ->name('enviado');
         });
 
     Route::prefix('ordens')->name('orders.')->group(function () {

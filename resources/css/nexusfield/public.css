@@ -329,6 +329,12 @@
     color: var(--nf-text-muted);
 }
 
+/* Crédito no canto direito do mesmo rodapé, sem deslocar a marca à esquerda. */
+.nf-public-footer-credit {
+    margin-left: auto;
+    color: var(--nf-text-muted);
+}
+
 
 /* Barra das telas de acesso: a mesma largura do cartão, marca e voltar à
    esquerda e tema à direita. Ela substitui o cabeçalho grande — aqui a página só

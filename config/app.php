@@ -39,7 +39,10 @@ return [
     |
     */
 
-    'debug' => (bool) env('APP_DEBUG', false),
+    'debug' => \App\Support\DebugPolicy::habilitado(
+        (bool) env('APP_DEBUG', false),
+        (string) env('APP_ENV', 'production'),
+    ),
 
     /*
     |--------------------------------------------------------------------------

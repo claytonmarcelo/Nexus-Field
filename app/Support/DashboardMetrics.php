@@ -16,6 +16,7 @@ use App\Models\StockMovement;
 use App\Models\Technician;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -542,11 +543,16 @@ class DashboardMetrics
         $base = [];
 
         if ($this->pode('users.view')) {
-            $base[] = ['label' => 'Usuários com acesso', 'value' => User::query()->count()];
+            $base[] = ['label' => 'Usuários com acesso', 'value' => User::query()
+                ->where('company_id', TenantContext::id())
+                ->whereNull('deleted_at')
+                ->count()];
         }
 
         if ($this->pode('roles.view')) {
-            $base[] = ['label' => 'Papéis da empresa', 'value' => Role::query()->count()];
+            $base[] = ['label' => 'Papéis da empresa', 'value' => Role::query()
+                ->where('company_id', TenantContext::id())
+                ->count()];
         }
 
         if ($this->pode('roles.view')) {

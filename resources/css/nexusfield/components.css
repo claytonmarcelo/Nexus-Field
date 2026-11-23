@@ -1379,11 +1379,6 @@
     letter-spacing: .08em;
 }
 
-/* No rodapé a marca é informação, não destaque: o verde fica só no cabeçalho. */
-.nf-wordmark-neutro .nf-wordmark-lead {
-    color: var(--nf-text-muted);
-}
-
 .nf-avatar {
     display: grid;
     place-items: center;

@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Tests\CreatesFixtures;
 use Tests\TestCase;
 
@@ -138,6 +139,67 @@ class CadastroEmpresaTest extends TestCase
         $this->get(route('registration.confirm', ['token' => 'invalido']))
             ->assertRedirect()
             ->assertSessionHas('erro');
+    }
+
+    public function test_link_de_confirmacao_com_acesso_invalido_nao_confirma_o_email(): void
+    {
+        $gestor = app(GestorDeCadastro::class);
+        $resultado = $gestor->iniciar($this->dados(), '127.0.0.1', 'Test');
+
+        $this->get(route('registration.confirm', [
+            'token' => $resultado['email_token'],
+            'acesso' => 'acesso-invalido',
+        ]))->assertRedirect()->assertSessionHas('erro');
+
+        $this->assertSame(CompanyRegistration::RASCUNHO, $resultado['registro']->fresh()->state);
+    }
+
+    public function test_link_de_confirmacao_rejeita_token_de_acesso_de_outro_cadastro(): void
+    {
+        $gestor = app(GestorDeCadastro::class);
+        $primeiro = $gestor->iniciar($this->dados(), '127.0.0.1', 'Test');
+
+        $outrosDados = $this->dados('outro-admin@empresa-teste.local');
+        $outrosDados['cnpj'] = '04.252.784/0001-04';
+        $segundo = $gestor->iniciar($outrosDados, '127.0.0.1', 'Test');
+
+        $this->get(route('registration.confirm', [
+            'token' => $primeiro['email_token'],
+            'acesso' => $segundo['access_token'],
+        ]))->assertRedirect()->assertSessionHas('erro');
+
+        $this->assertSame(CompanyRegistration::RASCUNHO, $primeiro['registro']->fresh()->state);
+        $this->assertSame(CompanyRegistration::RASCUNHO, $segundo['registro']->fresh()->state);
+    }
+
+    public function test_token_de_rascunho_nao_abre_a_etapa_de_documentos(): void
+    {
+        $this->seedPermissions();
+        $admin = $this->administrador();
+        $resultado = app(GestorDeCadastro::class)->iniciar($this->dados(), '127.0.0.1', 'Test');
+
+        $this->actingAs($admin)
+            ->get(route('cadastro.documentos', ['token' => $resultado['access_token']]))
+            ->assertRedirect()
+            ->assertSessionHas('erro');
+    }
+
+    public function test_tela_de_protocolo_so_abre_com_link_assinado(): void
+    {
+        $this->seedPermissions();
+        $admin = $this->administrador();
+        $resultado = app(GestorDeCadastro::class)->iniciar($this->dados(), '127.0.0.1', 'Test');
+        $protocolo = $resultado['registro']->protocol;
+
+        $this->actingAs($admin)->get(route('cadastro.enviado', $protocolo))->assertForbidden();
+
+        $url = URL::temporarySignedRoute(
+            'cadastro.enviado',
+            now()->addMinutes(30),
+            ['protocolo' => $protocolo],
+        );
+
+        $this->actingAs($admin)->get($url)->assertOk()->assertSee($protocolo);
     }
 
     public function test_fluxo_completo_ate_aprovacao_cria_empresa_administrador_e_estrutura(): void

@@ -224,13 +224,13 @@ class AuthenticatedLayoutTest extends TestCase
 
         $publica = $this->get(route('welcome'))->getContent();
 
-        // A marca continua no rodapé público, mas em tinta neutra: o verde fica só
-        // no cabeçalho. O pé público traz apenas o texto literal pedido, ao lado
-        // da logo; o crédito segue só no rodapé autenticado.
-        $this->assertStringContainsString('nf-wordmark-neutro', $publica);
+        // No rodapé público sobra o medalhão e o texto literal pedido, sem
+        // repetir o nome da marca. O crédito agora fecha o canto direito desse
+        // mesmo rodapé, ao lado do texto autenticado.
+        $this->assertStringNotContainsString('nf-wordmark-neutro', $publica);
         $this->assertStringNotContainsString('nf-signature-brand', $publica);
         $this->assertStringContainsString('© 2026 NEXUS-FIELD', $publica);
-        $this->assertStringNotContainsString('Clayton Marcelo', $publica);
+        $this->assertStringContainsString('Desenvolvido por Clayton Marcelo', $publica);
 
         $autenticada = $this->actingAs($user)->get(route('dashboard'))->getContent();
 

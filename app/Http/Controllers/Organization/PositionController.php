@@ -13,6 +13,7 @@ use App\Services\Organizacao\GestorDeEstrutura;
 use App\Services\Recusa;
 use App\Support\ListFilters;
 use App\Support\StatusCatalog;
+use App\Support\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -63,7 +64,7 @@ class PositionController extends Controller
         return view('organization.positions.form', [
             'cargo' => new Position(['active' => true, 'level' => 5]),
             'setores' => $this->setores(),
-            'papeis' => Role::query()->orderBy('name')->pluck('name', 'id')->all(),
+            'papeis' => $this->papeis(),
         ]);
     }
 
@@ -95,7 +96,7 @@ class PositionController extends Controller
         return view('organization.positions.form', [
             'cargo' => $cargo,
             'setores' => $this->setores(),
-            'papeis' => Role::query()->orderBy('name')->pluck('name', 'id')->all(),
+            'papeis' => $this->papeis(),
         ]);
     }
 
@@ -123,6 +124,21 @@ class PositionController extends Controller
         return redirect()
             ->route('organization.positions.index')
             ->with('status', "Cargo “{$cargo->name}” excluído.");
+    }
+
+    /**
+     * O papel sugerido é só orientação, mas ainda assim é dado de outra empresa
+     * se a consulta não for fechada pelo tenant da sessão.
+     *
+     * @return array<int, string>
+     */
+    private function papeis(): array
+    {
+        return Role::query()
+            ->where('company_id', TenantContext::id())
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
     }
 
     /** @return array<int, string> */
