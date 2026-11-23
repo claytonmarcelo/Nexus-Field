@@ -20,6 +20,9 @@ final class UserContext
 {
     private const TTL_SECONDS = 60;
 
+    /** Assinatura cancelada precisa barrar o login rápido, sem esperar o TTL cheio. */
+    private const COMPANY_TTL_SECONDS = 15;
+
     private const VERSION_KEY = 'user-context:version';
 
     /** @var \WeakMap<User, true>|null */
@@ -56,7 +59,7 @@ final class UserContext
         } else {
             $company = Cache::remember(
                 'user-context:company:v'.static::version().':'.$user->id,
-                now()->addSeconds(self::TTL_SECONDS),
+                now()->addSeconds(self::COMPANY_TTL_SECONDS),
                 static fn (): ?Company => Company::query()->find($user->company_id),
             );
         }
