@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-413%20testes%20%2F%203848%20asser%C3%A7%C3%B5es-brightgreen" alt="413 testes, 3848 asserções">
+  <img src="https://img.shields.io/badge/testes-418%20testes%20%2F%203879%20asser%C3%A7%C3%B5es-brightgreen" alt="418 testes, 3879 asserções">
 </p>
 
 <p align="center">
@@ -564,6 +564,7 @@ O banco já modela o domínio inteiro (fase 2). As telas vieram uma fase por vez
 | Chamados | ✅ | ✅ | ✅ |
 | Agenda e compromissos | ✅ | ✅ | ✅ |
 | Visitas de campo (check-in e check-out geolocalizado) | ✅ | ✅ | ✅ |
+| Mapa GPS (posição informada e rotas percorridas) | ✅ | ✅ | ✅ |
 | Estoque e movimentações | ✅ | ✅ | ✅ |
 | Financeiro (contas a receber e a pagar) | ✅ | ✅ | ✅ |
 | Relatórios e exportações | ✅ | ✅ | ✅ |

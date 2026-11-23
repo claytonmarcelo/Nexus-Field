@@ -15,6 +15,7 @@ use App\Http\Controllers\Clients\ClientContactController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Deploy\CronController;
+use App\Http\Controllers\Field\GpsController;
 use App\Http\Controllers\Finance\FinancialRecordController;
 use App\Http\Controllers\Finance\PaymentController;
 use App\Http\Controllers\Notifications\NotificationController;
@@ -183,6 +184,22 @@ Route::middleware(['auth', 'company'])->group(function () {
         Route::patch('{visita}/saida', [CheckinController::class, 'checkout'])
             ->middleware('permission:orders.execute,orders.approve')
             ->name('checkout');
+    });
+
+    /*
+     * O mapa é a leitura do campo, não uma tela de configuração: quem pode ver
+     * as visitas pode ver a rota. A escrita da própria posição é mais estreita —
+     * só quem tem ficha de técnico e com limites de requisição, porque vira
+     * atualização frequente no celular.
+     */
+    Route::prefix('gps')->name('gps.')->group(function () {
+        Route::get('/', [GpsController::class, 'index'])
+            ->middleware('permission:orders.view')
+            ->name('index');
+
+        Route::post('localizacao', [GpsController::class, 'localizacao'])
+            ->middleware('throttle:30,1')
+            ->name('localizacao');
     });
 
     /*

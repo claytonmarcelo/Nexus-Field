@@ -2128,6 +2128,133 @@
 }
 
 /* ==========================================================================
+   Mapa do campo — o quadro do mapa e a coluna da equipe dividem a mesma régua
+   dos cartões da casa. O marcador de pessoa e o balão usam os tokens para
+   acompanhar o tema; o traçado em si quem desenha é o Leaflet.
+   ================================================================== */
+.nf-gps-mapa {
+    width: 100%;
+    height: 32rem;
+    border: 1px solid var(--nf-line);
+    border-radius: .75rem;
+    background: var(--nf-surface);
+    overflow: hidden;
+}
+
+.nf-gps-legenda {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: .75rem;
+    color: var(--nf-text-muted);
+    font-size: .78rem;
+}
+
+.nf-gps-legenda span {
+    margin-left: auto;
+    font-family: var(--font-family-nexusfield-ui);
+    font-variant-numeric: tabular-nums;
+}
+
+.nf-gps-compartilhar {
+    padding-bottom: .9rem;
+    margin-bottom: .9rem;
+    border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-gps-aviso {
+    margin-top: .55rem;
+    color: var(--nf-text-muted);
+    font-size: .75rem;
+    line-height: 1.45;
+}
+
+.nf-gps-lista {
+    display: grid;
+    gap: .5rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.nf-gps-pessoa {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    width: 100%;
+    padding: .65rem .8rem;
+    border: 1px solid var(--nf-line);
+    border-left: 3px solid var(--nf-primary);
+    border-radius: .55rem;
+    background: var(--nf-elevated);
+    color: var(--nf-text);
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--nf-duration) var(--nf-ease),
+        transform var(--nf-duration) var(--nf-ease);
+}
+
+.nf-gps-pessoa:hover,
+.nf-gps-pessoa:focus-visible {
+    background: var(--nf-primary-soft);
+    transform: translateX(2px);
+}
+
+.nf-gps-pessoa:focus-visible {
+    outline: 2px solid var(--nf-primary);
+    outline-offset: 2px;
+}
+
+.nf-gps-pessoa-nome {
+    font-size: .88rem;
+    font-weight: 700;
+}
+
+.nf-gps-pessoa-meta {
+    color: var(--nf-text-muted);
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.nf-gps-nota {
+    margin: .85rem 0 0;
+    padding: .6rem .8rem;
+    border: 1px solid var(--nf-line-strong);
+    border-radius: .55rem;
+    background: var(--nf-primary-soft);
+    color: var(--nf-text);
+    font-size: .8rem;
+}
+
+.nf-gps-marcador {
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--nf-primary);
+    color: var(--nf-on-brand);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--nf-primary) 22%, transparent);
+}
+
+.nf-gps-popup {
+    min-width: 12rem;
+    color: var(--nf-text);
+    font-size: .8rem;
+    line-height: 1.5;
+}
+
+.nf-gps-popup strong {
+    color: var(--nf-primary);
+}
+
+@media (max-width: 991.98px) {
+    .nf-gps-mapa {
+        height: 24rem;
+    }
+}
+
+/* ==========================================================================
    Sino do navbar — a bandeja resumida na barra. A contagem pendente é um selo
    pequeno no canto do ícone; o menu é uma coluna de avisos em que a linha sem
    leitura leva o fio verde à esquerda, e o rodapé é a única porta para a tela

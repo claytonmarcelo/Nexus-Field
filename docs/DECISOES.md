@@ -2,6 +2,20 @@
 
 Registro de mudanças de direção que afetam regra de negócio, com data e motivo.
 
+## 22/11/2026 — Mapa GPS com rotas lidas do campo
+
+**Pedido do usuário:** "A função GPS deve ter o mapa mostrando os funcionarios de campo trabalhando em suas rotas."
+
+**Nova decisão:** a operação ganha `Mapa GPS` (`/gps`), com Leaflet sobre OpenStreetMap carregado só nessa tela. Cada técnico ativo aparece com a posição registrada na própria ficha (`technicians.latitude`, `longitude` e `last_location_at`) e com a rota desenhada pela sequência real de chegadas e saídas (`service_order_checkins`). O servidor monta os pontos e o navegador apenas desenha: não há interpolação, ponto fictício nem traçado inventado entre duas visitas.
+
+**Consentimento e isolamento:** o mapa lê o banco; a escrita de posição só acontece depois que o navegador obtém permissão de geolocalização. O endpoint `gps.localizacao` ignora qualquer `technician_id` do request e grava somente na ficha ligada à conta autenticada — um técnico não consegue alterar a posição do colega, e uma conta de escritório sem ficha recebe 403. As coordenadas passam por validação de intervalo e precisão, e a rota de escrita tem `throttle:30,1`.
+
+**Alcance:** a leitura segue a mesma política das visitas de campo. Quem tem ficha de técnico vê a própria rota; a conta de cliente vê apenas técnicos que passaram pelas ordens da carteira dela; o escritório vê a equipe da empresa. Tudo passa pelo global scope de empresa e pela middleware `company`, então o mapa nunca cruza tenants. A atribuição do OSM aparece no rodapé do mapa e o projeto continua sem chave de mapa paga.
+
+**Motivo:** havia coordenadas no check-in e na ficha do técnico, mas nenhuma leitura que mostrasse a trajetória. O mapa fecha esse ciclo sem criar tabela, sem exigir workflow novo e sem transformar presença em vigilância: a posição é voluntária, é do próprio técnico e pode ser interrompida no botão. O bundle do mapa sai do pacote comum — `app.js` importa `gps.js` sob demanda — para que login, painel e listagens não paguem Leaflet.
+
+**Verificação:** `GpsTest` cobre a posição e a rota na empresa, o recorte do técnico, o recorte da conta de cliente, a recusa de escrita em nome de outro técnico, a validação de coordenada e as middleware da rota de escrita. `npm run build` gera o chunk separado do GPS. Suíte: 418 testes / 3879 asserções.
+
 ## 22/11/2026 — Limpeza global de cache restrita à conta raiz
 
 **Decisão anterior:** não existia botão nem rota para limpar cache em execução; a limpeza só acontecia
@@ -88,7 +102,7 @@ mas quem abre e fecha o painel continua sendo o template.
 **Implementação:** `navbar.blade.php` passa a embrulhar as barras em `.nf-nav-toggle-icone` e acrescenta
 `.nf-nav-toggle-texto`; `components.css` redesilha a pílula com tokens dos dois temas, transições e
 foco visível; `CoerenciaVisualTest` passa a exigir o invólucro, o rótulo e o contorno de foco. Suíte:
-413 testes / 3848 asserções.
+418 testes / 3879 asserções.
 
 **Restrições mantidas:** paleta e logotipo preservados, `data-lte-toggle="sidebar"` intacto, nenhum
 glifo de biblioteca no lugar das barras, nenhum push.
@@ -113,7 +127,7 @@ placeholders genéricos e a regra de que senha nunca volta em `old()`.
 passaram a exigir um único botão na página e a ausência do texto e do destino de cadastro. Um teste
 novo em `AccessScreenTest` verifica `autocomplete="off"` no formulário, e‑mail e senha, valor vazio no
 e‑mail e nenhum `value` na senha. Nenhuma cor, token, permissão, integração ou consulta foi alterada.
-Suíte: 413 testes / 3848 asserções.
+Suíte: 418 testes / 3879 asserções.
 
 **Restrições mantidas:** credencial da conta raiz fora de código, teste, doc, log e commit; prosa
 hifenizada com U+2011; paleta e logotipo preservados; nenhum push.

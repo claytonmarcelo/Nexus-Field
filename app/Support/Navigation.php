@@ -53,6 +53,12 @@ class Navigation
                         'icon' => 'fa-solid fa-location-crossing',
                     ],
                     [
+                        'label' => 'Mapa GPS',
+                        'route' => 'gps.index',
+                        'permission' => 'orders.view',
+                        'icon' => 'fa-solid fa-map-location-dot',
+                    ],
+                    [
                         'label' => 'Estoque',
                         'route' => 'movements.index',
                         'permission' => 'stock.view',

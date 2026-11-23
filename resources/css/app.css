@@ -12,6 +12,7 @@
 @import "@fortawesome/fontawesome-free/css/brands.min.css";
 @import "toastr/build/toastr.min.css";
 @import "summernote/dist/summernote-bs5.min.css";
+@import "leaflet/dist/leaflet.css";
 @import "./nexusfield/tokens.css";
 @import "./nexusfield/base.css";
 @import "./nexusfield/components.css";

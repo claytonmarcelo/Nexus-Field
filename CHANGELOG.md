@@ -10,10 +10,16 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Alterado
 
+- Mapa GPS: nova tela `Mapa GPS` em Operação, com Leaflet sobre OpenStreetMap carregado sob demanda.
+  A posição atual vem da ficha do técnico e a rota é desenhada pelas chegadas e saídas reais das ordens,
+  no mesmo alcance das visitas de campo. O botão `Compartilhar minha localização` depende da permissão
+  do navegador e só escreve na ficha de quem está logado, com validação de coordenada e
+  `throttle:30,1`. Nenhum ponto é inventado e nenhum tenant aparece no mapa alheio. Suíte: 418 testes /
+  3879 asserções.
 - Menu lateral: o hambúrguer virou pílula com ícone em casa própria e rótulo `Menu` no desktop (o
   rótulo some no celular), barras em degrau que se dobram em 45°, elevação no hover, recuo no clique
   e contorno de foco com `--nf-primary`. O estado continua vindo de `sidebar-collapse`/`sidebar-open`
-  e o contrato `data-lte-toggle="sidebar"` não foi tocado. Suíte: 413 testes / 3848 asserções.
+  e o contrato `data-lte-toggle="sidebar"` não foi tocado. Suíte: 418 testes / 3879 asserções.
 - Cabeçalho público: marca à esquerda e, no mesmo grupo à direita, chave de tema seguida de `Acessar`
   — a ordem e o alinhamento medidos em `https://nexus-business-manager.vercel.app/`. O grid de três
   colunas deu lugar ao flex com `justify-content: space-between`; o contrato de acessibilidade
@@ -40,7 +46,7 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   próprio lado (30 no sidebar e no cabeçalho, 22 no rodapé). A logo do sidebar deixa de ser cortada
   pela faixa de 35px e o rodapé público fecha nos mesmos 38px do rodapé autenticado, medidos no
   navegador. A animação da marca acima do título de entrada saiu com a casca antiga, e o CSS dela
-  foi removido. Suíte: 413 testes / 3848 asserções.
+  foi removido. Suíte: 418 testes / 3879 asserções.
 - Cadastro de empresas: o fluxo saiu do grupo `guest` e passou a viver em **Cadastros › Empresas**
   (`/cadastros/empresas`), com `auth`, tenant e `organization.create`, casca autenticada e trilha do
   menu lateral. O endpoint tokenizado de confirmação por e-mail ficou fora dos grupos de acesso, sem

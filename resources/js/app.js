@@ -50,3 +50,11 @@ menu.init();
 if (document.querySelector('[data-nf-agenda]')) {
     import('./nexusfield/agenda').then((modulo) => modulo.init());
 }
+
+/*
+ * O mapa é o outro peso sob demanda: Leaflet e a base do OSM entram só na tela
+ * de GPS. As outras páginas continuam com o pacote enxuto de sempre.
+ */
+if (document.querySelector('[data-nf-gps]')) {
+    import('./nexusfield/gps').then((modulo) => modulo.init());
+}
