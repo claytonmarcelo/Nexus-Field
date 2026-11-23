@@ -78,6 +78,18 @@ Route::get('__bench/no-sanitize', fn () => response('ok'))->withoutMiddleware([\
 Route::get('__bench/no-security', fn () => response('ok'))->withoutMiddleware([\App\Http\Middleware\SecurityHeaders::class]);
 Route::get('__bench/no-resolve', fn () => response('ok'))->withoutMiddleware([\App\Http\Middleware\ResolveCompany::class]);
 Route::get('__bench/no-nostore', fn () => response('ok'))->withoutMiddleware([\App\Http\Middleware\NoStore::class]);
+Route::get('__bench/no-start-full', fn () => response('ok'))->withoutMiddleware([
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class,
+]);
+Route::get('__bench/no-cookies-only', fn () => response('ok'))->withoutMiddleware([
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+]);
+Route::get('__bench/no-start', fn () => response('ok'))->withoutMiddleware([\Illuminate\Session\Middleware\StartSession::class]);
+Route::get('__bench/no-csrf', fn () => response('ok'))->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class]);
+Route::get('__bench/no-share', fn () => response('ok'))->withoutMiddleware([\Illuminate\View\Middleware\ShareErrorsFromSession::class]);
 
 // Vercel Cron -> GET /cron/schedule com Authorization: Bearer $CRON_SECRET.
 // Fora dos grupos `guest` e `auth`: quem autoriza é o segredo, não a sessão.
