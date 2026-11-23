@@ -13,9 +13,9 @@ use App\Models\CompanySetting;
  */
 final class Settings
 {
-    public static function valor(string $chave): mixed
+    public static function valor(string $chave, ?int $empresaId = null): mixed
     {
-        $guardado = CompanySetting::valueFor($chave);
+        $guardado = CompanySetting::valueFor($chave, null, $empresaId);
         $padrao = SettingsCatalog::PREFERENCIAS[$chave]['padrao'] ?? null;
 
         if ($guardado === null || $guardado === '') {
@@ -37,9 +37,9 @@ final class Settings
         return $guardado;
     }
 
-    public static function inteiro(string $chave): int
+    public static function inteiro(string $chave, ?int $empresaId = null): int
     {
-        return (int) self::valor($chave);
+        return (int) self::valor($chave, $empresaId);
     }
 
     public static function ligado(string $chave): bool

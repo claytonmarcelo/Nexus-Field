@@ -2,6 +2,18 @@
 
 Registro de mudanças de direção que afetam regra de negócio, com data e motivo.
 
+## 22/11/2026 — Back‑up individual e restauração não destrutiva
+
+**Pedido do usuário:** "a empresa precisa ter em seu perfil um back‑up automatico que caso houver um problema ela terá como utilizar seu back‑up, e cada empresa cadastrada terá seu back‑up individual, o banco deve ter a configuração conforme o uso e aviso sobre sobrecarregamento e configuração propria para que isso não ocorra, evitando um workflow desnecessario."
+
+**Decisão:** o back‑up é um snapshot **lógico da configuração**, não um dump completo do banco. Entram perfil (campos configuráveis), preferências de `company_settings` e organograma — filiais, setores e cargos. Não entram clientes, ordens, arquivos enviados, rotas nem vínculos de `employments`: são dados de negócio, e a restauração nunca os apaga. Isso mantém a cópia pequena e torna a recuperação um ato do perfil, sem workflow novo.
+
+**Ciclo de vida:** a primeira cópia é gravada na aprovação do cadastro, fora da transação — disco indisponível não desfaz empresa aprovada. A varredura diária `nf:backups:empresas` (03:00, `withoutOverlapping(60)`) respeita o intervalo de cada empresa; `config/backup.php` guarda só o disco, o diretório e o lote de leitura, para um banco grande não virar carga. O arquivo JSON fica no disco privado com SHA‑256, metadados em `company_backups` e poda automática do excedente.
+
+**Configuração e aviso:** retenção, limite em MB, intervalo em dias e percentual de aviso são chaves em `company_settings`, declaradas em `SettingsCatalog`. `carga()` avisa antes da gravação ser recusada, e `garantirEspaco()` barra uma nova cópia quando o limite da empresa estoura — a empresa ajusta as próprias rédeas no perfil, sem depender de suporte.
+
+**Segurança da restauração:** o servidor confere o `company_id` da cópia, a existência do arquivo, o checksum SHA‑256 e o `id` da empresa dentro do JSON antes de abrir uma transação. Cada linha reaplicada é conferida quanto ao tenant; se alguma pertencer a outra empresa, nada é gravado. A auditoria registra quem restaurou e diz explicitamente que nenhum cliente, ordem, arquivo ou rota foi apagado. `BackupController` complementa o escopo global com checagem explícita, e um id de cópia alheia responde 404. Suíte: 428 testes / 4127 asserções.
+
 ## 22/11/2026 — Exclusão restrita a admin/diretor e gerente/coordenador
 
 **Decisão do usuário:** "A Limpeza de cache não deve apagar nenhuma informação escrita ou posta no projeto, isso não pode acontecer, informações da empresa ou clientes devem estar permanente e só podem ser apagadas ou excluidas pelos admin, diretor, gerente ou coordenador com modal personalizado e texto personalizado também." Na pergunta de mapeamento, ele escolheu `Admin/Diretor = admin` e `Gerente/Coord = supervisor`.

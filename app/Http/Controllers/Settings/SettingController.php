@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Services\Backup\GerenciadorDeBackups;
 use App\Support\Auditor;
 use App\Support\Settings;
 use App\Support\SettingsCatalog;
@@ -34,7 +35,7 @@ class SettingController extends Controller
     /** Colunas do perfil que esta tela escreve. Slug e plano não estão aqui de propósito. */
     private const CAMPOS_PERFIL = ['name', 'document', 'phone', 'email', 'website'];
 
-    public function index(Request $request): View
+    public function index(Request $request, GerenciadorDeBackups $backups): View
     {
         $empresa = $this->empresa();
 
@@ -44,6 +45,8 @@ class SettingController extends Controller
             'valores' => $this->valoresTela(),
             'podeGerir' => $request->user()->hasPermission('settings.manage'),
             'contas' => $empresa->users()->whereNull('deleted_at')->count(),
+            'backups' => $backups->listar($empresa),
+            'carga' => $backups->carga($empresa),
         ]);
     }
 

@@ -19,3 +19,13 @@ Schedule::command('nf:notificacoes:diaria')
     ->dailyAt('07:00')
     ->withoutOverlapping()
     ->name('notificacoes-diarias');
+
+/*
+ * Cada empresa ganha a própria cópia de configuração antes do expediente. O
+ * intervalo e o limite são escolhidos no perfil; aqui só se garante o ritmo e
+ * que uma varredura atrasada não empilhe com a seguinte.
+ */
+Schedule::command('nf:backups:empresas')
+    ->dailyAt('03:00')
+    ->withoutOverlapping(60)
+    ->name('backups-individuais-por-empresa');

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
+use App\Models\CompanyBackup;
 use App\Models\CompanyRegistration;
 use App\Models\User;
 use App\Notifications\CadastroAprovado;
@@ -183,6 +184,11 @@ class CadastroEmpresaTest extends TestCase
         $this->assertDatabaseHas('roles', ['company_id' => $empresa->id, 'slug' => 'administrator']);
         $this->assertDatabaseHas('company_documents', ['id' => $documento->id, 'company_id' => $empresa->id]);
 
+        // A primeira cópia individual já nasce com a empresa aprovada.
+        $backup = CompanyBackup::query()->anyCompany()->where('company_id', $empresa->id)->sole();
+        $this->assertSame('configuracao', $backup->tipo);
+        Storage::disk('local')->assertExists($backup->path);
+
         Notification::assertSentOnDemand(CadastroAprovado::class);
     }
 
@@ -221,6 +227,7 @@ class CadastroEmpresaTest extends TestCase
     public function test_aprovacao_gera_token_de_redefinicao_utilizavel(): void
     {
         Notification::fake();
+        Storage::fake('local');
         $this->seedPermissions();
 
         $gestor = app(GestorDeCadastro::class);

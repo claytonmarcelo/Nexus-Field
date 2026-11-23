@@ -15,6 +15,7 @@ use App\Notifications\CadastroEmAnalise;
 use App\Notifications\CadastroReprovado;
 use App\Notifications\ConfirmacaoDeCadastro;
 use App\Services\BackfillOrganizacional;
+use App\Services\Backup\GerenciadorDeBackups;
 use App\Services\Recusa;
 use App\Support\Auditor;
 use App\Support\Roles;
@@ -26,6 +27,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * Dono do cadastro público de empresas (E6).
@@ -49,6 +51,8 @@ final class GestorDeCadastro
     private const HORAS_TOKEN_EMAIL = 48;
 
     private const DIAS_TOKEN_ACESSO = 7;
+
+    public function __construct(private readonly GerenciadorDeBackups $backups) {}
 
     /**
      * @param array<string, mixed> $dados
@@ -366,6 +370,17 @@ final class GestorDeCadastro
         });
 
         $empresa = $resultado['empresa'];
+
+        /*
+         * A primeira cópia nasce com a empresa, fora da transação de aprovação:
+         * um disco indisponível não pode desfazer um cadastro já aceito. A
+         * varredura diária retoma o ritmo depois, e o perfil mostra o arquivo.
+         */
+        try {
+            $this->backups->criar($empresa, $ator);
+        } catch (Throwable $erro) {
+            report($erro);
+        }
 
         if ($resultado['definir_senha']) {
             $token = Password::broker()->createToken($resultado['administrador']);

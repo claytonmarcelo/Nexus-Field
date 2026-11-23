@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-422%20testes%20%2F%204067%20asser%C3%A7%C3%B5es-brightgreen" alt="422 testes, 4067 asserções">
+  <img src="https://img.shields.io/badge/testes-428%20testes%20%2F%204127%20asser%C3%A7%C3%B5es-brightgreen" alt="428 testes, 4127 asserções">
 </p>
 
 <p align="center">
@@ -439,6 +439,15 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - Supervisor vê, administrador gere: em modo leitura cada campo vem desabilitado com o cartão que diz
   por quê, e o PUT sem `settings.manage` é barrado com 403 antes de encostar em qualquer valor. Cada
   campo alterado sai carimbado na auditoria com o antes e o depois
+- **Back‑up individual de cada empresa**: perfil, preferências e organograma (filiais, setores e cargos)
+  são gravados num JSON no disco privado, com SHA‑256 e metadados em `company_backups`. A primeira
+  cópia nasce com a aprovação do cadastro e a varredura diária (`nf:backups:empresas`) segue o intervalo
+  de cada empresa — rédeas de disco e lote em `config/backup.php`
+- Restauração pelo perfil, não destrutiva: confere empresa, arquivo e checksum antes de reaplicar só o
+  que estava na cópia. Cliente, ordem, arquivo enviado e rota nunca entram no snapshot e nunca são
+  apagados; a ação sai auditada
+- Retenção, limite em MB, intervalo em dias e aviso de carga são configurações da própria empresa. O
+  aviso aparece antes da gravação ser recusada, e a poda remove só o excedente das próprias cópias
 
 ### Auditoria
 
@@ -639,6 +648,7 @@ por quê está em [docs/integracoes-ia-e-apis.md](docs/integracoes-ia-e-apis.md)
 | `Auditor` / `Auditable` | Trilha de auditoria: criar, alterar e excluir são gravados pelo trait em `audit_logs` sem o controller lembrar, e a ação de negócio que não é CRUD (aprovar ordem, montar quadro, mover estado) entra escrita à mão, com o verbo certo |
 | `Notifier` | O sino da barra e a bandeja da conta: o ato de negócio avisa quem tem de mexer, com tipo do vocabulário fechado e link para a ficha |
 | `Settings` / `SettingsCatalog` | As escolhas da empresa declaradas uma vez: a chave é de quem escreve e o padrão é de quem declara — catálogo que nada lê é enfeite |
+| `GerenciadorDeBackups` | O back‑up individual da empresa: snapshot lógico da configuração no disco privado com checksum, retenção podada, aviso de carga e restauração que reaplica sem apagar nada do negócio |
 | `Relatorio` | Os fechamentos de período somados no MySQL com as mesmas expressões que mandam nos módulos: o dinheiro pago, o total da ordem e o prazo da prioridade |
 | `MotivoErro` | O critério único das cinco páginas de erro: mostra o motivo que nós escrevemos e guarda o texto que o framework inventa sobre a casa por dentro |
 | `TemEnderecos` | Endereços polimórficos e o endereço principal de um cadastro |

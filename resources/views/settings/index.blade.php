@@ -133,6 +133,42 @@
                 </div>
             </div>
 
+            <div class="nf-form-secao">
+                <h2>Back‑up individual da empresa</h2>
+
+                <p class="nf-text-muted-2">
+                    Uma cópia da configuração desta empresa é gravada automaticamente na aprovação do
+                    cadastro e, depois, no intervalo escolhido aqui. Ela guarda perfil, preferências,
+                    filiais, setores e cargos. Clientes, ordens, arquivos e rotas nunca entram no
+                    arquivo — e uma restauração nunca apaga nada: apenas reaplica o que foi gravado.
+                </p>
+
+                @if ($carga['aviso'] !== null)
+                    <div class="alert alert-warning" role="status">
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        {{ $carga['aviso'] }}
+                    </div>
+                @endif
+
+                <div class="nf-form-grade">
+                    @foreach ([
+                        \App\Support\SettingsCatalog::BACKUP_RETENCAO,
+                        \App\Support\SettingsCatalog::BACKUP_INTERVALO_DIAS,
+                        \App\Support\SettingsCatalog::BACKUP_LIMITE_MB,
+                        \App\Support\SettingsCatalog::BACKUP_AVISO_PERCENTUAL,
+                    ] as $chave)
+                        <x-ui.input label="{{ $preferencias[$chave]['rotulo'] }}" :name="$chave"
+                            inputmode="numeric" :value="old($chave, $valores[$chave])"
+                            placeholder="{{ $preferencias[$chave]['padrao'] }}" :disabled="! $editando"
+                            :hint="$preferencias[$chave]['ajuda']" />
+
+                        @error($chave)
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    @endforeach
+                </div>
+            </div>
+
             @if ($editando)
                 <div class="nf-form-acoes">
                     <x-ui.button type="submit" variant="primary" icon="fa-solid fa-floppy-disk" data-loading="false">
@@ -145,6 +181,85 @@
                 </div>
             @endif
         </form>
+    </x-ui.card>
+
+    <x-ui.card title="Cópias guardadas"
+        subtitle="Cada empresa guarda a própria cópia em disco privado, com checksum e restauração sem apagar nada.">
+        <p class="nf-text-muted-2 small">
+            {{ $carga['quantidade'] }} cópia(s) · {{ number_format($carga['bytes'] / 1024, 1, ',', '.') }} KB de
+            {{ number_format($carga['limite_bytes'] / (1024 * 1024), 0, ',', '.') }} MB ·
+            {{ $carga['percentual'] }}% do limite.
+            @if ($carga['ultimo'] !== null)
+                Última em {{ Formatters::dateTime($carga['ultimo']->created_at) }}.
+            @endif
+        </p>
+
+        @if ($editando)
+            <form method="POST" action="{{ route('settings.backups.store') }}" class="mb-3">
+                @csrf
+                <x-ui.button type="submit" icon="fa-solid fa-box-archive" variant="primary">
+                    Criar back‑up agora
+                </x-ui.button>
+            </form>
+        @endif
+
+        @forelse ($backups as $copia)
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Cópia</th>
+                            <th scope="col">Configurações</th>
+                            <th scope="col">Tamanho</th>
+                            <th scope="col" class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($backups as $backup)
+                            <tr>
+                                <td>
+                                    <strong>{{ Formatters::dateTime($backup->created_at) }}</strong>
+                                    @if ($backup->restaurado_em !== null)
+                                        <div class="small text-success">
+                                            Restaurada em {{ Formatters::dateTime($backup->restaurado_em) }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <td>{{ $backup->total_configuracoes }}</td>
+                                <td>{{ number_format($backup->size_bytes / 1024, 1, ',', '.') }} KB</td>
+                                <td>
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <x-ui.button :href="route('settings.backups.download', $backup)" size="sm"
+                                            variant="secondary" icon="fa-solid fa-download">
+                                            Baixar
+                                        </x-ui.button>
+
+                                        @if ($editando)
+                                            <form method="POST"
+                                                action="{{ route('settings.backups.restore', $backup) }}"
+                                                data-nf-confirm
+                                                data-confirm-titulo="Restaurar configuração"
+                                                data-confirm-texto="Os ajustes gravados nesta cópia serão reaplicados. Clientes, ordens, arquivos e rotas não serão apagados."
+                                                data-confirm-rotulo="Restaurar"
+                                                data-confirm-perigo="false">
+                                                @csrf
+                                                <x-ui.button type="submit" size="sm" variant="warning"
+                                                    icon="fa-solid fa-rotate-left">
+                                                    Restaurar
+                                                </x-ui.button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @empty
+            <x-ui.state title="Nenhuma cópia ainda"
+                text="A primeira cópia é gravada quando a empresa é aprovada. Você também pode criar uma agora." />
+        @endforelse
     </x-ui.card>
 
     <x-ui.card title="O plano, que não se mexe aqui"

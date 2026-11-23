@@ -10,6 +10,13 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Alterado
 
+- Back‑up individual por empresa: cada empresa cadastrada passa a ter uma cópia automática da própria
+  configuração — perfil, preferências, filiais, setores e cargos — gravada no disco privado com SHA‑256
+  e metadados em `company_backups`. A primeira cópia nasce na aprovação do cadastro e a varredura diária
+  (`nf:backups:empresas`, 03:00) complementa o ritmo conforme o intervalo escolhido no perfil. A
+  restauração valida empresa, arquivo e checksum e reaplica somente o que estava gravado, sem apagar
+  cliente, ordem, arquivo ou rota. Retenção, limite, intervalo e aviso de carga são ajustáveis por
+  empresa, com rédeas globais em `config/backup.php`. Suíte: 428 testes / 4127 asserções.
 - Exclusão responsável: o papel `supervisor` (gerente/coordenador) passou a receber todos os verbos
   `*.delete`; `administrator` (admin/diretor) mantém `*` e os demais papéis seguem sem excluir. Clientes
   e informações da empresa só saem por esses dois degraus, com o modal `x-ui.action-form` e texto

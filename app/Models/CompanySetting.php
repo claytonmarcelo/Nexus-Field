@@ -25,9 +25,9 @@ class CompanySetting extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public static function valueFor(string $key, mixed $default = null): mixed
+    public static function valueFor(string $key, mixed $default = null, ?int $companyId = null): mixed
     {
-        $companyId = TenantContext::id();
+        $companyId ??= TenantContext::id();
 
         if ($companyId === null) {
             return $default;

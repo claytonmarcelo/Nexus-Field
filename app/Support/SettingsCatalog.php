@@ -22,6 +22,14 @@ final class SettingsCatalog
 
     public const AVISO_AGENDA = 'varredura_agenda';
 
+    public const BACKUP_RETENCAO = 'backup_retencao';
+
+    public const BACKUP_LIMITE_MB = 'backup_limite_mb';
+
+    public const BACKUP_INTERVALO_DIAS = 'backup_intervalo_dias';
+
+    public const BACKUP_AVISO_PERCENTUAL = 'backup_aviso_percentual';
+
     /**
      * @var array<string, array{rotulo: string, ajuda: string, padrao: mixed, regras: array<int, string>}>
      */
@@ -58,6 +66,34 @@ final class SettingsCatalog
             'ajuda' => 'O compromisso marcado para o dia seguinte toca o técnico da janela e a carteira do cliente.',
             'padrao' => true,
             'regras' => ['boolean'],
+        ],
+        self::BACKUP_RETENCAO => [
+            'rotulo' => 'Cópias mantidas por empresa',
+            'ajuda' => 'Quantos back‑ups automáticos ficam no perfil. As cópias mais antigas saem sozinhas; '
+                .'vazio usa o padrão da casa: 7.',
+            'padrao' => 7,
+            'regras' => ['nullable', 'integer', 'between:1,30'],
+        ],
+        self::BACKUP_INTERVALO_DIAS => [
+            'rotulo' => 'Intervalo do back‑up automático (dias)',
+            'ajuda' => 'De quantos em quantos dias uma cópia nova é gravada sem clique. A primeira já nasce '
+                .'com a empresa aprovada; vazio usa o padrão da casa: 1 dia.',
+            'padrao' => 1,
+            'regras' => ['nullable', 'integer', 'between:1,30'],
+        ],
+        self::BACKUP_LIMITE_MB => [
+            'rotulo' => 'Limite de armazenamento do back‑up (MB)',
+            'ajuda' => 'Teto das cópias desta empresa. Atingido o limite, a gravação nova é recusada e o '
+                .'aviso aparece no perfil; nenhum arquivo alheio é tocado. Padrão da casa: 20 MB.',
+            'padrao' => 20,
+            'regras' => ['nullable', 'integer', 'between:1,200'],
+        ],
+        self::BACKUP_AVISO_PERCENTUAL => [
+            'rotulo' => 'Avisar ao usar percentual do limite (%)',
+            'ajuda' => 'Quando as cópias chegam a esta fração do limite, o perfil mostra o aviso de carga '
+                .'antes de faltar espaço. Padrão da casa: 80%.',
+            'padrao' => 80,
+            'regras' => ['nullable', 'integer', 'between:50,95'],
         ],
     ];
 

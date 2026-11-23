@@ -29,6 +29,7 @@ use App\Http\Controllers\Orders\OrderAssignmentController;
 use App\Http\Controllers\Orders\OrderController;
 use App\Http\Controllers\Orders\OrderItemController;
 use App\Http\Controllers\Reports\ReportController;
+use App\Http\Controllers\Settings\BackupController;
 use App\Http\Controllers\Settings\SettingController;
 use App\Http\Controllers\Stock\MovementController;
 use App\Http\Controllers\System\CacheController;
@@ -635,6 +636,23 @@ Route::middleware(['auth', 'company'])->group(function () {
         Route::put('/', [SettingController::class, 'update'])
             ->middleware('permission:settings.manage')
             ->name('update');
+
+        /*
+         * O back‑up individual vive no mesmo perfil. Ler e baixar acompanham
+         * `settings.view`; gravar e restaurar exigem `settings.manage`, o mesmo
+         * degrau que altera a configuração que está sendo protegida.
+         */
+        Route::post('backups', [BackupController::class, 'store'])
+            ->middleware('permission:settings.manage')
+            ->name('backups.store');
+
+        Route::get('backups/{backup}/download', [BackupController::class, 'download'])
+            ->middleware('permission:settings.view')
+            ->name('backups.download');
+
+        Route::post('backups/{backup}/restore', [BackupController::class, 'restore'])
+            ->middleware('permission:settings.manage')
+            ->name('backups.restore');
     });
 
     /*
