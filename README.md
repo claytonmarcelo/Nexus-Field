@@ -16,7 +16,7 @@
   <img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white" alt="Laravel 13">
   <img src="https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white" alt="MySQL 8">
   <img src="https://img.shields.io/badge/TiDB-Cloud-00A99D" alt="TiDB Cloud em produção">
-  <img src="https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white" alt="Vercel Container Runtime">
+  <a href="https://nexus-field-inky.vercel.app/"><img src="https://img.shields.io/badge/Vercel-Live%20Demo-000000?logo=vercel&logoColor=white" alt="Live Demo na Vercel"></a>
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
