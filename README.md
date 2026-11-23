@@ -32,8 +32,7 @@
   <sub>Estágio atual: o plano de reconstrução fechou. Da fundação (fases 1 a 8) aos cadastros e
   ao catálogo (9 a 11), pela operação (12 a 18 — ordens, chamados, agenda, visita de campo, estoque,
   financeiro e relatórios), pelo controle (19 a 22 — notificações, contas e papéis, configurações da
-  empresa e auditoria) e pela prontidão de deploy. A tabela
-  <a href="#módulos">Módulos</a> diz, um por um, o que está no ar.</sub>
+  empresa e auditoria) e pela prontidão de deploy. A tabela módulos, um por um, o que está no ar.</sub>
 </p>
 
 ---
