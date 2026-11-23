@@ -44,7 +44,8 @@ if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
     php artisan migrate --force --no-interaction
 fi
 
-php-fpm -D -g "pid = ${PHP_FPM_PID};"
+# -g do FPM e o caminho do arquivo de PID, nao uma diretiva "pid = ...;".
+php-fpm -D -g "${PHP_FPM_PID}"
 
 # Evita responder antes de o FPM estar aceitando conexoes.
 tentativas=0
