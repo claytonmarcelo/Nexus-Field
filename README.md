@@ -1033,6 +1033,7 @@ em `vercel.json`, uma única região (`gru1`, São Paulo) e o cron diário `0 10
 | Conta raiz | `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` definidos só no ambiente de seed; a senha nunca é impressa |
 | Sessão | `SESSION_DRIVER=cookie` com `SESSION_SECURE_COOKIE=true`: o login não lê nem grava no TiDB em cada request |
 | Cache | `CACHE_STORE=file` sob `APP_STORAGE_PATH=/tmp/nexusfield/storage`, com TTL curto no painel (15s), na identidade (60s), no estado da assinatura no login (15s) e no sino (15s) |
+| Caches do framework | Config, rotas e Blade compilados no startup em `/tmp/nexusfield/bootstrap/cache` com as variáveis reais da Vercel; o startup nunca roda migração |
 | Fila | `QUEUE_CONNECTION=database`, mantida só para uma job futura não se perder |
 | Uploads | `FILESYSTEM_DISK=local` enquanto não há credenciais S3: os arquivos vivem em `/tmp` e não sobrevivem a redeploy |
 | Confiança | `TRUSTED_HOSTS=^.*\.vercel\.app$` é regex PCRE; `TRUSTED_PROXIES` sem `*` para ninguém forjar `X-Forwarded-For` |

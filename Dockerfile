@@ -100,6 +100,7 @@ FROM php-base AS runtime
 
 RUN apk add --no-cache nginx ca-certificates \
     && mkdir -p /run/nginx \
+        /tmp/nexusfield/bootstrap/cache \
         /tmp/nexusfield/storage/app/private \
         /tmp/nexusfield/storage/app/public \
         /tmp/nexusfield/storage/framework/cache/data \
@@ -126,6 +127,9 @@ COPY --from=assets /app/public/build ./public/build
 ENV APP_ENV=production \
     APP_DEBUG=false \
     APP_STORAGE_PATH=/tmp/nexusfield/storage \
+    APP_CONFIG_CACHE=/tmp/nexusfield/bootstrap/cache/config.php \
+    APP_EVENTS_CACHE=/tmp/nexusfield/bootstrap/cache/events.php \
+    APP_ROUTES_CACHE=/tmp/nexusfield/bootstrap/cache/routes-v7.php \
     APP_MAINTENANCE_DRIVER=cache \
     CACHE_STORE=file \
     FILESYSTEM_DISK=local \

@@ -18,6 +18,7 @@ sed -i "s|^listen 80 default_server;|listen ${PORT} default_server;|" /etc/nginx
 # O filesystem da imagem e somente leitura. Todo caminho gravavel do Laravel
 # aponta para /tmp por meio de APP_STORAGE_PATH (definido no Dockerfile).
 mkdir -p \
+    /tmp/nexusfield/bootstrap/cache \
     /tmp/nexusfield/storage/app/private \
     /tmp/nexusfield/storage/app/public \
     /tmp/nexusfield/storage/framework/cache/data \
@@ -36,6 +37,13 @@ if [ -z "${APP_URL:-}" ]; then
     echo "ERRO: APP_URL nao definida. Use a URL publica https do projeto." >&2
     exit 1
 fi
+
+# A imagem e imutavel, mas os caches precisam das variaveis reais da Vercel.
+# Gera-los aqui evita que cada request pague config, rotas e Blade, e nao toca
+# no banco: nenhuma migracao acontece no startup.
+php artisan config:cache --no-interaction
+php artisan route:cache --no-interaction
+php artisan view:cache --no-interaction
 
 # -g do FPM e o caminho do arquivo de PID, nao uma diretiva "pid = ...;".
 php-fpm -D -g "${PHP_FPM_PID}"
