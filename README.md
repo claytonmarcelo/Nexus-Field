@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-418%20testes%20%2F%203879%20asser%C3%A7%C3%B5es-brightgreen" alt="418 testes, 3879 asserções">
+  <img src="https://img.shields.io/badge/testes-419%20testes%20%2F%203950%20asser%C3%A7%C3%B5es-brightgreen" alt="419 testes, 3950 asserções">
 </p>
 
 <p align="center">

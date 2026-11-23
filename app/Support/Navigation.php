@@ -50,7 +50,7 @@ class Navigation
                         'label' => 'Visitas de campo',
                         'route' => 'checkins.index',
                         'permission' => 'orders.view',
-                        'icon' => 'fa-solid fa-location-crossing',
+                        'icon' => 'fa-solid fa-route',
                     ],
                     [
                         'label' => 'Mapa GPS',

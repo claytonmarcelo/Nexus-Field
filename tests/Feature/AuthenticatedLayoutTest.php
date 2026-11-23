@@ -89,6 +89,41 @@ class AuthenticatedLayoutTest extends TestCase
         }
     }
 
+    public function test_todos_os_icones_do_menu_existem_no_fontawesome_instalado(): void
+    {
+        $css = (string) file_get_contents(
+            base_path('node_modules/@fortawesome/fontawesome-free/css/fontawesome.min.css')
+        );
+
+        $this->assertNotSame('', $css, 'O CSS do FontAwesome precisou ser instalado para validar os ícones.');
+
+        foreach (Navigation::sections() as $section) {
+            foreach ($section['items'] as $item) {
+                $classes = array_values(array_filter(
+                    explode(' ', $item['icon']),
+                    fn (string $class) => str_starts_with($class, 'fa-'),
+                ));
+
+                $this->assertNotEmpty($classes, "O item [{$item['label']}] não tem glifo declarado.");
+
+                foreach ($classes as $class) {
+                    $this->assertStringContainsString(
+                        '.'.$class,
+                        $css,
+                        "O ícone [{$class}] do item [{$item['label']}] não existe no FontAwesome instalado."
+                    );
+                }
+            }
+        }
+
+        $visitas = collect(Navigation::sections())
+            ->flatMap(fn (array $section) => $section['items'])
+            ->firstWhere('route', 'checkins.index');
+
+        $this->assertSame('fa-solid fa-route', $visitas['icon'],
+            'Visitas de campo precisa do glifo de rota, alinhado aos demais itens do menu.');
+    }
+
     public function test_item_sem_permissao_sai_do_menu_e_do_gate(): void
     {
         $this->seedPermissions();
