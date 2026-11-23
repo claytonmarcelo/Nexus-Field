@@ -10,6 +10,8 @@
   campo com geolocalização, estoque, financeiro, relatórios e auditoria no mesmo painel.
 </p>
 
+[![Deploy na Vercel](https://img.shields.io/badge/Vercel-Live%20Demo-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://nexus-field-inky.vercel.app/)
+
 <p align="center">
   <img src="https://img.shields.io/badge/vers%C3%A3o-0.1.0-blue" alt="Versão 0.1.0">
   <img src="https://img.shields.io/badge/PHP-8.3-777BB4?logo=php&logoColor=white" alt="PHP 8.3">
