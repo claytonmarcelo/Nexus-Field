@@ -90,6 +90,20 @@ Route::get('__bench/no-cookies-only', fn () => response('ok'))->withoutMiddlewar
 Route::get('__bench/no-start', fn () => response('ok'))->withoutMiddleware([\Illuminate\Session\Middleware\StartSession::class]);
 Route::get('__bench/no-csrf', fn () => response('ok'))->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class]);
 Route::get('__bench/no-share', fn () => response('ok'))->withoutMiddleware([\Illuminate\View\Middleware\ShareErrorsFromSession::class]);
+Route::post('__bench/post', fn () => response('ok'));
+Route::post('__bench/post-bare', fn () => response('ok'))->withoutMiddleware([
+    \App\Http\Middleware\SanitizeReferer::class,
+    \App\Http\Middleware\SecurityHeaders::class,
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class,
+    \Illuminate\Routing\Middleware\SubstituteBindings::class,
+    'auth.session',
+    \App\Http\Middleware\ResolveCompany::class,
+    \App\Http\Middleware\NoStore::class,
+]);
 
 // Vercel Cron -> GET /cron/schedule com Authorization: Bearer $CRON_SECRET.
 // Fora dos grupos `guest` e `auth`: quem autoriza é o segredo, não a sessão.
