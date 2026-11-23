@@ -108,12 +108,20 @@ Route::get('__bench/cacheinfo', function () {
     $store = \Illuminate\Support\Facades\Cache::getStore();
 
     return response()->json([
-        'default' => config('cache.default'),
+        'app_env' => env('APP_ENV'),
+        'app_name' => env('APP_NAME'),
+        'app_url' => env('APP_URL'),
+        'app_locale' => env('APP_LOCALE'),
+        'cache_store' => env('CACHE_STORE'),
+        'cache_default' => config('cache.default'),
         'store_class' => get_class($store),
-        'prefix' => \Illuminate\Support\Facades\Cache::getPrefix(),
-        'path' => $store instanceof \Illuminate\Cache\FileStore ? $store->path('x') : null,
-        'env_cache_store' => env('CACHE_STORE'),
-        'env_app_storage' => env('APP_STORAGE_PATH'),
+        'session_driver' => env('SESSION_DRIVER'),
+        'session_config' => config('session.driver'),
+        'queue_connection' => env('QUEUE_CONNECTION'),
+        'filesystem_disk' => env('FILESYSTEM_DISK'),
+        'db_connection' => env('DB_CONNECTION'),
+        'db_host' => env('DB_HOST'),
+        'app_storage' => env('APP_STORAGE_PATH'),
     ]);
 });
 Route::get('__bench/flock2', function () {
