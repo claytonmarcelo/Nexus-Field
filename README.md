@@ -8,11 +8,10 @@
   <strong>Field Service Management — a operação externa inteira em um só lugar</strong><br>
   Plataforma multiempresa para gerenciar clientes, ordens de serviço, chamados, agenda, check-in em
   campo com geolocalização, estoque, financeiro, relatórios e auditoria no mesmo painel.
-</p>
-
-[![Deploy na Vercel](https://img.shields.io/badge/Vercel-Live%20Demo-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://nexus-field-inky.vercel.app/)
-
 <p align="center">
+  <a href="https://nexus-field-inky.vercel.app/">
+    <img src="https://img.shields.io/badge/Vercel-Live%20Demo-000000?logo=vercel&logoColor=white" alt="Live Demo na Vercel">
+  </a>
   <img src="https://img.shields.io/badge/vers%C3%A3o-0.1.0-blue" alt="Versão 0.1.0">
   <img src="https://img.shields.io/badge/PHP-8.3-777BB4?logo=php&logoColor=white" alt="PHP 8.3">
   <img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white" alt="Laravel 13">
