@@ -74,6 +74,10 @@ Route::get('__bench/no-custom', fn () => response('ok'))->withoutMiddleware([
     \App\Http\Middleware\ResolveCompany::class,
     \App\Http\Middleware\NoStore::class,
 ]);
+Route::get('__bench/no-sanitize', fn () => response('ok'))->withoutMiddleware([\App\Http\Middleware\SanitizeReferer::class]);
+Route::get('__bench/no-security', fn () => response('ok'))->withoutMiddleware([\App\Http\Middleware\SecurityHeaders::class]);
+Route::get('__bench/no-resolve', fn () => response('ok'))->withoutMiddleware([\App\Http\Middleware\ResolveCompany::class]);
+Route::get('__bench/no-nostore', fn () => response('ok'))->withoutMiddleware([\App\Http\Middleware\NoStore::class]);
 
 // Vercel Cron -> GET /cron/schedule com Authorization: Bearer $CRON_SECRET.
 // Fora dos grupos `guest` e `auth`: quem autoriza é o segredo, não a sessão.
