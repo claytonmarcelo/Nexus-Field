@@ -1446,8 +1446,11 @@
  * decidiu: a pílula nasce na posição certa, sem depender do JavaScript carregar.
  * ------------------------------------------------------------------ */
 .nf-theme-toggle {
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: 0;
     padding: 0;
     background: none;
     border: 0;
@@ -2106,6 +2109,22 @@
     margin: 0;
     font-size: .82rem;
     color: var(--nf-danger);
+}
+
+/* ==========================================================================
+   Botão global de cache — usa `x-ui.button` como qualquer outra ação da casa.
+   Ele só é montado para a conta raiz: limpar configuração, rotas e views
+   alcança todas as empresas, então não pode herdar o `*` de um tenant. Aqui
+   só o ajuste de largura: na barra estreita o rótulo cede e o ícone fica.
+   ================================================================== */
+@media (max-width: 991.98px) {
+    .nf-cache-toggle .nf-btn-label {
+        display: none;
+    }
+
+    .nf-cache-toggle {
+        padding-inline: .55rem;
+    }
 }
 
 /* ==========================================================================

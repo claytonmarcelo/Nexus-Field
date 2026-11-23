@@ -2,6 +2,44 @@
 
 Registro de mudanças de direção que afetam regra de negócio, com data e motivo.
 
+## 22/11/2026 — Limpeza global de cache restrita à conta raiz
+
+**Decisão anterior:** não existia botão nem rota para limpar cache em execução; a limpeza só acontecia
+por comando Artisan no deploy.
+
+**Nova decisão:** o navbar autenticado ganha um botão `Limpar cache` montado com `x-ui.button`
+(`ghost`, `sm`) dentro de um formulário `POST` com CSRF, confirmação do design system e rota com
+`throttle:5,1`. A ação executa `optimize:clear` — cache de dados, configuração, eventos, rotas e views —
+e grava auditoria com autor, IP e navegador. O botão só é montado para `is_root`, e a rota repete a
+checagem com o middleware `root`.
+
+**Motivo:** o usuário pediu um botão global de limpeza de cache. "Global" aqui é o alcance do efeito:
+o arquivo compilado é compartilhado por todas as empresas da instalação. O `*` do administrador de uma
+empresa vale dentro do tenant e não pode se estender a um artefato comum — o mesmo princípio que
+impede o administrador recém-criado de virar raiz do projeto. Por isso a interface esconde o controle
+e o servidor recusa a requisição mesmo que alguém monte o POST à mão.
+
+**Garantia de integridade:** o usuário deixou claro que limpar cache não pode apagar nada do que foi
+escrito ou enviado ao projeto. `optimize:clear` só remove artefatos derivados — cache de dados,
+configuração, eventos, rotas e views compiladas; ele não executa `DELETE` em tabela de negócio nem
+toca arquivos enviados. As preferências da empresa continuam sendo lidas direto de `company_settings`
+em `Settings`, sem camada de cache. O modal e o aviso de retorno dizem isso com todas as letras, e
+`CacheClearTest` cria empresa, cliente e ordem com texto escrito, dispara a limpeza e exige que os três
+registros e o texto continuem iguais. Exclusão de informação é outro assunto: só acontece pelos
+papéis de administração, com modal e texto próprios.
+
+**Implementação:** `EnsureRoot` virou middleware com alias `root`; `CacheController::clear` chama
+`optimize:clear` e registra a auditoria; `routes/web.php` abre a rota fora do grupo `company`, mas
+dentro de `auth`, com CSRF implícito do grupo web e rate limit. O botão usa o componente de botão do
+design system e só recebe CSS para recolher o rótulo na barra estreita. `CacheClearTest` prova que a
+raiz limpa e audita, que o administrador com `*` recebe 403 sem apagar nada, que a rota não aceita GET
+nem visita anônima e que o botão sai do `x-ui.button` com confirmação e token. Suíte: 413 testes /
+3848 asserções.
+
+**Restrições mantidas:** nenhuma credencial real da conta raiz em código, teste, documento, log ou
+commit; o teste usa usuário fictício marcado como raiz apenas no banco de testes. Paleta, logotipo,
+permissões de tenant, integrações e consultas intactos; nenhum push.
+
 ## 22/11/2026 — Cabeçalho e rodapé da referência, com sino na barra
 
 **Decisão anterior:** o cabeçalho público usava grid de três colunas com a chave de tema no centro e
@@ -26,8 +64,8 @@ antes do botão e troca o rótulo; `public-footer.blade.php` ganha `.nf-public-f
 autoral e o crédito fixo; `public.css` troca o grid por flex e estende o rodapé com as duas colunas.
 `CoerenciaVisualTest` e `AccessScreenTest` passam a exigir a ordem tema → `Acessar`, o texto do pé e
 a ausência da descrição antiga. Nenhuma consulta, permissão, rota, integração, cor ou token foi
-alterado; o sino já era filtrado por `user_id` e já usava `notifications.view`. Suíte: 408 testes /
-3820 asserções.
+alterado; o sino já era filtrado por `user_id` e já usava `notifications.view`. Suíte: 413 testes /
+3848 asserções.
 
 **Restrições mantidas:** credencial da conta raiz fora de código, teste, doc, log e commit; usuário e
 aviso fictícios removidos ao final da validação; prosa hifenizada com U+2011; paleta e logotipo
@@ -50,7 +88,7 @@ mas quem abre e fecha o painel continua sendo o template.
 **Implementação:** `navbar.blade.php` passa a embrulhar as barras em `.nf-nav-toggle-icone` e acrescenta
 `.nf-nav-toggle-texto`; `components.css` redesilha a pílula com tokens dos dois temas, transições e
 foco visível; `CoerenciaVisualTest` passa a exigir o invólucro, o rótulo e o contorno de foco. Suíte:
-408 testes / 3820 asserções.
+413 testes / 3848 asserções.
 
 **Restrições mantidas:** paleta e logotipo preservados, `data-lte-toggle="sidebar"` intacto, nenhum
 glifo de biblioteca no lugar das barras, nenhum push.
@@ -75,7 +113,7 @@ placeholders genéricos e a regra de que senha nunca volta em `old()`.
 passaram a exigir um único botão na página e a ausência do texto e do destino de cadastro. Um teste
 novo em `AccessScreenTest` verifica `autocomplete="off"` no formulário, e‑mail e senha, valor vazio no
 e‑mail e nenhum `value` na senha. Nenhuma cor, token, permissão, integração ou consulta foi alterada.
-Suíte: 408 testes / 3820 asserções.
+Suíte: 413 testes / 3848 asserções.
 
 **Restrições mantidas:** credencial da conta raiz fora de código, teste, doc, log e commit; prosa
 hifenizada com U+2011; paleta e logotipo preservados; nenhum push.
@@ -114,8 +152,8 @@ Blade de acesso receberam a cópia da referência; `welcome.blade.php` foi reesc
 cards curtos, mantendo os seis passos do ciclo e o CTA final. A animação da marca que ficava acima do título
 de entrada saiu junto com a casca antiga, e o CSS morto foi removido. Nenhuma cor, token, permissão,
 integração ou consulta foi alterada; o formulário de cadastro continua com apenas nome, e‑mail, senha e
-confirmação — os checkboxes de Termos/Privacidade da referência não foram adicionados. Suíte: 408 testes /
-3812 asserções.
+confirmação — os checkboxes de Termos/Privacidade da referência não foram adicionados. Suíte: 413 testes /
+3848 asserções.
 
 **Restrições mantidas:** credencial da conta raiz fora de código, teste, doc, log e commit; prosa hifenizada
 com U+2011 (`e‑mail`, `check‑in`, `bem‑vindo`); paleta e logotipo preservados; nenhum push.

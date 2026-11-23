@@ -8,11 +8,13 @@
      já pôs no <body> — ver resources/js/nexusfield/menu.js.
 
      A chave de tema fica no grupo de ações à direita aqui no painel; no cabeçalho
-     da página inicial ela ocupa o centro da barra. O sino lê a bandeja de quem
-     está logado — a consulta filtra por `user_id` antes de qualquer coisa, então
-     a contagem da barra é sempre da pessoa, nunca da empresa. Ele não some para
-     papel nenhum: `notifications.view` é de todos os papéis, e um sino que não
-     existe para quem atende no campo é aviso que chega tarde. --}}
+     da página inicial ela entra antes da porta de acesso. O sino lê a bandeja de
+     quem está logado — a consulta filtra por `user_id` antes de qualquer coisa,
+     então a contagem da barra é sempre da pessoa, nunca da empresa. Ele não some
+     para papel nenhum: `notifications.view` é de todos os papéis, e um sino que
+     não existe para quem atende no campo é aviso que chega tarde. O botão de
+     cache é global de verdade: só a raiz o vê, porque o efeito alcança todas as
+     empresas; o `*` do administrador de uma empresa não chega aqui. --}}
 @props(['user'])
 
 <nav class="app-header navbar navbar-expand">
@@ -39,10 +41,27 @@
             </li>
         </ul>
 
-        <ul class="navbar-nav ms-auto">
-            <li class="nav-item nf-nav-item-toggle">
+        <ul class="navbar-nav ms-auto d-flex align-items-center">
+            <li class="nav-item nf-nav-item-toggle d-flex align-items-center">
                 <x-ui.theme-toggle />
             </li>
+
+            @if ($user->isRoot() && Route::has('system.cache.clear'))
+                <li class="nav-item d-flex align-items-center">
+                    <form method="POST" action="{{ route('system.cache.clear') }}"
+                        data-nf-confirm
+                        data-confirm-titulo="Limpar o cache global?"
+                        data-confirm-texto="Nenhum dado de empresa, cliente, ordem ou arquivo será apagado. Somente a configuração, as rotas, os eventos e as views compiladas serão reconstruídos."
+                        data-confirm-rotulo="Limpar cache">
+                        @csrf
+                        <x-ui.button type="submit" variant="ghost" size="sm"
+                            icon="fa-solid fa-broom" class="nf-cache-toggle"
+                            title="Limpar cache global" aria-label="Limpar cache global">
+                            Limpar cache
+                        </x-ui.button>
+                    </form>
+                </li>
+            @endif
 
             @if ($user->hasPermission('notifications.view') && Route::has('notifications.index'))
                 @php

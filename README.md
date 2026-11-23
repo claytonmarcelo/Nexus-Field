@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white" alt="Bootstrap 5.3">
   <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/testes-408%20testes%20%2F%203820%20asser%C3%A7%C3%B5es-brightgreen" alt="408 testes, 3820 asserções">
+  <img src="https://img.shields.io/badge/testes-413%20testes%20%2F%203848%20asser%C3%A7%C3%B5es-brightgreen" alt="413 testes, 3848 asserções">
 </p>
 
 <p align="center">
@@ -643,6 +643,7 @@ por quê está em [docs/integracoes-ia-e-apis.md](docs/integracoes-ia-e-apis.md)
 | `TemEnderecos` | Endereços polimórficos e o endereço principal de um cadastro |
 | `EmEdicao` / `CuidaDeEnderecos` / `TrataRegistrosAninhados` | Edição em linha na própria ficha, o ciclo de vida do endereço aninhado e a conferência de que a peça pertence mesmo ao cadastro aberto — id chutado em outra linha da mesma empresa responde 404 |
 | `Navigation` | Menu montado por permissão e rota existente |
+| `EnsureRoot` / `CacheController` | Ação global da instalação: limpar cache compilado é coisa da conta raiz, não do `*` de um tenant — a rota recusa administrador de empresa e grava auditoria |
 | `Nf` (`theme`, `toast`, `confirm`, `forms`, `flash`, `passwords`, `editor`) | Únicos caminhos permitidos para tema, aviso, diálogo e texto rico na tela |
 
 ---
@@ -940,7 +941,12 @@ O alternador de tema fica à direita do cabeçalho público, imediatamente antes
 para o canto direito da barra enxuta, com `Voltar` à esquerda, seguindo o site de referência. A
 preferência continua no mesmo contrato JavaScript e no mesmo atributo `data-bs-theme` de sempre.
 O sino da barra abre o dropdown com os avisos pendentes da própria conta e leva à central em
-`/notificacoes`; a contagem e a leitura continuam filtradas por `user_id` no servidor.
+`/notificacoes`; a contagem e a leitura continuam filtradas por `user_id` no servidor. Ao lado do tema,
+a conta raiz vê `Limpar cache`: formulário `POST` com confirmação que executa `optimize:clear` para a
+instalação inteira e audita o autor. O administrador de empresa não vê o botão e recebe 403 se chamar
+a rota — o `*` dele vale dentro do tenant, não sobre cache compartilhado. A limpeza só reconstrói
+artefatos derivados: empresa, cliente, ordem, textos escritos e arquivos enviados permanecem intactos,
+como o modal e o teste de integridade declaram.
 
 **Cadastro de acesso:** `/register` é o cadastro público de usuário comum e pede somente nome, e-mail,
 senha e confirmação. A conta entra no painel imediatamente e recebe um ambiente inicial ativo — plano

@@ -30,6 +30,7 @@ use App\Http\Controllers\Orders\OrderItemController;
 use App\Http\Controllers\Reports\ReportController;
 use App\Http\Controllers\Settings\SettingController;
 use App\Http\Controllers\Stock\MovementController;
+use App\Http\Controllers\System\CacheController;
 use App\Http\Controllers\Technicians\SpecialtyController;
 use App\Http\Controllers\Technicians\TeamController;
 use App\Http\Controllers\Technicians\TechnicianAddressController;
@@ -71,6 +72,15 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('logout', [LoginController::class, 'destroy'])->name('logout')->middleware('auth');
+
+/*
+ * Cache compilado é coisa da instalação, não da empresa: por isso esta rota
+ * fica fora do grupo `company` e só aceita a conta raiz. POST com CSRF e
+ * throttle curto — limpar tudo custa caro e não pode virar diversão de bot.
+ */
+Route::post('sistema/cache/limpar', [CacheController::class, 'clear'])
+    ->middleware(['auth', 'root', 'throttle:5,1'])
+    ->name('system.cache.clear');
 
 Route::middleware(['auth', 'company'])->group(function () {
     Route::get('dashboard', DashboardController::class)
