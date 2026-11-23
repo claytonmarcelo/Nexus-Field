@@ -316,7 +316,7 @@ class Relatorio
             ->selectRaw('technician_id, count(*) ordens, '
                 .'coalesce(sum('.ServiceOrder::totalPorOrdemSql().'), 0) valor, '
                 .'coalesce(sum(case when started_at is not null and completed_at is not null '
-                .'then timestampdiff(minute, started_at, completed_at) else 0 end), 0) minutos, '
+                .'then '.SqlCompat::diferencaMinutos('started_at', 'completed_at').' else 0 end), 0) minutos, '
                 .'count(case when started_at is not null and completed_at is not null then 1 end) com_tempo, '
                 .'coalesce(sum(discount), 0) descontos')
             ->where('status', 'completed')
@@ -328,7 +328,7 @@ class Relatorio
         $visitas = ServiceOrderCheckin::query()
             ->selectRaw('technician_id, count(*) visitas, '
                 .'coalesce(sum(case when checkout_at is not null '
-                .'then timestampdiff(minute, checkin_at, checkout_at) else 0 end), 0) minutos, '
+                .'then '.SqlCompat::diferencaMinutos('checkin_at', 'checkout_at').' else 0 end), 0) minutos, '
                 .'count(case when checkout_at is not null then 1 end) encerradas, '
                 .'coalesce(sum(checkin_distance), 0) distancia, '
                 .'count(checkin_distance) com_distancia, '
