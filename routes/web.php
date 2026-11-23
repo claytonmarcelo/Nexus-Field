@@ -104,6 +104,51 @@ Route::get('__bench/rate', function () {
 
     return response()->json(['ms' => round((microtime(true) - $inicio) * 1000, 1)]);
 });
+Route::get('__bench/flock', function () {
+    $dir = storage_path('framework/cache/data');
+    @mkdir($dir, 0777, true);
+    $file = $dir.'/bench-flock-'.getmypid();
+    $out = ['dir' => $dir];
+
+    // raw write
+    $t = microtime(true);
+    file_put_contents($file, 'x');
+    $out['raw_write_ms'] = round((microtime(true) - $t) * 1000, 1);
+
+    // fopen + flock + write + unlock + close
+    $t = microtime(true);
+    $h = fopen($file, 'c+');
+    flock($h, LOCK_EX | LOCK_NB);
+    fwrite($h, 'y');
+    fflush($h);
+    flock($h, LOCK_UN);
+    fclose($h);
+    $out['flock_write_ms'] = round((microtime(true) - $t) * 1000, 1);
+
+    // Cache::put (no lock, uses Filesystem::put with lock=true actually)
+    $t = microtime(true);
+    \Illuminate\Support\Facades\Cache::put('bench:put', 'x', 60);
+    $out['cache_put_ms'] = round((microtime(true) - $t) * 1000, 1);
+
+    // Cache::get
+    $t = microtime(true);
+    \Illuminate\Support\Facades\Cache::get('bench:put');
+    $out['cache_get_ms'] = round((microtime(true) - $t) * 1000, 1);
+
+    // Cache::add (uses LockableFile with flock)
+    $t = microtime(true);
+    \Illuminate\Support\Facades\Cache::add('bench:add-'.uniqid(), 'x', 60);
+    $out['cache_add_ms'] = round((microtime(true) - $t) * 1000, 1);
+
+    // Cache::increment
+    $t = microtime(true);
+    \Illuminate\Support\Facades\Cache::increment('bench:inc');
+    $out['cache_increment_ms'] = round((microtime(true) - $t) * 1000, 1);
+
+    @unlink($file);
+
+    return response()->json($out);
+});
 Route::get('__bench/fs', function () {
     $out = [];
     foreach (['/tmp', '/dev/shm'] as $path) {
