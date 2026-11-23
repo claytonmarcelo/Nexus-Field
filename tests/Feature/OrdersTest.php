@@ -797,9 +797,11 @@ class OrdersTest extends TestCase
             ->assertSessionHasNoErrors();
         $this->assertSame('in_progress', $ordem->fresh()->status);
 
-        // O gestor aprova e exporta, mas apagar ordem é do administrador.
+        // O gestor aprova, exporta e também recebe o verbo de exclusão; a ordem
+        // que já virou trabalho continua protegida pela regra do fluxo.
         $this->actingAs($gestor)->get(route('orders.export'))->assertOk();
-        $this->actingAs($gestor)->delete(route('orders.destroy', $ordem))->assertForbidden();
+        $this->actingAs($gestor)->delete(route('orders.destroy', $ordem))
+            ->assertSessionHas('erro');
         $this->assertDatabaseHas('service_orders', ['id' => $ordem->id]);
 
         $this->assertSame(1, ServiceOrder::anyCompany()->count(), 'Recusa no servidor não cria ordem.');

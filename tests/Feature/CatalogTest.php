@@ -416,12 +416,14 @@ class CatalogTest extends TestCase
         $this->assertSame(0, Product::anyCompany()->count());
         $this->assertSame(0, ServiceCategory::anyCompany()->count());
 
-        // O gestor cria e edita, mas apagar catálogo é do administrador.
+        // O gestor cria, edita e exclui o catálogo sem histórico; as regras de
+        // integridade do serviço continuam valendo para todos os papéis.
         $this->actingAs($gestor)->get(route('services.create'))->assertOk();
         $this->actingAs($gestor)->post(route('services.store'), $servico)->assertSessionHasNoErrors();
         $criado = Service::anyCompany()->firstWhere('name', 'Instalação');
         $this->assertSame($empresa->id, $criado->company_id);
-        $this->actingAs($gestor)->delete(route('services.destroy', $criado))->assertForbidden();
+        $this->actingAs($gestor)->delete(route('services.destroy', $criado))->assertRedirect();
+        $this->assertSoftDeleted('services', ['id' => $criado->id]);
     }
 
     /** @return array{0: Company, 1: User} */

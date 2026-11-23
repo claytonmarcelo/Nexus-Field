@@ -58,7 +58,7 @@ class OrganizacaoEstruturaTest extends TestCase
         }
     }
 
-    public function test_supervisor_le_a_estrutura_mas_nao_escreve_e_outros_papeis_nao_veem(): void
+    public function test_supervisor_le_e_exclui_a_estrutura_mas_nao_cria_nem_edita(): void
     {
         [$empresa, $admin] = $this->empresaComAdmin();
         $supervisor = $this->contaComPapel($empresa, 'supervisor', 'supervisor-estrutura@test.local');
@@ -77,12 +77,31 @@ class OrganizacaoEstruturaTest extends TestCase
             route('organization.branches.update', $estrutura['filial']),
             $this->dadosFilial(['name' => 'Filial alterada pelo supervisor'], $estrutura['filial']),
         )->assertForbidden();
-        $this->actingAs($supervisor)->delete(route('organization.branches.destroy', $estrutura['filial']))
-            ->assertForbidden();
-
         foreach ([$funcionario, $tecnico, $cliente] as $semAcesso) {
             $this->actingAs($semAcesso)->get(route('organization.index'))->assertForbidden();
+            $this->actingAs($semAcesso)->delete(route('organization.branches.destroy', $estrutura['filial']))
+                ->assertForbidden();
         }
+
+        // A filial do quadro tem setor e não pode sair: a exclusão do gestor
+        // continua passando pela regra de integridade do serviço.
+        $this->actingAs($supervisor)->delete(route('organization.branches.destroy', $estrutura['filial']))
+            ->assertSessionHas('erro');
+        $this->assertDatabaseHas('branches', ['id' => $estrutura['filial']->id]);
+
+        TenantContext::set($empresa->id);
+        $vazia = Branch::query()->create([
+            'company_id' => $empresa->id,
+            'name' => 'Filial vazia para exclusão',
+            'type' => 'filial',
+            'active' => true,
+        ]);
+        TenantContext::forget();
+
+        $this->actingAs($supervisor)->delete(route('organization.branches.destroy', $vazia))
+            ->assertRedirect()
+            ->assertSessionMissing('erro');
+        $this->assertSoftDeleted('branches', ['id' => $vazia->id]);
 
         $this->assertTrue($admin->hasPermission('organization.delete'));
         $this->assertDatabaseMissing('branches', ['name' => 'Filial negada']);

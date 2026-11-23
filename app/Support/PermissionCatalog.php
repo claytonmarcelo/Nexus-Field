@@ -119,32 +119,35 @@ class PermissionCatalog
             'administrator' => ['*'],
             'supervisor' => [
                 'dashboard.view',
-                'clients.view', 'clients.create', 'clients.update', 'clients.export',
-                'technicians.view', 'technicians.create', 'technicians.update',
-                'teams.view', 'teams.create', 'teams.update',
-                'services.view', 'services.create', 'services.update',
-                'products.view', 'products.create', 'products.update',
+                // O usuário mapeou admin/diretor para `administrator` e
+                // gerente/coordenador para `supervisor`. Exclusão é ato desses
+                // dois degraus: o supervisor recebe todos os `*.delete`, e as
+                // regras de integridade de cada controller continuam valendo —
+                // histórico, vínculo e papel de sistema seguem protegidos.
+                'clients.view', 'clients.create', 'clients.update', 'clients.delete', 'clients.export',
+                'technicians.view', 'technicians.create', 'technicians.update', 'technicians.delete',
+                'teams.view', 'teams.create', 'teams.update', 'teams.delete',
+                'services.view', 'services.create', 'services.update', 'services.delete',
+                'products.view', 'products.create', 'products.update', 'products.delete',
                 'stock.view', 'stock.move', 'stock.adjust', 'stock.export',
-                'orders.view', 'orders.create', 'orders.update', 'orders.approve', 'orders.execute', 'orders.export',
+                'orders.view', 'orders.create', 'orders.update', 'orders.delete', 'orders.approve', 'orders.execute', 'orders.export',
                 'tickets.view', 'tickets.create', 'tickets.update', 'tickets.execute', 'tickets.close',
                 'tickets.export',
                 'agenda.view', 'agenda.create', 'agenda.update', 'agenda.delete',
-                'financial.view', 'financial.create', 'financial.update', 'financial.approve', 'financial.export',
+                'financial.view', 'financial.create', 'financial.update', 'financial.delete', 'financial.approve', 'financial.export',
                 'reports.view', 'reports.export',
                 'notifications.view', 'notifications.manage',
                 // A Fase 20 entrega ao supervisor a gerência do time que ele
-                // alcança: ver a folha, criar e editar quem enxerga menos que
-                // ele, e ler os papéis. Excluir conta e desenhar papel continuam
-                // degrau de administrador — e o alcance, não a rota, é que fecha
-                // a mão dele no formulário.
-                'users.view', 'users.create', 'users.update',
-                'roles.view',
+                // alcança. Excluir conta e papel customizado entra com o mesmo
+                // limite de alcance; criar e editar papel segue de administrador.
+                'users.view', 'users.create', 'users.update', 'users.delete',
+                'roles.view', 'roles.delete',
                 'settings.view',
                 'audit.view', 'audit.export',
-                // A estrutura é aberta para leitura do gestor: ele precisa do
-                // organograma para situar a própria equipe. Escrever filial,
-                // setor, cargo ou vínculo continua sendo degrau de administrador.
-                'organization.view',
+                // O gestor lê o organograma para situar a própria equipe. Criar
+                // e editar filial, setor, cargo ou vínculo segue de administrador;
+                // excluir nós vazios passa ao supervisor, com modal e texto próprios.
+                'organization.view', 'organization.delete',
             ],
             'employee' => [
                 'dashboard.view',

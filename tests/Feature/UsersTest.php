@@ -46,7 +46,7 @@ class UsersTest extends TestCase
         $this->actingAs($admin)->delete(route('users.destroy', $alheia))->assertNotFound();
     }
 
-    public function test_supervisor_ve_a_folha_mas_excluir_e_criar_papel_sao_de_administrador(): void
+    public function test_supervisor_gera_a_folha_e_exclui_conta_mas_nao_cria_papel(): void
     {
         [$empresa, $admin] = $this->empresaComAdmin();
         $supervisora = $this->conta($empresa, 'supervisor', 'sup@test.local');
@@ -54,7 +54,8 @@ class UsersTest extends TestCase
 
         $this->actingAs($supervisora)->get(route('users.index'))->assertOk();
         $this->actingAs($supervisora)->get(route('users.create'))->assertOk();
-        $this->actingAs($supervisora)->delete(route('users.destroy', $alvo))->assertForbidden();
+        $this->actingAs($supervisora)->delete(route('users.destroy', $alvo))->assertRedirect();
+        $this->assertSoftDeleted('users', ['id' => $alvo->id]);
         $this->actingAs($supervisora)->get(route('roles.create'))->assertForbidden();
     }
 

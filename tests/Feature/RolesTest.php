@@ -135,7 +135,7 @@ class RolesTest extends TestCase
         $this->actingAs($admin)->delete(route('roles.destroy', $alheio))->assertNotFound();
     }
 
-    public function test_supervisor_ve_os_papeis_mas_nao_desenha_nem_mexe(): void
+    public function test_supervisor_ve_os_papeis_exclui_o_customizado_mas_nao_desenha_nem_edita(): void
     {
         [$empresa, $admin] = $this->empresaComAdmin();
         $supervisora = $this->conta($empresa, 'supervisor', 'sup@test.local');
@@ -148,6 +148,8 @@ class RolesTest extends TestCase
             'name' => 'Leitor maquiado',
             'permissoes' => ['reports.view'],
         ])->assertForbidden();
+        $this->actingAs($supervisora)->delete(route('roles.destroy', $leitor))->assertRedirect();
+        $this->assertDatabaseMissing('roles', ['id' => $leitor->id]);
     }
 
     public function test_editar_um_papel_reajusta_o_alcance_de_quem_o_veste(): void

@@ -10,14 +10,19 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 
 ### Alterado
 
+- Exclusão responsável: o papel `supervisor` (gerente/coordenador) passou a receber todos os verbos
+  `*.delete`; `administrator` (admin/diretor) mantém `*` e os demais papéis seguem sem excluir. Clientes
+  e informações da empresa só saem por esses dois degraus, com o modal `x-ui.action-form` e texto
+  personalizado — histórico, vínculos e papéis de sistema continuam barrando a exclusão. Suíte: 422
+  testes / 4067 asserções.
 - Rodapé público: agora traz somente `© 2026 NEXUS-FIELD` ao lado da logo, na mesma posição à esquerda.
   O crédito e o ano dinâmico saíram do pé público; o rodapé autenticado segue com o crédito. O CSS não
   centraliza mais a linha no celular e o teste de coerência proíbe texto extra no componente. Suíte:
-  419 testes / 3953 asserções.
+  422 testes / 4067 asserções.
 - Menu lateral: `Visitas de campo` deixou de usar `fa-location-crossing`, que não existe no FontAwesome
   6.7.2 instalado, e passou a usar `fa-route`, o mesmo vocabulário viário dos demais itens de Operação.
   Um teste novo valida todos os glifos de `Navigation` contra o CSS instalado, para nenhum item virar
-  quadrado vazio de novo. Suíte: 419 testes / 3953 asserções.
+  quadrado vazio de novo. Suíte: 422 testes / 4067 asserções.
 - Mapa GPS: nova tela `Mapa GPS` em Operação, com Leaflet sobre OpenStreetMap carregado sob demanda.
   A posição atual vem da ficha do técnico e a rota é desenhada pelas chegadas e saídas reais das ordens,
   no mesmo alcance das visitas de campo. O botão `Compartilhar minha localização` depende da permissão
@@ -27,7 +32,7 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
 - Menu lateral: o hambúrguer virou pílula com ícone em casa própria e rótulo `Menu` no desktop (o
   rótulo some no celular), barras em degrau que se dobram em 45°, elevação no hover, recuo no clique
   e contorno de foco com `--nf-primary`. O estado continua vindo de `sidebar-collapse`/`sidebar-open`
-  e o contrato `data-lte-toggle="sidebar"` não foi tocado. Suíte: 419 testes / 3953 asserções.
+  e o contrato `data-lte-toggle="sidebar"` não foi tocado. Suíte: 422 testes / 4067 asserções.
 - Cabeçalho público: marca à esquerda e, no mesmo grupo à direita, chave de tema seguida de `Acessar`
   — a ordem e o alinhamento medidos em `https://nexus-business-manager.vercel.app/`. O grid de três
   colunas deu lugar ao flex com `justify-content: space-between`; o contrato de acessibilidade
@@ -55,7 +60,7 @@ Padrão de versões: esta reconstrução parte do zero, então o baseline é `0.
   próprio lado (30 no sidebar e no cabeçalho, 22 no rodapé). A logo do sidebar deixa de ser cortada
   pela faixa de 35px e o rodapé público fecha nos mesmos 38px do rodapé autenticado, medidos no
   navegador. A animação da marca acima do título de entrada saiu com a casca antiga, e o CSS dela
-  foi removido. Suíte: 419 testes / 3953 asserções.
+  foi removido. Suíte: 422 testes / 4067 asserções.
 - Cadastro de empresas: o fluxo saiu do grupo `guest` e passou a viver em **Cadastros › Empresas**
   (`/cadastros/empresas`), com `auth`, tenant e `organization.create`, casca autenticada e trilha do
   menu lateral. O endpoint tokenizado de confirmação por e-mail ficou fora dos grupos de acesso, sem

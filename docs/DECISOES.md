@@ -2,6 +2,16 @@
 
 Registro de mudanças de direção que afetam regra de negócio, com data e motivo.
 
+## 22/11/2026 — Exclusão restrita a admin/diretor e gerente/coordenador
+
+**Decisão do usuário:** "A Limpeza de cache não deve apagar nenhuma informação escrita ou posta no projeto, isso não pode acontecer, informações da empresa ou clientes devem estar permanente e só podem ser apagadas ou excluidas pelos admin, diretor, gerente ou coordenador com modal personalizado e texto personalizado também." Na pergunta de mapeamento, ele escolheu `Admin/Diretor = admin` e `Gerente/Coord = supervisor`.
+
+**Tradução em papéis:** `administrator` já tem `*`. O `supervisor` passou a receber todos os `slugs` com ação `delete` do catálogo — clientes, técnicos, equipes, serviços, produtos, ordens, agenda, financeiro, usuários, papéis customizados e nós da organização. `employee`, `technician` e `client` não recebem nenhum `*.delete`. A decisão é sobre **quem pode apertar o botão**, não sobre burlar integridade: cliente com histórico, filial com setor/vínculo, técnico com ordem, papel de sistema e conta raiz continuam recusados no servidor.
+
+**Modal e texto:** todas as telas destrutivas já usam `<x-ui.action-form>`, que abre o SweetAlert2 com `data-confirm-titulo` e `data-confirm-texto`; os textos são próprios de cada entidade (por exemplo, o cliente avisa que histórico impede a exclusão e que inativar preserva tudo). O novo `ExclusaoResponsavelTest` varre todas as views e exige `texto=` em cada botão `Excluir`, além de provar a matriz de papéis e a exclusão real de um cliente sem histórico pelo supervisor.
+
+**Coordenação com as fases anteriores:** testes antigos que davam 403 ao supervisor por `users.delete`, `roles.delete`, `organization.delete`, `services.delete` e `orders.delete` foram reescritos para a nova regra, mantendo as recusas por integridade. Nenhuma rota, consulta ou mensagem de negócio foi removida; o cache continua sem tocar em dados. Suíte: 422 testes / 4067 asserções.
+
 ## 22/11/2026 — Rodapé público com uma única linha de direito autoral
 
 **Pedido do usuário:** "Colocar somente o texto \"© 2026 NEXUS-FIELD\" no rodapé ao lado da logo mantendo a mesma posição."
@@ -10,7 +20,7 @@ Registro de mudanças de direção que afetam regra de negócio, com data e moti
 
 **Posição:** a marca segue no mesmo ponto da linha e o alinhamento à esquerda virou `flex-start` explícito em vez de `space-between`. A regra que centralizava o rodapé no celular saiu: centralizar seria mudar a posição pedida. A altura de 38px, o tamanho de 22px da marca e o forro de `.75rem` não mudaram.
 
-**Verificação:** `CoerenciaVisualTest` exige o texto literal, proíbe `now()->format`, crédito e descrição no componente; `AccessScreenTest` confere a página aberta; `AuthenticatedLayoutTest` separa o pé público do autenticado. Suíte: 419 testes / 3953 asserções.
+**Verificação:** `CoerenciaVisualTest` exige o texto literal, proíbe `now()->format`, crédito e descrição no componente; `AccessScreenTest` confere a página aberta; `AuthenticatedLayoutTest` separa o pé público do autenticado. Suíte: 422 testes / 4067 asserções.
 
 ## 22/11/2026 — Ícone de Visitas de campo alinhado ao menu
 
@@ -18,7 +28,7 @@ Registro de mudanças de direção que afetam regra de negócio, com data e moti
 
 **Decisão:** o item passou de `fa-location-crossing` — glifo ausente no FontAwesome 6.7.2 deste projeto — para `fa-route`. A troca usa um ícone já presente na biblioteca instalada e conversa com o traçado do mapa GPS e com a natureza de percurso das visitas. `Mapa GPS` usa `fa-map-location-dot`, sem conflito com a rota.
 
-**Garantia:** `AuthenticatedLayoutTest` agora abre o CSS do FontAwesome instalado e exige que todas as classes `fa-*` declaradas em `Navigation::sections()` existam de fato, além de fixar `fa-route` para `Visitas de campo`. A validação cobre o menu inteiro, não só o item trocado, e evita que a casca exiba quadrado vazio ou glifo de Pac-Man. Suíte: 419 testes / 3953 asserções.
+**Garantia:** `AuthenticatedLayoutTest` agora abre o CSS do FontAwesome instalado e exige que todas as classes `fa-*` declaradas em `Navigation::sections()` existam de fato, além de fixar `fa-route` para `Visitas de campo`. A validação cobre o menu inteiro, não só o item trocado, e evita que a casca exiba quadrado vazio ou glifo de Pac-Man. Suíte: 422 testes / 4067 asserções.
 
 ## 22/11/2026 — Mapa GPS com rotas lidas do campo
 
@@ -32,7 +42,7 @@ Registro de mudanças de direção que afetam regra de negócio, com data e moti
 
 **Motivo:** havia coordenadas no check-in e na ficha do técnico, mas nenhuma leitura que mostrasse a trajetória. O mapa fecha esse ciclo sem criar tabela, sem exigir workflow novo e sem transformar presença em vigilância: a posição é voluntária, é do próprio técnico e pode ser interrompida no botão. O bundle do mapa sai do pacote comum — `app.js` importa `gps.js` sob demanda — para que login, painel e listagens não paguem Leaflet.
 
-**Verificação:** `GpsTest` cobre a posição e a rota na empresa, o recorte do técnico, o recorte da conta de cliente, a recusa de escrita em nome de outro técnico, a validação de coordenada e as middleware da rota de escrita. `npm run build` gera o chunk separado do GPS. Suíte: 419 testes / 3953 asserções.
+**Verificação:** `GpsTest` cobre a posição e a rota na empresa, o recorte do técnico, o recorte da conta de cliente, a recusa de escrita em nome de outro técnico, a validação de coordenada e as middleware da rota de escrita. `npm run build` gera o chunk separado do GPS. Suíte: 422 testes / 4067 asserções.
 
 ## 22/11/2026 — Limpeza global de cache restrita à conta raiz
 
@@ -120,7 +130,7 @@ mas quem abre e fecha o painel continua sendo o template.
 **Implementação:** `navbar.blade.php` passa a embrulhar as barras em `.nf-nav-toggle-icone` e acrescenta
 `.nf-nav-toggle-texto`; `components.css` redesilha a pílula com tokens dos dois temas, transições e
 foco visível; `CoerenciaVisualTest` passa a exigir o invólucro, o rótulo e o contorno de foco. Suíte:
-419 testes / 3953 asserções.
+422 testes / 4067 asserções.
 
 **Restrições mantidas:** paleta e logotipo preservados, `data-lte-toggle="sidebar"` intacto, nenhum
 glifo de biblioteca no lugar das barras, nenhum push.
@@ -145,7 +155,7 @@ placeholders genéricos e a regra de que senha nunca volta em `old()`.
 passaram a exigir um único botão na página e a ausência do texto e do destino de cadastro. Um teste
 novo em `AccessScreenTest` verifica `autocomplete="off"` no formulário, e‑mail e senha, valor vazio no
 e‑mail e nenhum `value` na senha. Nenhuma cor, token, permissão, integração ou consulta foi alterada.
-Suíte: 419 testes / 3953 asserções.
+Suíte: 422 testes / 4067 asserções.
 
 **Restrições mantidas:** credencial da conta raiz fora de código, teste, doc, log e commit; prosa
 hifenizada com U+2011; paleta e logotipo preservados; nenhum push.
