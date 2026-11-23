@@ -48,6 +48,32 @@ Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
 Route::get('__bench/simple', fn () => response('ok'));
 Route::get('__bench/view', fn () => view('auth.login'));
+Route::get('__bench/bare', fn () => response('ok'))->withoutMiddleware([
+    \App\Http\Middleware\SanitizeReferer::class,
+    \App\Http\Middleware\SecurityHeaders::class,
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class,
+    \Illuminate\Routing\Middleware\SubstituteBindings::class,
+    'auth.session',
+    \App\Http\Middleware\ResolveCompany::class,
+    \App\Http\Middleware\NoStore::class,
+]);
+Route::get('__bench/no-session', fn () => response('ok'))->withoutMiddleware([
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class,
+]);
+Route::get('__bench/no-custom', fn () => response('ok'))->withoutMiddleware([
+    \App\Http\Middleware\SanitizeReferer::class,
+    \App\Http\Middleware\SecurityHeaders::class,
+    \App\Http\Middleware\ResolveCompany::class,
+    \App\Http\Middleware\NoStore::class,
+]);
 
 // Vercel Cron -> GET /cron/schedule com Authorization: Bearer $CRON_SECRET.
 // Fora dos grupos `guest` e `auth`: quem autoriza é o segredo, não a sessão.
