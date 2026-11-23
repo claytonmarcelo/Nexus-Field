@@ -61,7 +61,7 @@ return new class extends Migration
         });
 
         // Um item é ou serviço ou produto consumido; nunca ambos, nunca nenhum.
-        DB::statement('ALTER TABLE "service_order_items" ADD CONSTRAINT "item_is_service_or_product" CHECK ((service_id is not null) <> (product_id is not null))');
+        DB::statement('ALTER TABLE `service_order_items` ADD CONSTRAINT `item_is_service_or_product` CHECK ((`service_id` is not null) <> (`product_id` is not null))');
 
         Schema::create('service_order_assignments', function (Blueprint $table) {
             $table->id();

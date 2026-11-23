@@ -15,9 +15,9 @@ A Vercel não oferece runtime PHP nativo. O projeto usa `framework: container` e
 - `docker/php/www.conf`: variáveis de ambiente repassadas aos workers
   (`clear_env = no`) — sem isso, `APP_KEY` não chega ao PHP-FPM e o login quebra.
 - `docker/entrypoint.sh`: falha cedo se `APP_KEY` ou `APP_URL` estiverem ausentes,
-  cria os diretórios graváveis em `/tmp`, inicia o FPM com
-  `php-fpm -D -g /tmp/nexusfield/php-fpm.pid` e aplica migrações apenas quando
-  `RUN_MIGRATIONS=true` (remover a variável depois).
+  cria os diretórios graváveis em `/tmp` e inicia o FPM com
+  `php-fpm -D -g /tmp/nexusfield/php-fpm.pid`. **Não** executa migrações: o
+  container pode ser replicado e migrações paralelas corrompem o schema.
 - Região: `gru1` (São Paulo). Múltiplas regiões não são usadas porque o banco é
   externo e único; replicar o container não replicaria os dados. Cron diário:
   `0 10 * * *` (10:00 UTC = 07:00 de São Paulo), com GET em `/cron/schedule`.
@@ -45,7 +45,7 @@ deve ser escrito em arquivo versionado, teste, documentação, log ou commit.**
 | `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | `mysql`; TiDB Cloud é MySQL-compatible. Use `DB_URL` apenas se preferir connection string |
 | `MYSQL_ATTR_SSL_CA` | Caminho do bundle de CAs no container: `/etc/ssl/certs/ca-certificates.crt` (endpoint público do TiDB exige TLS) |
 | `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | `smtp`; no Gmail use `smtp.gmail.com:587`, `tls` e uma **App Password** de 16 caracteres. `log` apenas local |
-| `FILESYSTEM_DISK`, `AWS_*` | Disk S3 para uploads; obrigatório em produção |
+| `FILESYSTEM_DISK`, `AWS_*` | Sem credenciais S3, use `local`; com `AWS_*` configurados, prefira `s3` |
 | `CRON_SECRET` | Segredo do header `Authorization: Bearer` do cron |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Conta raiz criada pelo seeder; defina apenas no ambiente de seed |
 
