@@ -91,6 +91,12 @@ Route::get('__bench/no-start', fn () => response('ok'))->withoutMiddleware([\Ill
 Route::get('__bench/no-csrf', fn () => response('ok'))->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class]);
 Route::get('__bench/no-share', fn () => response('ok'))->withoutMiddleware([\Illuminate\View\Middleware\ShareErrorsFromSession::class]);
 Route::post('__bench/post', fn () => response('ok'));
+Route::post('__bench/post-back', fn () => back()->with('status', 'ok'));
+Route::post('__bench/post-validate', function () {
+    request()->validate(['email' => ['required', 'email']]);
+
+    return response('ok');
+});
 Route::post('__bench/post-bare', fn () => response('ok'))->withoutMiddleware([
     \App\Http\Middleware\SanitizeReferer::class,
     \App\Http\Middleware\SecurityHeaders::class,
