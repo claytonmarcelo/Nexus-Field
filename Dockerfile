@@ -71,7 +71,13 @@ RUN composer install \
         --optimize-autoloader
 
 COPY . .
-RUN composer dump-autoload --optimize --no-dev --classmap-authoritative \
+# O `package:discover` do Laravel le TODOS os pacotes de vendor/composer/installed.json,
+# inclusive os de require-dev que o Composer ainda lista la. Isso faz o build procurar
+# BoostServiceProvider (ferramenta de desenvolvimento) numa imagem --no-dev. Filtra
+# pelo proprio `dev-package-names` antes de gerar o manifesto de producao.
+RUN rm -f bootstrap/cache/*.php \
+    && composer dump-autoload --optimize --no-dev --classmap-authoritative --no-scripts \
+    && php -r '$p="vendor/composer/installed.json"; $j=json_decode(file_get_contents($p),true); $dev=$j["dev-package-names"]??[]; $j["packages"]=array_values(array_filter($j["packages"],fn($x)=>!in_array($x["name"],$dev,true))); $j["dev"]=false; file_put_contents($p,json_encode($j,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));' \
     && php artisan package:discover --ansi
 
 # ---------------------------------------------------------------------------

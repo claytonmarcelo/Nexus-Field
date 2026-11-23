@@ -173,7 +173,7 @@ class AuthenticatedLayoutTest extends TestCase
         );
         $this->assertStringContainsString('name="_token"', $html);
 
-        $this->actingAs($user)->post(route('logout'))->assertRedirect(route('login'));
+        $this->actingAs($user)->post(route('logout'))->assertRedirect(route('welcome'));
         $this->assertGuest();
     }
 

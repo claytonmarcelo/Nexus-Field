@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -40,6 +42,24 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return $usuario->hasPermission($habilidade) ?: null;
+        });
+
+        // A notificação de recuperação que vem com o Laravel sai em inglês.
+        // Aqui ela é reescrita em português, como toda a interface do produto.
+        ResetPassword::toMailUsing(function ($notifiable, string $token) {
+            $url = url(route('password.reset', [
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], false));
+
+            $validade = config('auth.passwords.'.config('auth.defaults.passwords').'.expire');
+
+            return (new MailMessage)
+                ->subject('Código de recuperação de senha')
+                ->greeting('Olá!')
+                ->line('Recebemos uma solicitação para redefinir a senha da sua conta.')
+                ->action('Redefinir senha', $url)
+                ->line('Este link expira em '.$validade.' minutos. Se você não fez esta solicitação, ignore esta mensagem.');
         });
     }
 }

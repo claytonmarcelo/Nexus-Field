@@ -7,6 +7,9 @@
 !.env.example
 vendor
 node_modules
+# O cache gerado localmente inclui providers de dependencias de desenvolvimento.
+# Copia-lo para a imagem de producao faz o package:discover falhar.
+bootstrap/cache/*.php
 storage/framework/views/*
 storage/framework/cache/*
 storage/framework/sessions/*

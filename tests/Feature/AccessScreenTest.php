@@ -74,7 +74,7 @@ class AccessScreenTest extends TestCase
             'password' => 'Senha-Forte-123',
         ])->assertRedirect(route('dashboard'));
 
-        $this->post(route('logout'))->assertRedirect(route('login'));
+        $this->post(route('logout'))->assertRedirect(route('welcome'));
 
         $html = $this->get(route('login'))->assertOk()->getContent();
 

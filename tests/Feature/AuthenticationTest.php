@@ -105,7 +105,7 @@ class AuthenticationTest extends TestCase
         $this->seedPermissions();
         $user = $this->makeUser('administrator', $company, 'admin@test.local');
 
-        $this->actingAs($user)->post('/logout')->assertRedirect(route('login'));
+        $this->actingAs($user)->post('/logout')->assertRedirect(route('welcome'));
         $this->assertGuest();
 
         $this->get(route('dashboard'))->assertRedirect(route('login'));

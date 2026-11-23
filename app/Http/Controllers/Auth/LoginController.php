@@ -66,9 +66,9 @@ class LoginController extends Controller
 
         TenantContext::forget();
 
-        // A saída abre a porta de entrada: nenhum dado da sessão anterior deve
+        // A saída volta para a vitrine: nenhum dado da sessão anterior deve
         // reassinar a tela seguinte, e o navegador recebe no-store no grupo web.
-        return redirect()->route('login');
+        return redirect()->route('welcome');
     }
 
     /** Derruba sessão e contexto do tenant antes de recusar o acesso. */
