@@ -46,6 +46,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
+Route::get('__bench/simple', fn () => response('ok'));
+Route::get('__bench/view', fn () => view('auth.login'));
+
 // Vercel Cron -> GET /cron/schedule com Authorization: Bearer $CRON_SECRET.
 // Fora dos grupos `guest` e `auth`: quem autoriza é o segredo, não a sessão.
 Route::get('cron/schedule', CronController::class)
