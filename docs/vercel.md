@@ -1,6 +1,6 @@
 # Deploy global na Vercel — NEXUS-FIELD
 
-Data da revisão: 21/11/2026.
+Data da revisão: 23/11/2026.
 
 ## Por que Container Runtime
 
@@ -18,7 +18,7 @@ A Vercel não oferece runtime PHP nativo. O projeto usa `framework: container` e
   cria os diretórios graváveis em `/tmp`, inicia o FPM com
   `php-fpm -D -g /tmp/nexusfield/php-fpm.pid` e aplica migrações apenas quando
   `RUN_MIGRATIONS=true` (remover a variável depois).
-- Região: `gru1` (São Paulo). Multiple regions não são usadas porque o banco é
+- Região: `gru1` (São Paulo). Múltiplas regiões não são usadas porque o banco é
   externo e único; replicar o container não replicaria os dados. Cron diário:
   `0 10 * * *` (10:00 UTC = 07:00 de São Paulo), com GET em `/cron/schedule`.
 
@@ -42,8 +42,9 @@ deve ser escrito em arquivo versionado, teste, documentação, log ou commit.**
 | `SESSION_SECURE_COOKIE` | `true` em produção; sem HTTPS o cookie não volta |
 | `TRUSTED_PROXIES` | TLS termina no edge; use `REMOTE_ADDR` |
 | `TRUSTED_HOSTS` | Expressões **regulares** PCRE, não nomes de domínio: `^.*\.vercel\.app$` (o host de `APP_URL` já é confiável) |
-| `DB_CONNECTION`, `DB_URL` | `pgsql`; `DB_URL` ou, na integração Neon da Vercel, `DB_POSTGRES_URL` |
-| `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | `smtp` ou `resend`; `log` apenas local |
+| `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | `mysql`; TiDB Cloud é MySQL-compatible. Use `DB_URL` apenas se preferir connection string |
+| `MYSQL_ATTR_SSL_CA` | Caminho do bundle de CAs no container: `/etc/ssl/certs/ca-certificates.crt` (endpoint público do TiDB exige TLS) |
+| `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | `smtp`; no Gmail use `smtp.gmail.com:587`, `tls` e uma **App Password** de 16 caracteres. `log` apenas local |
 | `FILESYSTEM_DISK`, `AWS_*` | Disk S3 para uploads; obrigatório em produção |
 | `CRON_SECRET` | Segredo do header `Authorization: Bearer` do cron |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Conta raiz criada pelo seeder; defina apenas no ambiente de seed |
@@ -57,9 +58,9 @@ ambiente e recusa semear em produção sem senha definida.
 
 1. Criar o projeto na Vercel apontando para este repositório. O `vercel.json`
    define o preset, as regiões e o cron; não use build preset PHP.
-2. Criar o banco Postgres externo (Lakebase/Neon) e configurar `DB_CONNECTION=pgsql`
-   mais `DB_URL` — ou usar a integração Neon da Vercel, que injeta
-   `DB_POSTGRES_URL`.
+2. Criar o cluster TiDB Cloud (MySQL-compatible) e configurar `DB_CONNECTION=mysql`
+   com `DB_HOST`, `DB_PORT=4000`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` e
+   `MYSQL_ATTR_SSL_CA`. Não usar Neon/Postgres: a aplicação agora aponta para TiDB.
 3. Aplicar as migrações no banco de produção (`php artisan migrate --force`)
    com as mesmas variáveis de ambiente da aplicação. A Vercel não executa
    migrações automaticamente no build do container.
@@ -84,7 +85,7 @@ ambiente e recusa semear em produção sem senha definida.
 - Conta raiz: validada localmente com `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`
   lidos do `.env`, sem imprimir valores (`USUARIO_EXISTE=true`,
   `SENHA_VALIDA=true`).
-- `vercel.json`: JSON válido, `framework=container`, 3 regiões e 1 cron.
+- `vercel.json`: JSON válido, `framework=container`, 1 região (`gru1`) e 1 cron.
 
 ## Não verificado
 

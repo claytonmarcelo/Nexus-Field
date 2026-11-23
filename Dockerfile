@@ -91,7 +91,7 @@ RUN npm run build
 # ---------------------------------------------------------------------------
 FROM php-base AS runtime
 
-RUN apk add --no-cache nginx \
+RUN apk add --no-cache nginx ca-certificates \
     && mkdir -p /run/nginx \
         /tmp/nexusfield/storage/app/private \
         /tmp/nexusfield/storage/app/public \
