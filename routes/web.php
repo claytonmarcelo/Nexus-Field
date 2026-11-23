@@ -97,6 +97,25 @@ Route::post('__bench/post-validate', function () {
 
     return response('ok');
 });
+Route::get('__bench/fs', function () {
+    $out = [];
+    foreach (['/tmp', '/dev/shm'] as $path) {
+        $inicio = microtime(true);
+        $arquivo = $path.'/nf-probe-'.getmypid();
+        $exists = is_dir($path);
+        $write = @file_put_contents($arquivo, 'x');
+        $read = @file_get_contents($arquivo);
+        @unlink($arquivo);
+        $out[$path] = [
+            'exists' => $exists,
+            'write' => $write,
+            'read' => $read,
+            'ms' => round((microtime(true) - $inicio) * 1000, 1),
+        ];
+    }
+
+    return response()->json($out);
+});
 Route::post('__bench/post-bare', fn () => response('ok'))->withoutMiddleware([
     \App\Http\Middleware\SanitizeReferer::class,
     \App\Http\Middleware\SecurityHeaders::class,
