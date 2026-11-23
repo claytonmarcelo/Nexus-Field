@@ -17,8 +17,6 @@ final class NotificationBadge
 
     private const VERSION_KEY = 'notification-badge:version';
 
-    private static bool $invalidado = false;
-
     /** @return array{pendentes: int, recentes: \Illuminate\Support\Collection} */
     public static function para(User $user): array
     {
@@ -35,11 +33,10 @@ final class NotificationBadge
 
     public static function invalidate(): void
     {
-        if (app()->runningUnitTests() || static::$invalidado) {
+        if (app()->runningUnitTests()) {
             return;
         }
 
-        static::$invalidado = true;
         Cache::increment(self::VERSION_KEY);
         Cache::remember(self::VERSION_KEY, now()->addDay(), static fn (): int => 1);
     }
