@@ -264,7 +264,7 @@ class DashboardMetrics
         $tempoMedio = $this->chamadosDoUsuario()
             ->whereNotNull('resolved_at')
             ->whereBetween('resolved_at', [now()->subDays(30), now()])
-            ->avg(DB::raw('TIMESTAMPDIFF(HOUR, opened_at, resolved_at)'));
+            ->avg(DB::raw(SqlCompat::diferencaHoras('opened_at', 'resolved_at')));
 
         return [
             'kpis' => [
@@ -282,7 +282,7 @@ class DashboardMetrics
                 'fila' => $this->chamadosDoUsuario()
                     ->with(['client'])
                     ->open()
-                    ->orderByRaw("field(priority, 'urgent', 'high', 'normal', 'low')")
+                    ->orderByRaw(SqlCompat::ordemPrioridade())
                     ->orderBy('opened_at')
                     ->limit(6)
                     ->get(),
@@ -715,7 +715,7 @@ class DashboardMetrics
         $contados = Payment::query()
             ->whereHas('financialRecord', fn (Builder $q) => $q->where('type', $tipo))
             ->where('paid_at', '>=', (clone $inicio)->startOfDay())
-            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as mes, sum(amount) as total")
+            ->selectRaw(SqlCompat::anoMes('paid_at').' as mes, sum(amount) as total')
             ->groupBy('mes')
             ->pluck('total', 'mes')
             ->all();

@@ -7,6 +7,11 @@ set -eu
 
 PORT="${PORT:-80}"
 
+# Em container o /run pode nao existir ou ser somente leitura. O PID file do
+# FPM vai para /tmp, que e o unico diretorio gravavel garantido pela imagem.
+PHP_FPM_PID=/tmp/nexusfield/php-fpm.pid
+NGINX_PID=/tmp/nexusfield/nginx.pid
+
 # O container pode receber uma porta dinamica da plataforma.
 sed -i "s|^listen 80 default_server;|listen ${PORT} default_server;|" /etc/nginx/conf.d/default.conf
 
@@ -32,7 +37,14 @@ if [ -z "${APP_URL:-}" ]; then
     exit 1
 fi
 
-php-fpm -D -g 'pid = /run/php-fpm.pid;'
+# Migracoes de producao sob demanda: defina RUN_MIGRATIONS=true, reimplemente
+# e remova a variavel depois que o deploy terminar.
+if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
+    echo "Aplicando migracoes de producao..." >&2
+    php artisan migrate --force --no-interaction
+fi
+
+php-fpm -D -g "pid = ${PHP_FPM_PID};"
 
 # Evita responder antes de o FPM estar aceitando conexoes.
 tentativas=0
@@ -46,12 +58,14 @@ until php -r 'exit(@fsockopen("127.0.0.1", 9000, $errno, $errstr, 1) ? 0 : 1);';
 done
 
 encerrar() {
-    nginx -s quit >/dev/null 2>&1 || true
-    if [ -f /run/php-fpm.pid ]; then
-        kill "$(cat /run/php-fpm.pid)" >/dev/null 2>&1 || true
+    if [ -f "$NGINX_PID" ]; then
+        kill "$(cat "$NGINX_PID")" >/dev/null 2>&1 || true
+    fi
+    if [ -f "$PHP_FPM_PID" ]; then
+        kill "$(cat "$PHP_FPM_PID")" >/dev/null 2>&1 || true
     fi
 }
 
 trap encerrar TERM INT
 
-nginx -g 'daemon off;'
+nginx -g "pid ${NGINX_PID}; daemon off;"

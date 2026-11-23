@@ -418,12 +418,12 @@ class Relatorio
                 .'sum(case when priority in (?, ?) then 1 else 0 end) criticos, '
                 .'sum(case when status in ('.$this->lista($andamento).') then 1 else 0 end) em_andamento, '
                 .'sum(case when status in ('.$this->lista($andamento).') '
-                .'and opened_at < now() - interval ('.$prazo.') hour then 1 else 0 end) vencendo, '
+                .'and opened_at < now() - '.SqlCompat::intervaloHoras($prazo).' then 1 else 0 end) vencendo, '
                 .'count(case when resolved_at is not null then 1 end) resolvidos, '
                 .'sum(case when resolved_at is not null '
-                .'and resolved_at <= opened_at + interval ('.$prazo.') hour then 1 else 0 end) no_prazo, '
+                .'and resolved_at <= opened_at + '.SqlCompat::intervaloHoras($prazo).' then 1 else 0 end) no_prazo, '
                 .'coalesce(sum(case when resolved_at is not null '
-                .'then timestampdiff(minute, opened_at, resolved_at) else 0 end), 0) minutos', [
+                .'then '.SqlCompat::diferencaMinutos('opened_at', 'resolved_at').' else 0 end), 0) minutos', [
                     'high',
                     'urgent',
                 ])

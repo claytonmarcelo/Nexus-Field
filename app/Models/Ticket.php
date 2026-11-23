@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use App\Models\Concerns\ComAlcance;
+use App\Support\SqlCompat;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -133,7 +134,7 @@ class Ticket extends Model
     public function scopeAtrasados(Builder $q): Builder
     {
         return $q->whereIn('status', self::EM_ANDAMENTO)
-            ->whereRaw('opened_at < now() - interval ('.static::prazoSql().') hour');
+            ->whereRaw('opened_at < now() - '.SqlCompat::intervaloHoras(static::prazoSql()));
     }
 
     public static function alcanceRestrito(User $usuario): bool

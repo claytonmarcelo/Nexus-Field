@@ -20,6 +20,7 @@ RUN apk add --no-cache \
         freetype \
         icu-libs \
         libjpeg-turbo \
+        libpq \
         libpng \
         libxml2 \
         libzip \
@@ -30,6 +31,7 @@ RUN apk add --no-cache \
         icu-dev \
         jpeg-dev \
         libpng-dev \
+        libpq-dev \
         libxml2-dev \
         libzip-dev \
         oniguruma-dev \
@@ -44,6 +46,7 @@ RUN apk add --no-cache \
         opcache \
         pcntl \
         pdo_mysql \
+        pdo_pgsql \
         xml \
         xmlreader \
         xmlwriter \

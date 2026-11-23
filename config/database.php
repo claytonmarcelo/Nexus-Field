@@ -88,7 +88,9 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DB_URL'),
+            // A integracao Neon da Vercel injeta DB_POSTGRES_URL; DB_URL continua
+            // valendo para quem usa uma connection string propria.
+            'url' => env('DB_URL') ?: env('DB_POSTGRES_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
             'database' => env('DB_DATABASE', 'laravel'),
