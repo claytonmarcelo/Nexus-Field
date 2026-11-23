@@ -97,6 +97,13 @@ Route::post('__bench/post-validate', function () {
 
     return response('ok');
 });
+Route::get('__bench/rate', function () {
+    $inicio = microtime(true);
+    \Illuminate\Support\Facades\RateLimiter::tooManyAttempts('probe:'.request()->ip(), 5);
+    \Illuminate\Support\Facades\RateLimiter::hit('probe:'.request()->ip());
+
+    return response()->json(['ms' => round((microtime(true) - $inicio) * 1000, 1)]);
+});
 Route::get('__bench/fs', function () {
     $out = [];
     foreach (['/tmp', '/dev/shm'] as $path) {
